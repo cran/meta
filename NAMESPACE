@@ -1,0 +1,13 @@
+export(ci, funnel, metabias, metabin, metacont,
+       metacum, metagen, metainf, radial, read.mtv,
+       plot.meta, print.meta, print.summary.meta, summary.meta)
+
+# not visible
+# format.p, meta-internal, p.ci, rmSpace
+
+S3method(plot, meta)
+S3method(print, meta)
+S3method(print, summary.meta)
+S3method(summary, meta)
+
+#useDynLib(meta)

@@ -1,0 +1,17 @@
+ci                      Calculation of confidence intervals (normal
+                        approximation)
+Fleiss93                Aspirin after Myocardial Infarction
+Fleiss93cont            Mental Health Treatment
+funnel                  Plot to assess funnel plot asymmetry
+metabias                Test for funnel plot asymmetry
+metabin                 Meta-analysis of binary outcome data
+metacont                Meta-analysis of continuous outcome data
+metacum                 Cumulative meta-analysis
+metagen                 Generic inverse variance meta-analysis
+metainf                 Influence analysis in meta-analysis
+Olkin95                 Thrombolytic Therapy after Acute Myocardial
+                        Infarction
+plot.meta               Plot function for objects of class meta
+print.meta              Print and summary method for objects of class
+                        meta
+read.mtv                Import RevMan data files (.mtv)

@@ -1,0 +1,113 @@
+\name{funnel}
+\alias{funnel}
+\alias{radial}
+\title{Plot to assess funnel plot asymmetry}
+\description{
+  Draw a funnel or radial plot to assess funnel plot asymmetry in the
+  active graphics window.
+}
+\usage{
+funnel(x, y, xlim=NULL, ylim=NULL, xlab=NULL, ylab=NULL,
+       comb.f=FALSE, axes=TRUE, labels=NULL, cex.lab=0.8,
+       log="", yaxis="se", sm=NULL, ...)
+
+radial(x, y, xlim=NULL, ylim=NULL,
+       xlab="Inverse of standard error",
+       ylab="Standardised treatment effect (z-score)",
+       comb.f=TRUE, axes=TRUE, labels=NULL, cex.lab=0.8,
+       level=NULL, ...)
+}
+\arguments{
+  \item{x}{An object of class \code{meta}, or estimated treatment
+    effect in individual studies.}
+  \item{y}{Standard error of estimated treatment effect (mandatory if
+    \code{x} not of class \code{meta}).}
+  \item{xlim}{The x limits (min,max) of the plot.}
+  \item{ylim}{The y limits (min,max) of the plot.}
+  \item{xlab}{A label for the x axis.}
+  \item{ylab}{A label for the y axis.}
+  \item{comb.f}{A logical indicating whether the pooled fixed effects
+    estimate should be plotted.}
+  \item{axes}{A logical indicating whether axes should be drawn on the
+    plot.}
+  \item{labels}{A character string specifying the text to be used as
+    plotting symbol.}
+  \item{cex.lab}{The magnification to be used for x and y labels.}
+  \item{log}{A character string which contains \code{"x"} if the x axis
+    is to be logarithmic, \code{"y"} if the y axis is to be logarithmic
+    and \code{"xy"} or \code{"yx"} if both axes are to be logarithmic
+    (applies only to function \code{funnel}).}
+  \item{yaxis}{A character string indicating which type of weights are
+    to be used. Either \code{"se"}, \code{"inv"}, or \code{"size"}
+    (applies only to function \code{funnel}). }
+  \item{sm}{A character string indicating underlying summary measure,
+    e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"WMD"},
+    \code{"SMD"} (applies only to function \code{funnel}).}
+  \item{level}{The confidence level utilised in the plot (applies only
+    to function \code{radial}).}
+  \item{\dots}{Graphical parameters as in \code{par} may also be
+    passed as arguments.}
+}
+\details{
+  A funnel plot or radial plot, also called Galbraith plot, is drawn in
+  the active graphics window. If \code{comb.f} is TRUE, the pooled
+  estimate of the fixed effects model is plotted. If \code{level} is not
+  NULL, the corresponding confidence limits are drawn.
+
+  In the funnel plot, if \code{yaxis} is \code{"se"}, the standard error
+  of the treatment estimates is plotted on the y axis which is likely to
+  be the best choice (Sterne & Egger, 2001). Other possible choices for
+  \code{yaxis} are \code{"inv"} (inverse of the variance) and
+  \code{"size"} (study size).
+}
+\references{
+  Galbraith RF (1988a),
+  Graphical display of estimates having differing standard
+  errors. \emph{Technometrics}, \bold{30}, 271--281.
+
+  Galbraith RF (1988b),
+  A note on graphical presentation of estimated odds ratios from several
+  clinical trials. \emph{Statistics in Medicine}, \bold{7}, 889--894.
+  
+  Light RJ & Pillemer DB (1984),
+  \emph{Summing Up. The Science of Reviewing Research}.
+  Cambridge: Havard University Press.
+
+  Sterne JAC & Egger M (2001),
+  Funnel plots for detecting bias in meta-analysis: Guidelines on choice
+  of axis. \emph{Journal of Clinical Epidemiology}, \bold{54},
+  1046--1055.
+}
+\author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
+\seealso{\code{\link{metabias}}, \code{\link{metabin}}, \code{\link{metagen}}}
+
+\examples{
+data(Olkin95)
+meta1 <- metabin(event.e, n.e, event.c, n.c,
+                 data=Olkin95, subset=c(41,47,51,59),
+                 sm="RR", meth="I")
+
+##
+## Same results:
+##
+oldpar <- par(mfrow=c(2,2))
+funnel(meta1)
+funnel(meta1$TE, meta1$seTE, sm="RR")
+par(oldpar)
+
+
+oldpar <- par(mfrow=c(2,2))
+funnel(meta1)
+funnel(meta1, yaxis="inv")
+funnel(meta1, yaxis="size")
+par(oldpar)
+
+
+funnel(meta1, comb.f=TRUE, xlim=c(0.1, 10), axes=FALSE)
+box()
+axis(1, at=c(0.1, 0.5, 1, 2, 10))
+axis(2)
+
+radial(meta1, level=0.95)
+}
+\keyword{hplot}

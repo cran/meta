@@ -1,0 +1,173 @@
+print.summary.meta <- function(x,
+                               digits=max(3, .Options$digits - 3),
+                               print.byvar=TRUE,
+                               ...){
+  
+  k <- x$k
+  sm <- x$sm
+
+  if (sm == "RR" | sm == "OR" | sm == "HR"){
+    x$fixed$TE <- exp(x$fixed$TE)
+    x$fixed$lower <- exp(x$fixed$lower)
+    x$fixed$upper <- exp(x$fixed$upper)
+    ##
+    x$random$TE <- exp(x$random$TE)
+    x$random$lower <- exp(x$random$lower)
+    x$random$upper <- exp(x$random$upper)
+    ##
+    if (!is.null(x$bylab)){
+      x$within$TE <- exp(x$within$TE)
+      x$within$lower <- exp(x$within$lower)
+      x$within$upper <- exp(x$within$upper)
+    }
+  }
+
+  TE.fixed    <- round(x$fixed$TE, digits)
+  lowTE.fixed <- round(x$fixed$lower, digits)
+  uppTE.fixed <- round(x$fixed$upper, digits)
+  pTE.fixed <- x$fixed$p
+  zTE.fixed <- round(x$fixed$z, digits)
+  ##
+  TE.random    <- round(x$random$TE, digits)
+  lowTE.random <- round(x$random$lower, digits)
+  uppTE.random <- round(x$random$upper, digits)
+  pTE.random <- x$random$p
+  zTE.random <- round(x$random$z, digits)
+  ##
+  k.w <- x$k.w
+  ##
+  if (!is.null(x$bylab)){
+    TE.w    <- round(x$within$TE, digits)
+    lowTE.w <- round(x$within$lower, digits)
+    uppTE.w <- round(x$within$upper, digits)
+  }
+  ##
+  H <- x$H$TE
+  lowH <- x$H$lower
+  uppH <- x$H$upper
+  ##
+  I2 <- x$I2$TE
+  lowI2 <- x$I2$lower
+  uppI2 <- x$I2$upper
+  
+  if (x$k.all == 1){
+    res <- cbind(TE.fixed,
+                 p.ci(format(lowTE.fixed), format(uppTE.fixed)),
+                 format(round(zTE.fixed,4)),
+                 format.p(pTE.fixed))
+    
+    dimnames(res) <- list("", c(sm, x$ci.lab, "z", "p.value"))
+    
+    prmatrix(res, quote=FALSE, right=TRUE, ...)
+
+    cat(paste("\nMethod: Inverse variance method\n"))
+  }
+  else{
+
+    cat(paste("Number of trials combined:", k, "\n\n"))
+    
+    res <- cbind(format(c(TE.fixed, TE.random)),
+                 p.ci(format(c(lowTE.fixed, lowTE.random)),
+                      format(c(uppTE.fixed, uppTE.random))),
+                 format(round(c(zTE.fixed, zTE.random),4)),
+                 format.p(c(pTE.fixed, pTE.random)))
+    
+    dimnames(res) <- list(c("Fixed effects model",
+                            "Random effects model"),  
+                          c(sm, x$ci.lab, "z", "p.value"))
+    
+    prmatrix(res, quote=FALSE, right=TRUE, ...)
+    
+    
+    if (inherits(x, "metabin")){
+      Qdata <- cbind(round(x$Q.CMH, 2), 1,
+                     format.p(1-pchisq(x$Q.CMH, df=1)))
+      
+      dimnames(Qdata) <- list("", c("Q", "d.f.", "p.value"))
+      ##
+      cat("\nCMH-test: \n")
+      prmatrix(Qdata, quote=FALSE, right=TRUE, ...)
+    }
+
+    
+    cat(paste("\nQuantifying heterogeneity:\n",
+              "tau^2 = ", round(x$tau^2, 4), 
+              ifelse(k>2,
+                     paste("; H = ", round(H, 2),
+                           p.ci(round(lowH, 2), round(uppH, 2)), "; ",
+                           "I^2 = ", round(100*I2, 1), "%",
+                           p.ci(paste(round(100*lowI2, 1), "%", sep=""),
+                                paste(round(100*uppI2, 1), "%", sep="")),
+                           sep=""),
+                     ""),
+              "\n", sep=""))
+    
+
+    if (k > 1){
+      cat("\nTest of heterogeneity:")
+      
+      if (is.null(x$bylab)){
+        Qdata <- cbind(round(x$Q, 2), k-1,
+                       format.p(1-pchisq(x$Q, df=k-1)))
+        
+        dimnames(Qdata) <- list("", c("Q", "d.f.", "p.value"))
+      }  
+      else{
+        Q <- x$Q
+        Q.w <- sum(x$Q.w, na.rm=TRUE)
+        Q.b <- Q - Q.w
+        ##
+        Qs  <- c(Q, Q.b,  Q.w, x$Q.w)
+        Qs <- ifelse(Qs > -0.1 & Qs < 0, 0, Qs)
+
+        df <- k-1
+        df.w <- sum((x$k.w-1)[!is.na(x$Q.w)])
+        df.b <- df - df.w
+        ##
+        dfs <- c(df, df.b, df.w, k.w-1)
+        dfs[dfs<=0] <- NA
+
+        pval <- 1-pchisq(Qs[1:3], df=dfs[1:3])
+        
+        Qdata <- cbind(format(round(Qs, 2)),
+                       ifelse(is.na(dfs), 0, dfs),
+                       c("--", "--", "--", format(TE.w)),
+                       c("--", "--", "--",
+                         p.ci(format(lowTE.w),
+                              format(uppTE.w))),
+                       c(format.p(pval),
+                         rep("--", length(x$Q.w))))
+        
+        if (print.byvar)
+          bylab.row <- paste(x$bylab,
+                             " = ", 
+                             format(x$by.levs), sep="")
+        else
+          bylab.row <- x$bylab
+        
+
+        dimnames(Qdata) <- list(c("Total           ",
+                                  "Between groups  ",
+                                  "Within groups   ", 
+                                  bylab.row),
+                                c("Q", "d.f.", sm, x$ci.lab,
+                                  "p.value"))
+      }
+      
+      cat("\n")
+      prmatrix(Qdata, quote=FALSE, right=TRUE, ...)
+
+    }
+    
+    method <- ifelse(x$method=="MH",
+                     "Mantel-Haenszel method",
+                     ifelse(x$method=="Peto", "Peto method",
+                            ifelse(x$method=="Inverse",
+                                   "Inverse variance method",
+                                   x$method)))
+    
+    cat(paste("\nMethod:", method, "\n"))
+  }
+  
+  invisible(NULL)
+}

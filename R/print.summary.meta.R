@@ -1,5 +1,5 @@
 print.summary.meta <- function(x,
-                               digits=max(3, .Options$digits - 3),
+                               digits=max(0, .Options$digits - 3),
                                print.byvar=TRUE,
                                ...){
   
@@ -167,6 +167,12 @@ print.summary.meta <- function(x,
                                    x$method)))
     
     cat(paste("\nMethod:", method, "\n"))
+  }
+  
+  
+  if (inherits(x, "trimfill")){
+    cat("\n")
+    print.trimfill(x$object)
   }
   
   invisible(NULL)

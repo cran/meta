@@ -4,7 +4,7 @@ print.meta <- function(x,
                        level.comb=level,
                        details=FALSE,
                        ma=TRUE,
-                       digits=max(4, .Options$digits - 3),
+                       digits=max(0, .Options$digits - 3),
                        ...){
     
   if (!inherits(x, "meta"))
@@ -28,7 +28,7 @@ print.meta <- function(x,
 
 
   ci.lab <- paste(round(100*level, 1), "%-CI", sep="")
-
+  
   
   if (details){
 
@@ -53,10 +53,10 @@ print.meta <- function(x,
     prmatrix(res[order(sortvar),])
     cat("\n\n")
   }
-
-
-
+  
+  
   if (k.all == 1){
+    cat("Trial-ID:", x$studlab, "\n\n")
     if (inherits(x, "metabin"))
       print(summary(metabin(x$event.e, x$n.e,
                             x$event.c, x$n.c,
@@ -138,6 +138,7 @@ print.meta <- function(x,
       print(summary(x, level.comb=level.comb), digits=digits)
     
   }
+  
   
   invisible(NULL)
 }

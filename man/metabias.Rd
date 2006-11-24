@@ -52,7 +52,7 @@ metabias(x, seTE, TE.fixed, seTE.fixed,
   If \code{method} is \code{"count"}, the test statistic is based on the
   rank correlation between a standardised cell frequency and the inverse
   of the variance of the cell frequency; Kendall's tau is used as
-  correlation measure (Schwarzer, 2003). The test statistic
+  correlation measure (Schwarzer, 2006). The test statistic
   follows a standard normal distribution. By default (if \code{correct}
   is FALSE), no continuity correction is utilised (Kendall & Gibbons,
   1990).
@@ -86,9 +86,10 @@ metabias(x, seTE, TE.fixed, seTE.fixed,
   Bias in meta-analysis detected by a simple,
   graphical test. \emph{British Medical Journal}, \bold{315}, 629--634.
 
-  Schwarzer G (2003),
-  Statistical Tests for Bias in Meta-Analysis with Binary Outcomes,
-  PhD thesis, University of Dortmund, Germany, http://eldorado.uni-dortmund.de
+  Schwarzer G, Antes G, Schumacher M (2006),
+  A test for publication bias in meta-analysis with sparse binary data.
+  \emph{Statistics in Medicine},
+  DOI: 10.1002/sim.2588, http://dx.doi.org/10.1002/sim.2588
 
   Thompson SG, Sharp, SJ (1999),
   Explaining heterogeneity in meta-analysis: A comparison of methods,

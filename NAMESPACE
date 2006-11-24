@@ -1,9 +1,10 @@
 export(ci, funnel, metabias, metabin, metacont,
        metacum, metagen, metainf, radial, read.mtv,
-       plot.meta, print.meta, print.summary.meta, summary.meta)
+       plot.meta, print.meta, print.summary.meta, summary.meta,
+       trimfill)
 
 # not visible
-# format.p, meta-internal, p.ci, rmSpace
+# format.p, meta-internal, p.ci, rmSpace, print.trimfill
 
 S3method(plot, meta)
 S3method(print, meta)

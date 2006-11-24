@@ -1,9 +1,10 @@
-read.mtv <- function(file, sep="$"){
+read.mtv <- function(file){
   ##
-  if ( length(unique(count.fields(file, sep=sep, quote=""))) != 1 )
-    stop("Please use different value for argument 'sep'")
-  ##
-  line <- as.character(read.table(file, sep=sep, quote="")$V1)
+  line <- scan(file,
+               what="character",
+               blank.lines.skip=FALSE,
+               comment.char="",
+               sep="\n")
   ##
   ##line <- line[substring(line, 1, 10) != "START DATA"]
   ##line <- line[substring(line, 1,  8) != "END DATA"]
@@ -32,6 +33,7 @@ read.mtv <- function(file, sep="$"){
                          comp.no    = I(substring(outc, 5, 6)),
                          outcome.no = I(substring(outc, 8, 9)),
                          type       = I(substring(outc, 3, 3)),
+                         totals     = I(substring(outc, 11, 11)),
                          outclab    = I(rmSpace(substring(outc,  26, 132), end=TRUE)),
                          graph.exp  = I(rmSpace(substring(outc, 134, 153), end=TRUE)),
                          graph.cont = I(rmSpace(substring(outc, 155, 174), end=TRUE)),
@@ -78,6 +80,33 @@ read.mtv <- function(file, sep="$"){
     res2 <- res$study
   res2 <- merge(res2, res$outcome, by=c("comp.no", "outcome.no"))
   res2 <- merge(res2, res$comparison, by=c("comp.no"))
+  ##
+  res2$event.e[res2$type == "I" & res2$event.e==0 & res2$n.e==1] <- NA
+  res2$n.e[res2$type == "I" & res2$n.e==1] <- NA
+  res2$event.c[res2$type == "I" & res2$event.c==0 & res2$n.c==1] <- NA
+  res2$n.c[res2$type == "I" & res2$n.c==1] <- NA
+  res2$mean.c[res2$type == "I" & res2$mean.c==0 & res2$sd.c==0] <- NA
+  res2$sd.c[res2$type == "I" & res2$sd.c==0] <- NA
+  res2$O.E[res2$type == "I" & res2$O.E==0 & res2$V==0] <- NA
+  res2$V[res2$type == "I" & res2$V==0] <- NA
+  ##
+  res2$mean.e[res2$type == "D" & res2$mean.e==0 & res2$sd.e==0] <- NA
+  res2$sd.e[res2$type == "D" & res2$sd.e==0] <- NA
+  res2$mean.c[res2$type == "D" & res2$mean.c==0 & res2$sd.c==0] <- NA
+  res2$sd.c[res2$type == "D" & res2$sd.c==0] <- NA
+  res2$O.E[res2$type == "D" & res2$O.E==0 & res2$V==0] <- NA
+  res2$V[res2$type == "D" & res2$V==0] <- NA
+  ##
+  res2$event.e[res2$type == "C" & res2$event.e==0] <- NA
+  res2$event.c[res2$type == "C" & res2$event.c==0] <- NA
+  res2$O.E[res2$type == "C" & res2$O.E==0 & res2$V==0] <- NA
+  res2$V[res2$type == "C" & res2$V==0] <- NA
+  ##
+  res2$mean.e[res2$type == "P" & res2$mean.e==0 & res2$sd.e==0] <- NA
+  res2$sd.e[res2$type == "P" & res2$sd.e==0] <- NA
+  res2$mean.c[res2$type == "P" & res2$mean.c==0 & res2$sd.c==0] <- NA
+  res2$sd.c[res2$type == "P" & res2$sd.c==0] <- NA
+  ##
   attr(res2, "title") <- res$title
   ##
   res2

@@ -8,13 +8,16 @@
 }
 \usage{
 funnel(x, y, xlim=NULL, ylim=NULL, xlab=NULL, ylab=NULL,
-       comb.f=FALSE, axes=TRUE, labels=NULL, cex.lab=0.8,
-       log="", yaxis="se", sm=NULL, ...)
+       comb.f=FALSE, axes=TRUE,
+       pch=1, text=NULL, cex=1, col=NULL,
+       log="", yaxis="se", sm=NULL,
+       level=NULL, ...)
 
 radial(x, y, xlim=NULL, ylim=NULL,
        xlab="Inverse of standard error",
        ylab="Standardised treatment effect (z-score)",
-       comb.f=TRUE, axes=TRUE, labels=NULL, cex.lab=0.8,
+       comb.f=TRUE, axes=TRUE,
+       pch=1, text=NULL, cex=1, col=NULL,
        level=NULL, ...)
 }
 \arguments{
@@ -30,21 +33,22 @@ radial(x, y, xlim=NULL, ylim=NULL,
     estimate should be plotted.}
   \item{axes}{A logical indicating whether axes should be drawn on the
     plot.}
-  \item{labels}{A character string specifying the text to be used as
-    plotting symbol.}
-  \item{cex.lab}{The magnification to be used for x and y labels.}
+  \item{pch}{The plotting symbol used for individual studies.}
+  \item{text}{A character vector specifying the text to be used instead
+    of plotting symbol.}
+  \item{cex}{The magnification to be used for plotting symbol.}
+  \item{col}{A vector with color of plotting symbols.}
   \item{log}{A character string which contains \code{"x"} if the x axis
     is to be logarithmic, \code{"y"} if the y axis is to be logarithmic
     and \code{"xy"} or \code{"yx"} if both axes are to be logarithmic
     (applies only to function \code{funnel}).}
   \item{yaxis}{A character string indicating which type of weights are
-    to be used. Either \code{"se"}, \code{"inv"}, or \code{"size"}
+    to be used. Either \code{"se"}, \code{"invvar"}, \code{"invse"}, or \code{"size"}
     (applies only to function \code{funnel}). }
   \item{sm}{A character string indicating underlying summary measure,
     e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"WMD"},
     \code{"SMD"} (applies only to function \code{funnel}).}
-  \item{level}{The confidence level utilised in the plot (applies only
-    to function \code{radial}).}
+  \item{level}{The confidence level utilised in the plot.}
   \item{\dots}{Graphical parameters as in \code{par} may also be
     passed as arguments.}
 }
@@ -57,8 +61,9 @@ radial(x, y, xlim=NULL, ylim=NULL,
   In the funnel plot, if \code{yaxis} is \code{"se"}, the standard error
   of the treatment estimates is plotted on the y axis which is likely to
   be the best choice (Sterne & Egger, 2001). Other possible choices for
-  \code{yaxis} are \code{"inv"} (inverse of the variance) and
-  \code{"size"} (study size).
+  \code{yaxis} are \code{"invvar"} (inverse of the variance),
+  \code{"invse"} (inverse of the standard error), and \code{"size"}
+  (study size).
 }
 \references{
   Galbraith RF (1988a),
@@ -98,7 +103,7 @@ par(oldpar)
 
 oldpar <- par(mfrow=c(2,2))
 funnel(meta1)
-funnel(meta1, yaxis="inv")
+funnel(meta1, yaxis="invvar")
 funnel(meta1, yaxis="size")
 par(oldpar)
 

@@ -8,11 +8,11 @@
 }
 \usage{
 print.meta(x, sortvar, level=0.95, level.comb=level,
-           details=FALSE, ma=TRUE, digits=max(4, .Options$digits - 3), ...)
+           details=FALSE, ma=TRUE, digits=max(0, .Options$digits - 3), ...)
 
 summary.meta(object, byvar, bylab, bystud=FALSE, level.comb=0.95, ...)
 
-print.summary.meta(x, digits = max(3, .Options$digits - 3),
+print.summary.meta(x, digits = max(0, .Options$digits - 3),
                    print.byvar = TRUE, ...)
 }
 \arguments{

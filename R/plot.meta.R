@@ -6,8 +6,11 @@ plot.meta <- function(x,
                       text.f="Fixed effect model",
                       text.r="Random effects model",
                       lty.f=2, lty.r=3,
-                      xlab, xlim, ylim, lwd=1, cex=1,
+                      xlab=NULL,
+                      xlim, ylim, lwd=1, cex=1,
                       cex.comb=1.2*cex,
+                      cex.axis=cex,
+                      cex.lab=cex,
 		      log=ifelse(x$sm=="RR"|x$sm=="OR"|x$sm=="HR", "x", ""),
                       axes=TRUE,
                       allstudies=TRUE,
@@ -44,14 +47,26 @@ plot.meta <- function(x,
   sm <- x$sm
 
   
-  if (inherits(x, "meta")){
-    if (sm == "OR"  & missing(xlab)) xlab <- "Odds Ratio"
-    if (sm == "RD"  & missing(xlab)) xlab <- "Risk Difference"
-    if (sm == "RR"  & missing(xlab)) xlab <- "Relative Risk"
-    if (sm == "SMD" & missing(xlab)) xlab <- "Standardised mean difference"
-    if (sm == "WMD" & missing(xlab)) xlab <- "Weighted mean difference"
-    if (sm == "HR"  & missing(xlab)) xlab <- "Hazard Ratio"
+  if (is.null(xlab)){
+    if      (sm=="OR" ) xlab <- "Odds Ratio"
+    else if (sm=="RD" ) xlab <- "Risk Difference"
+    else if (sm=="RR" ) xlab <- "Relative Risk"
+    else if (sm=="SMD") xlab <- "Standardised mean difference"
+    else if (sm=="WMD") xlab <- "Weighted mean difference"
+    else if (sm=="HR" ) xlab <- "Hazard Ratio"
+    else if (sm=="AS" ) xlab <- "Arcus Sinus Transformation"
+    else xlab <- sm
   }
+  ##  if (inherits(x, "meta")){
+  ##    if (sm == "OR"  & missing(xlab)) xlab <- "Odds Ratio"
+  ##    else if (sm == "RD"  & missing(xlab)) xlab <- "Risk Difference"
+  ##    else if (sm == "RR"  & missing(xlab)) xlab <- "Relative Risk"
+  ##    else if (sm == "SMD" & missing(xlab)) xlab <- "Standardised mean difference"
+  ##    else if (sm == "WMD" & missing(xlab)) xlab <- "Weighted mean difference"
+  ##    else if (sm == "HR"  & missing(xlab)) xlab <- "Hazard Ratio"
+  ##    else if (sm == "AS"  & missing(xlab)) xlab <- "Arcus Sinus Transformation"
+  ##    else xlab <- sm
+  ##  }
 
   
   ##
@@ -339,8 +354,8 @@ plot.meta <- function(x,
   ## Add axis
   ##
   if (axes){
-    axis(1)
-    mtext(xlab, 1, line=2)
+    axis(1, cex.axis=cex.axis)
+    mtext(xlab, 1, line=2, cex=cex.lab)
   }
 
   ##
@@ -368,7 +383,7 @@ plot.meta <- function(x,
   if (length(col.i) == 1) col.i <- rep(col.i, length(TE))
   for ( i in seq(along=TE)){
     if (cex.i[i] < 0.3)
-      points(TE[i], yTE[i], pch=3, col=col.i[i])
+      points(TE[i], yTE[i], pch=3, col=col.i[i], lwd=lwd)
     else
       points(TE[i], yTE[i], cex=as.numeric(cex.i[i]), pch=15, col=col.i[i])
   }

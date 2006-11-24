@@ -1,10 +1,10 @@
 metainf <- function(x, pooled="fixed", sortvar){
-
+  
   
   if (!inherits(x, "meta"))
     stop("Argument 'x' must be an object of class \"meta\"")
-
-
+  
+  
   imeth <- charmatch(tolower(pooled), c("fixed", "random"), nomatch = NA)
   ##
   if (is.na(imeth)) 

@@ -4,12 +4,35 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
 
   if (is.null(data)) data <- sys.frame(sys.parent())
   ##
+  ## Catch n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab (possibly) from data:
+  ##
   mf <- match.call()
   mf$data <- mf$subset <- mf$sm <- NULL
   mf[[1]] <- as.name("data.frame")
   mf <- eval(mf, data)
   ##
-  if (!is.null(subset)) mf <- mf[subset,]
+  ## Catch subset (possibly) from data:
+  ##
+  mf2 <- match.call()
+  mf2$n.e <- mf2$mean.e <- mf2$sd.e <- NULL
+  mf2$n.c <- mf2$mean.c <- mf2$sd.c <- NULL
+  mf2$studlab <- NULL 
+  mf2$data <- mf2$sm <- NULL
+  mf2[[1]] <- as.name("data.frame")
+  ##
+  mf2 <- eval(mf2, data)
+  ##
+  if (!is.null(mf2$subset))
+    if ((is.logical(mf2$subset) & (sum(mf2$subset) > length(mf$n.e))) ||
+        (length(mf2$subset) > length(mf$n.e)))
+      stop("Length of subset is larger than number of trials.")
+    else
+      mf <- mf[mf2$subset,]
+  ##if (!is.null(mf2$subset))
+  ##  if (length(mf2$subset) > length(mf$n.e))
+  ##    stop("Length of subset is larger than number of trials.")
+  ##  else
+  ##    mf <- mf[mf2$subset,]
   ##
   n.e     <- mf$n.e
   mean.e  <- mf$mean.e
@@ -18,14 +41,15 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   mean.c  <- mf$mean.c
   sd.c    <- mf$sd.c
   ##
-  if (!missing(studlab)) studlab <- as.character(mf$studlab)
+  if (!missing(studlab))
+    studlab <- as.character(mf$studlab)
+  else
+    studlab <- row.names(mf)
 
 
   k.all <- length(n.e)
   ##
-  if (k.all == 0) stop("n.e = numeric(0)")
-  ##
-  if (missing(studlab)) studlab <- as.character(1:k.all)
+  if (k.all == 0) stop("No trials to combine in meta-analysis.")
 
   
   if (match(sm, c("WMD", "SMD"), nomatch=0) == 0)

@@ -46,7 +46,9 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   \item{RR.cochrane}{A logical indicating if 2*\code{incr} instead of
     1*\code{incr} is to be added to \code{n.e} and \code{n.c} in the
     calculation of the relative risk (i.e., \code{sm="RR"}) for studies
-    with a zero cell count.}
+    with a zero cell. This is used in RevMan 4, the
+    Cochrane Collaboration's program for preparing and maintaining
+    Cochrane reviews.}
   \item{warn}{A logical indicating whether the addition of \code{incr}
     to studies with zero cell frequencies should result in a warning.}
 }
@@ -68,7 +70,7 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   For the Mantel-Haenszel method, by default (if \code{MH.exact} is
   FALSE), 0.5 is added to all cell frequencies of a study with a zero cell
   count in the calculation of the pooled estimate. This approach is also
-  used in other software, e.g. RevMan 4.1 and the Stata procedure metan.
+  used in other software, e.g. RevMan 4 and the Stata procedure metan.
   According to Fleiss (in Cooper & Hedges, 1994), there is no need to
   add 0.5 to a cell frequency of zero to calculate the Mantel-Haenszel
   estimate and he advocates the exact method
@@ -116,8 +118,9 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   Estimation of a common effect parameter from sparse follow-up data.
   \emph{Biometrics}, \bold{41}, 55--68.
 
-  \emph{Review Manager (RevMan)} [Computer program]. Version 4.1 for
-  Windows. Oxford, England: The Cochrane Collaboration, 2000.
+  \emph{Review Manager (RevMan)} [Computer program]. Version 4.2 for
+  Windows. Copenhagen: The Nordic Cochrane Centre, The Cochrane
+  Collaboration, 2003.
 
   StataCorp. 2001.
   \emph{Stata Statistical Software: Release 7.0}. College Station, TX:

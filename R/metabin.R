@@ -11,31 +11,53 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   
   if (is.null(data)) data <- sys.frame(sys.parent())
   ##
+  ## Catch event.e, n.e, event.c, n.e, studlab (possibly) from data:
+  ##
   mf <- match.call()
   mf$data <- mf$subset <- mf$method <- mf$sm <- NULL
-  mf$incr <- mf$allincr <- mf$allstudies <- mf$MH.exact <- NULL
+  mf$incr <- mf$allincr <- mf$addincr <- mf$allstudies <- NULL
+  mf$MH.exact <- mf$RR.cochrane <- mf$warn <- NULL
   mf[[1]] <- as.name("data.frame")
   mf <- eval(mf, data)
   ##
-  if (!is.null(subset)) mf <- mf[subset,]
+  ## Catch subset (possibly) from data:
   ##
-  event.e <- mf$event.e
-  n.e <- mf$n.e
-  event.c <- mf$event.c
-  n.c <- mf$n.c
+  mf2 <- match.call()
+  mf2$event.e <- mf2$n.e <- NULL
+  mf2$event.c <- mf2$n.c <- NULL
+  mf2$studlab <- NULL 
+  mf2$data <- mf2$method <- mf2$sm <- NULL
+  mf2$incr <- mf2$allincr <- mf2$addincr <- mf2$allstudies <- NULL
+  mf2$MH.exact <- mf2$RR.cochrane <- mf2$warn <- NULL
+  mf2[[1]] <- as.name("data.frame")
   ##
-  if (!missing(studlab)) studlab <- as.character(mf$studlab)
+  mf2 <- eval(mf2, data)
+  ##
+  if (!is.null(mf2$subset))
+    if ((is.logical(mf2$subset) & (sum(mf2$subset) > length(mf$event.e))) ||
+        (length(mf2$subset) > length(mf$event.e)))
+      stop("Length of subset is larger than number of trials.")
+    else
+      mf <- mf[mf2$subset,]
+  ##
+  event.e <- as.numeric(mf$event.e)
+  n.e <- as.numeric(mf$n.e)
+  event.c <- as.numeric(mf$event.c)
+  n.c <- as.numeric(mf$n.c)
+  ##
+  if (!missing(studlab))
+    studlab <- as.character(mf$studlab)
+  else
+    studlab <- row.names(mf)
 
   
   k.all <- length(event.e)
   ##
-  if (k.all == 0) stop("event.e = numeric(0)")
-  ##
-  if (missing(studlab)) studlab <- as.character(1:k.all)
+  if (k.all == 0) stop("No trials to combine in meta-analysis.")
 
 
-  if (match(sm, c("OR", "RD", "RR"), nomatch=0) == 0)
-    stop("possible summary measures are \"OR\", \"RD\" and \"RR\"")
+  if (match(sm, c("OR", "RD", "RR", "AS"), nomatch=0) == 0)
+    stop("possible summary measures are \"OR\", \"RD\", \"RR\", and \"AS\"")
   ##
   if (!(is.numeric(event.e) & is.numeric(n.e) &
         is.numeric(event.c) & is.numeric(n.c)))
@@ -51,8 +73,11 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   ##
   if (length(studlab) != k.all)
     stop("Number of studies and labels are different")
-
-
+  
+  
+  if (sm == "AS") method <- "Inverse"
+  
+  
   imeth <- charmatch(tolower(method),
                      c("inverse", "mh", "peto"), nomatch = NA)
   ##
@@ -65,15 +90,19 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     stop("Peto's method only possible with 'sm=OR'")
   ##
   if (k.all == 1 & method == "MH"){
-    warning("For single trials, inverse variance method used instead of Mantel Haenszel method.")
+    warning("For a single trial, inverse variance method used instead of Mantel Haenszel method.")
     method <- "Inverse"
   }
-
+  
   
   ##
-  ## Include non-informative trials?
   ##
-  if (sm == "RD") incl <- rep(1, k.all)
+  ## Include non-informative trials?
+  ## (i.e. trials with either zero or all events in both groups)
+  ##
+  ##
+  if (sm == "RD" | sm == "AS")
+    incl <- rep(1, k.all)
   else{
     if (allstudies) incl <- rep(1, k.all)
     else
@@ -84,17 +113,20 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   ## k: effective number of trials
   ##
   k <- sum(!is.na(incl))
-
-
+  
+  
+  ##
   ##
   ## Sparse computation
+  ##
   ##
   sel <- switch(sm,
                 OR=((n.e - event.e) == 0 | event.e == 0 |
                     (n.c - event.c) == 0 | event.c == 0),
                 RD=((n.e - event.e) == 0 | event.e == 0 |
                     (n.c - event.c) == 0 | event.c == 0),
-                RR=(event.e == 0 | event.c == 0))
+                RR=(event.e == 0 | event.c == 0),
+                AS=rep(FALSE, length(event.e)))
   ##
   sel[is.na(incl)] <- FALSE
   ##
@@ -102,7 +134,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   ##
   if (addincr){
     i <- rep(incr, k.all)
-    if (warn)
+    if (warn & sm != "AS")
       warning(paste(incr, "added to each cell frequency of all studies"))
   }
   else{
@@ -136,12 +168,17 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   n22 <- n2. - n21
   n.1 <- n11 + n21
   n.2 <- n12 + n22
-
+  
   
   Q.CMH <- (sum(n11 - n1.*n.1/n.., na.rm=TRUE)^2/
             sum(n1.*n2.*n.1*n.2/n..^3, na.rm=TRUE))
-
-
+  
+  
+  ##
+  ##
+  ## Estimation of treatment effects in individual trials
+  ##
+  ##
   if (sm == "OR"){
     if (method == "MH" || method == "Inverse"){
       ## 
@@ -184,18 +221,32 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     varTE <- (n11+i)*(n12+i)/(n1.+2*i)^3 +
       (n21+i)*(n22+i)/(n2.+2*i)^3
   }
+  else if (sm == "AS"){
+    ## 
+    ## Gerta Ruecker, IMBI, 2005
+    ## 
+    TE <- asin(sqrt(n11/n1.)) - asin(sqrt(n21/n2.))
+    varTE <- 0.25*(1/n1. + 1/n2.)
+  }
 
   
   ##
+  ##
   ## Calculate random effects estimate:
+  ##
   ##
   m <- metagen(TE, sqrt(varTE))
   ##
   TE.random <- m$TE.random
   seTE.random <- m$seTE.random
   w.random <- m$w.random
-
   
+  
+  ##
+  ##
+  ## Calculate fixed effect estimate:
+  ##
+  ##
   if (method == "Inverse" || method=="Peto"){
     w.fixed <- m$w.fixed
     TE.fixed <- m$TE.fixed
@@ -235,7 +286,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
       ##
       ## Bradburn, Deeks, Altman, Stata-procedure "metan"
       ## (MH.exact==FALSE)
-      ## 
+      ##
       D <- ((n1.+2*i)*(n2.+2*i)*(n.1+2*i) -
             (n11+i)*(n21+i)*(n..+4*i))/(n..+4*i)^2
       R <- (n11+i)*(n2.+2*i)/(n..+4*i)
@@ -262,8 +313,6 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
       varTE.fixed <- sum(R, na.rm=TRUE)/sum(S, na.rm=TRUE)^2
     }
   }
-
-
   ##
   ## Modify fixed effects estimate:
   ##
@@ -277,7 +326,10 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
 
   
   ##
+  ##
+  ## Calculate Cochrane Q (heterogeneity statistic)
   ## Cooper & Hedges (1994), p. 274-5
+  ##
   ##
   if (!is.na(TE.fixed)){
     Q <- sum(1/varTE*(TE-TE.fixed)^2, na.rm=TRUE)
@@ -292,7 +344,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     Q <- NA
     tau2 <- NA
   }
-
+  
   
   res <- list(event.e=event.e, n.e=n.e,
               event.c=event.c, n.c=n.c,

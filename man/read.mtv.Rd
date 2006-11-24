@@ -2,18 +2,16 @@
 \alias{read.mtv}
 \title{Import RevMan data files (.mtv)}
 \description{
-  Reads a file created with RevMan 4.1 and creates a data frame from it.
+  Reads a file created with RevMan 4 and creates a data frame from it.
 }
 \usage{
-read.mtv(file, sep="$")
+read.mtv(file)
 }
 \arguments{
   \item{file}{The name of the file which the data are to be read from.}
-  \item{sep}{The field separator character. Values on each line of the
-          file are separated by this character.}
 }
 \details{
-  Reads a file created with RevMan 4.1 (Menu: "File" - "Export" -
+  Reads a file created with RevMan 4 (Menu: "File" - "Export" -
   "Analysis data file...") and creates a data frame from it.
 }
 \value{
@@ -43,6 +41,11 @@ read.mtv(file, sep="$")
   \item{label.exp}{Label for experimental group.}
   \item{label.cont}{Label for control group.}
   \item{complab}{Comparison label.}
+}
+\references{
+  \emph{Review Manager (RevMan)} [Computer program]. Version 4.2 for
+  Windows. Copenhagen: The Nordic Cochrane Centre, The Cochrane
+  Collaboration, 2003.
 }
 \author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
 

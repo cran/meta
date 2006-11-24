@@ -1,18 +1,17 @@
 metacum <- function(x, pooled="fixed", sortvar){
-
+  
   
   if (!inherits(x, "meta"))
     stop("Argument 'x' must be an object of class \"meta\"")
-
-
+  
   imeth <- charmatch(tolower(pooled), c("fixed", "random"), nomatch = NA)
   ##
   if (is.na(imeth)) 
         stop("'pooled' should be \"fixed\" or \"random\"")
   ##
   pooled <- c("fixed", "random")[imeth]
-
-
+  
+  
   k.all <- length(x$TE)
   sort <- !missing(sortvar)
 

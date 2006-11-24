@@ -8,8 +8,8 @@
 plot.meta(x, byvar, bylab, sortvar, studlab = TRUE, level = 0.95,
           level.comb = level, comb.f = FALSE, comb.r = FALSE,
           text.f = "Fixed effect model", text.r = "Random effects model",
-          lty.f = 2, lty.r = 3, xlab, xlim, ylim, lwd = 1, cex = 1,
-          cex.comb = 1.2 * cex,
+          lty.f = 2, lty.r = 3, xlab=NULL, xlim, ylim, lwd = 1, cex = 1,
+          cex.comb = 1.2 * cex, cex.axis=cex, cex.lab=cex,
           log = ifelse(x$sm == "RR" | x$sm == "OR" | x$sm == "HR", "x", ""),
           axes = TRUE, allstudies = TRUE, weight = "fixed", scale.diamond = 1,
           scale.square =  1, col.i = "black", ...)
@@ -45,6 +45,10 @@ plot.meta(x, byvar, bylab, sortvar, studlab = TRUE, level = 0.95,
     and symbols should be scaled relative to the default.}
   \item{cex.comb}{A numerical value giving the amount by which plotting
     text and symbols for pooled fixed and random effects estimates should be scaled.}
+  \item{cex.axis}{The magnification to be used for axis annotation
+    relative to the current setting of \code{cex}.}
+  \item{cex.lab}{The magnification to be used for x and y labels
+    relative to the current setting of \code{cex}.}
   \item{log}{A character string which contains \code{"x"} if the x axis
     is to be logarithmic (other values for \code{log} are not
     reasonable).}

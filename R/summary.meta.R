@@ -49,8 +49,8 @@ summary.meta <- function(object,
   ##
   ci.f <- ci(object$TE.fixed , object$seTE.fixed , level.comb)
   ci.r <- ci(object$TE.random, object$seTE.random, level.comb)
-
-
+  
+  
   if (!missing(byvar)){
 
     if (any(is.na(byvar))) stop("Missing values in 'byvar'")
@@ -143,7 +143,14 @@ summary.meta <- function(object,
     res$by.levs <- by.levs
   }
   
-  class(res) <- c("summary.meta")
   
+
+  if (inherits(object, "trimfill")){
+    res$object <- object
+    class(res) <- c("summary.meta", "trimfill")
+  }
+  else
+    class(res) <- c("summary.meta")
+
   res
 }

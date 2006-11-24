@@ -2,24 +2,47 @@ metagen <- function(TE, seTE, studlab, data=NULL, subset=NULL, sm=""){
 
   if (is.null(data)) data <- sys.frame(sys.parent())
   ##
+  ## Catch TE, seTE, studlab (possibly) from data:
+  ##
   mf <- match.call()
   mf$data <- mf$subset <- mf$sm <- NULL
   mf[[1]] <- as.name("data.frame")
   mf <- eval(mf, data)
   ##
-  if (!is.null(subset)) mf <- mf[subset,]
+  ## Catch subset (possibly) from data:
+  ##
+  mf2 <- match.call()
+  mf2$TE <- mf2$seTE <- NULL
+  mf2$studlab <- NULL
+  mf2$data <- mf2$sm <- NULL
+  mf2[[1]] <- as.name("data.frame")
+  ##
+  mf2 <- eval(mf2, data)
+  ##
+  if (!is.null(mf2$subset))
+    if ((is.logical(mf2$subset) & (sum(mf2$subset) > length(mf$TE))) ||
+        (length(mf2$subset) > length(mf$TE)))
+      stop("Length of subset is larger than number of trials.")
+    else
+      mf <- mf[mf2$subset,]
+  ##if (!is.null(mf2$subset))
+  ##  if (length(mf2$subset) > length(mf$TE))
+  ##    stop("Length of subset is larger than number of trials.")
+  ##  else
+  ##    mf <- mf[mf2$subset,]
   ##
   TE   <- mf$TE
   seTE <- mf$seTE
   ##
-  if (!missing(studlab)) studlab <- as.character(mf$studlab)
+  if (!missing(studlab))
+    studlab <- as.character(mf$studlab)
+  else
+    studlab <- row.names(mf)
 
   
   k.all <- length(TE)
   ##
-  if ( k.all == 0 ) stop("TE = numeric(0)")
-  ##
-  if (missing(studlab)) studlab <- as.character(1:k.all)
+  if ( k.all == 0 ) stop("No trials to combine in meta-analysis.")
 
   
   if ( length(seTE) != k.all )

@@ -246,11 +246,11 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
   if (inherits(x, "meta")){
     TE <- x$TE
     seTE <- x$seTE
+    n.e <- x$n.e
+    n.c <- x$n.c
     data.name <- deparse(substitute(x))
     ##
     if (inherits(x, "metabin")){
-      n.e <- x$n.e
-      n.c <- x$n.c
       event.e <- x$event.e
       event.c <- x$event.c
       ##
@@ -295,11 +295,13 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
   k <- length(TE)
   
   
-  imeth <- charmatch(method, c("rank", "linreg", "mm", "count"), nomatch = NA)
-  if(is.na(imeth))
-    stop("method should be \"rank\", \"linreg\", \"mm\", or \"count\"")
+  imeth <- charmatch(method,
+                     c("rank", "linreg", "mm", "count", "countlin", "score", "LRn", "LRvar", "peters"),
+                     nomatch = NA)
+  if(is.na(imeth) | imeth==0)
+    stop("method should be \"rank\", \"linreg\", \"mm\", \"count\", \"countlin\", \"score\", \"LRn\", \"LRvar\", or \"peters\"")
   ##
-  method <- c("rank", "linreg", "mm", "count")[imeth]
+  method <- c("rank", "linreg", "mm", "count", "countlin", "score", "LRn", "LRvar", "peters")[imeth]
   
   
   if (k <= 2){
@@ -307,7 +309,7 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
     res <- NULL
   }
   else{
-  if (method=="rank"){
+    if (method=="rank"){
       ##
       ## Begg und Mazumdar (1994), Biometrics, 50, 1088-1101
       ##
@@ -327,7 +329,9 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
       names(res$statistic) <- "z"
       names(res$estimate) <- c("ks", "se.ks")
     }
-    else   if (method=="linreg" | method=="mm"){
+    else if (method=="linreg" | method=="mm" | method=="score" |
+             method=="countlin" | method=="LRn" | method=="LRvar" |
+             method=="peters"){
       
       if (method=="linreg"){
         ##
@@ -357,6 +361,109 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
         lreg <- linregcore(seTE, TE, 1/(seTE^2+tau2))
         se.bias <- lreg$se.slope/sqrt(lreg$MSE.w)
       }
+      else if (method=="score"){
+        ##
+        ## Harbord et al. (2006), Stat Med
+        ##
+        if (inherits(x, "metabin")){
+          Z <- event.e - (event.e+event.c)*n.e/(n.e+n.c)
+          V <- (n.e*n.c*(event.e+event.c)*
+                (n.e-event.e+n.c-event.c)/((n.e+n.c)^2*((n.e+n.c)-1)))
+          ##
+          TE.score <- Z/V
+          seTE.score <- 1/sqrt(V)
+          ##
+          lreg <- linregcore(seTE.score, TE.score, 1/seTE.score^2)
+          se.bias <- lreg$se.slope
+        }
+        else{
+          stop(paste("method '", method, "' only defined for meta-analysis with binary outcome data (function 'metabin')", sep=""))
+        }
+      }
+      else if (method=="peters"){
+        ##
+        ## Peters et al. (2006), JAMA
+        ##
+        if (inherits(x, "metabin")){
+          seTE.peters <- sqrt(1/(event.e+event.c) +
+                              1/(n.e-event.e + n.c-event.c))
+          ##
+          lreg <- linregcore(1/(n.e+n.c), TE, 1/seTE.peters^2)
+          se.bias <- lreg$se.slope
+        }
+        else{
+          stop(paste("method '", method, "' only defined for meta-analysis with binary outcome data (function 'metabin')", sep=""))
+        }
+      }
+      else if (method=="countlin"){
+        ##
+        ## Schwarzer (2006)
+        ##
+        if (inherits(x, "metabin")){
+          TE.MH <- metabin(x$event.e, x$n.e,
+                           x$event.c, x$n.c,
+                           sm="OR", method="MH", warn=FALSE)$TE.fixed
+          
+          n.. <- n.e + n.c
+          n11 <- event.e
+          n1. <- n.e
+          n.1 <- event.e + event.c
+          
+          n11.e <- rep(NA, k)
+          n11.v <- rep(NA, k)
+          ##
+          for ( i in seq(1:k) ){
+            obj <- hypergeometric(n1.[i], n.1[i], n..[i], exp(TE.MH))
+            n11.e[i] <- obj$mean()
+            n11.v[i] <- obj$var()
+          }
+          ##
+          TE.cl <- (n11-n11.e)/sqrt(n11.v)
+          seTE.cl <- sqrt(1/n11.v)
+          ##
+          lreg <- linregcore(seTE.cl, TE.cl, 1/seTE.cl^2)
+          se.bias <- lreg$se.slope
+        }
+        else{
+          stop(paste("method '", method, "' only defined for meta-analysis with binary outcome data (function 'metabin')", sep=""))
+        }
+      }
+      else if (method=="LRn" | method=="LRvar"){
+        ##
+        ## James Carpenter (2006)
+        ##
+        if (inherits(x, "metabin")){
+          ##
+          n <- n.e + n.c
+          d <- event.e + event.c
+          ##
+          LR <- 2*(ifelse(event.e==0, 0,
+                          event.e*log(event.e/n.e)) +
+                   (n.e-event.e)*log((n.e-event.e)/n.e) +
+                   ifelse(event.c==0, 0,
+                          event.c*log(event.c/n.c)) +
+                   (n.c-event.c)*log((n.c-event.c)/n.c) -
+                   ifelse(d==0, 0,
+                          (d*log(d/n) + (n-d)*log((n-d)/n))))
+          V <- (n.e*n.c*(event.e+event.c)*
+                (n.e-event.e+n.c-event.c)/((n.e+n.c)^2*((n.e+n.c)-1)))
+          ##
+          TE.LR <- switch(method,
+                          LRn=sign(TE)*sqrt(LR)/sqrt(n),
+                          LRvar=sign(TE)*sqrt(LR)/sqrt(V))
+          seTE.LR <- switch(method,
+                            LRn=1/sqrt(n),
+                            LRvar=1/sqrt(V))
+          ##
+          lreg <- linregcore(seTE.LR, TE.LR, 1/seTE.LR^2)
+          se.bias <- lreg$se.slope
+        }
+        else{
+          stop(paste("method '", method, "' only defined for meta-analysis with binary outcome data (function 'metabin')", sep=""))
+        }
+      }
+      ##
+      ##
       bias <- lreg$slope
       df <- lreg$df
       slope <- lreg$intercept
@@ -371,16 +478,15 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
       names(res$statistic) <- "t"
       names(res$parameters) <- "df"
       names(res$estimate) <- c("bias", "se.bias", "slope")
-      
     }
     else if (method=="count"){
       ##
-      ## Schwarzer (2003), PhD thesis, University of Dortmund, Germany
+      ## Schwarzer, Antes, Schumacher (2006), Stat Med
       ##
       if (inherits(x, "metabin")){
         TE.MH <- metabin(x$event.e, x$n.e,
                          x$event.c, x$n.c,
-                         sm="OR", method="MH")$TE.fixed
+                         sm="OR", method="MH", warn=FALSE)$TE.fixed
         
         n.. <- n.e + n.c
         n11 <- event.e
@@ -405,10 +511,10 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
         names(res$estimate) <- c("ks", "se.ks")
       }
       else{
-        stop(paste("method 'count' only defined for meta-analysis with binary outcome data (function 'metabin')"))
+          stop(paste("method '", method, "' only defined for meta-analysis with binary outcome data (function 'metabin')", sep=""))
       }
     }
-    
+  
     res$null.value <- 0
     res$alternative <- "asymmetry in funnel plot"
     
@@ -419,7 +525,12 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
                     "Weighted regression test of funnel plot asymmetry",
                     paste("New test of funnel plot asymmetry",
                           ifelse(correct==TRUE, " (with continuity correction)", ""),
-                          sep=""))[imeth]
+                          sep=""),
+                    "Linear regression test of funnel plot asymmetry (based on counts)",
+                    "Linear regression test of funnel plot asymmetry (efficient score)",
+                    "Linear regression test of funnel plot asymmetry (James with n)",
+                    "Linear regression test of funnel plot asymmetry (James with var)",
+                    "Linear regression test of funnel plot asymmetry (based on sample size)")[imeth]
     
     res$data.name <- data.name
     
@@ -436,6 +547,16 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
                xlab="Standardised treatment effect",
                ylab="Estimated variance of treatment estimate")
         }
+      }
+      else if (method=="LRn"|method=="LRvar"){
+        ##
+        radial(TE.LR, seTE.LR, comb.f=FALSE)
+        abline(lreg$slope, lreg$intercept)
+      }
+      else if (method=="score"){
+        ##
+        radial(TE.score, seTE.score, comb.f=FALSE)
+        abline(lreg$slope, lreg$intercept)
       }
     }
     

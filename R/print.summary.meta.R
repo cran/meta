@@ -1,12 +1,10 @@
 print.summary.meta <- function(x,
-                               digits=max(3, .Options$digits - 3),
+                               digits=max(0, .Options$digits - 3),
                                print.byvar=TRUE,
                                ...){
-
   
   k <- x$k
   sm <- x$sm
-
 
   if (sm == "RR" | sm == "OR" | sm == "HR"){
     x$fixed$TE <- exp(x$fixed$TE)
@@ -23,25 +21,6 @@ print.summary.meta <- function(x,
       x$within$upper <- exp(x$within$upper)
     }
   }
-  ##
-  if (inherits(x, "metaprop")){
-    denum <- 1 + x$freeman.tukey
-    ##
-    x$fixed$TE    <- sin(x$fixed$TE/denum)^2
-    x$fixed$lower <- sin(x$fixed$lower/denum)^2
-    x$fixed$upper <- sin(x$fixed$upper/denum)^2
-    ##
-    x$random$TE    <- sin(x$random$TE/denum)^2
-    x$random$lower <- sin(x$random$lower/denum)^2
-    x$random$upper <- sin(x$random$upper/denum)^2
-    ##
-    if (!is.null(x$bylab)){
-      x$within$TE    <- sin(x$within$TE/denum)^2
-      x$within$lower <- sin(x$within$lower/denum)^2
-      x$within$upper <- sin(x$within$upper/denum)^2
-    }
-  }
-
 
   TE.fixed    <- round(x$fixed$TE, digits)
   lowTE.fixed <- round(x$fixed$lower, digits)
@@ -70,7 +49,6 @@ print.summary.meta <- function(x,
   I2 <- x$I2$TE
   lowI2 <- x$I2$lower
   uppI2 <- x$I2$upper
-
   
   if (x$k.all == 1){
     res <- cbind(TE.fixed,
@@ -82,10 +60,7 @@ print.summary.meta <- function(x,
     
     prmatrix(res, quote=FALSE, right=TRUE, ...)
 
-    method <- ifelse(x$method=="Peto",
-                     "Peto method", "Inverse variance method")
-    ##
-    cat(paste("\nMethod:", method, "\n"))
+    cat(paste("\nMethod: Inverse variance method\n"))
   }
   else{
 
@@ -97,7 +72,7 @@ print.summary.meta <- function(x,
                  format(round(c(zTE.fixed, zTE.random),4)),
                  format.p(c(pTE.fixed, pTE.random)))
     
-    dimnames(res) <- list(c("Fixed effect model",
+    dimnames(res) <- list(c("Fixed effects model",
                             "Random effects model"),  
                           c(sm, x$ci.lab, "z", "p.value"))
     
@@ -113,38 +88,21 @@ print.summary.meta <- function(x,
       cat("\nCMH-test: \n")
       prmatrix(Qdata, quote=FALSE, right=TRUE, ...)
     }
-    
 
+    
     cat(paste("\nQuantifying heterogeneity:\n",
-              "tau^2 = ",
-              format(round(x$tau^2, 4), 4, nsmall=4),
-              paste("; H = ", round(H, 2),
-                    ifelse(k>2,
-                           p.ci(round(lowH, 2), round(uppH, 2)),
-                           ""),
-                    "; ",
-                    "I^2 = ", round(100*I2, 1), "%",
-                    ifelse(k>2,
+              "tau^2 = ", round(x$tau^2, 4), 
+              ifelse(k>2,
+                     paste("; H = ", round(H, 2),
+                           p.ci(round(lowH, 2), round(uppH, 2)), "; ",
+                           "I^2 = ", round(100*I2, 1), "%",
                            p.ci(paste(round(100*lowI2, 1), "%", sep=""),
                                 paste(round(100*uppI2, 1), "%", sep="")),
-                           ""),
                            sep=""),
+                     ""),
               "\n", sep=""))
-    ##
-    ##    cat(paste("\nQuantifying heterogeneity:\n",
-    ##              "tau^2 = ", round(x$tau^2, 4), 
-    ##              ifelse(k>2,
-    ##                     paste("; H = ", round(H, 2),
-    ##                           p.ci(round(lowH, 2), round(uppH, 2)), "; ",
-    ##                           "I^2 = ", round(100*I2, 1), "%",
-    ##                           p.ci(paste(round(100*lowI2, 1), "%", sep=""),
-    ##                                paste(round(100*uppI2, 1), "%", sep="")),
-    ##                           sep=""),
-    ##                     ""),
-    ##              "\n", sep=""))
     
 
-    
     if (k > 1){
       cat("\nTest of heterogeneity:")
       
@@ -181,17 +139,17 @@ print.summary.meta <- function(x,
                          rep("--", length(x$Q.w))))
         
         if (print.byvar)
-          bylab <- paste(x$bylab,
-                         " = ", 
-                         format(x$by.levs), sep="")
+          bylab.row <- paste(x$bylab,
+                             " = ", 
+                             format(x$by.levs), sep="")
         else
-          bylab <- format(x$by.levs)
+          bylab.row <- x$bylab
         
 
         dimnames(Qdata) <- list(c("Total           ",
                                   "Between groups  ",
                                   "Within groups   ", 
-                                  bylab),
+                                  bylab.row),
                                 c("Q", "d.f.", sm, x$ci.lab,
                                   "p.value"))
       }
@@ -207,15 +165,15 @@ print.summary.meta <- function(x,
                             ifelse(x$method=="Inverse",
                                    "Inverse variance method",
                                    x$method)))
-    ##
+    
     cat(paste("\nMethod:", method, "\n"))
   }
-  ##
-  if (inherits(x, "metaprop"))
-    if (!x$freeman.tukey)
-      cat("Arcsine transformation used for proportions\n")
-    else
-      cat("Freeman-Tukey double arcsine transformation used for proportions\n")
+  
+  
+  if (inherits(x, "trimfill")){
+    cat("\n")
+    print.trimfill(x$object)
+  }
   
   invisible(NULL)
 }

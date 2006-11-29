@@ -1,6 +1,6 @@
 \name{read.mtv}
 \alias{read.mtv}
-\title{Import RevMan 4 data files (.mtv)}
+\title{Import RevMan data files (.mtv)}
 \description{
   Reads a file created with RevMan 4 and creates a data frame from it.
 }

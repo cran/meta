@@ -1,17 +1,13 @@
 metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
-                     data=NULL, subset=NULL,
-                     sm="MD",
-                     level=0.95, level.comb=level
-                     ){
+                     data=NULL, subset=NULL, sm="WMD"){
   
-  
+
   if (is.null(data)) data <- sys.frame(sys.parent())
   ##
   ## Catch n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab (possibly) from data:
   ##
   mf <- match.call()
   mf$data <- mf$subset <- mf$sm <- NULL
-  mf$level <- mf$level.comb <- NULL
   mf[[1]] <- as.name("data.frame")
   mf <- eval(mf, data)
   ##
@@ -22,7 +18,6 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   mf2$n.c <- mf2$mean.c <- mf2$sd.c <- NULL
   mf2$studlab <- NULL 
   mf2$data <- mf2$sm <- NULL
-  mf2$level <- mf2$level.comb <- NULL
   mf2[[1]] <- as.name("data.frame")
   ##
   mf2 <- eval(mf2, data)
@@ -56,13 +51,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##
   if (k.all == 0) stop("No trials to combine in meta-analysis.")
 
-  if (sm == "WMD"|sm=="wmd"){
-    warning("Effect measure '", sm, "' renamed as 'MD'")
-    sm <- "MD"
-  }
   
-  if (match(sm, c("MD", "SMD"), nomatch=0) == 0)
-    stop("possible summary measures are \"MD\" and \"SMD\"")
+  if (match(sm, c("WMD", "SMD"), nomatch=0) == 0)
+    stop("possible summary measures are \"WMD\" and \"SMD\"")
   ##
   if ((length(n.c) != k.all) ||
       (length(mean.e) != k.all) || (length(sd.e) != k.all) ||
@@ -76,32 +67,14 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   if (any(n.e <= 0 | n.c <= 0))
     stop("n.e and n.c must be positive")
   ##
-  ## Studies with zero sd.e and/or sd.c will be included in
-  ## meta-analysis, however with zero weight
-  ## (if-statement commented out by sc, 3.6.2008):
-  ##
-  ##if (any(sd.e <= 0 | sd.c <= 0))
-  ##  stop("sd.e and sd.c must be larger than zero")
+  if (any(sd.e <= 0 | sd.c <= 0))
+    stop("sd.e and sd.c must be larger than zero")
   ##
   if (length(studlab) != k.all)
     stop("Number of studies and labels are different")
+
   
-  
-  ##
-  ## Check for levels of confidence interval
-  ##
-  if (!is.numeric(level) | length(level)!=1)
-    stop("parameter 'level' must be a numeric of length 1")
-  if (level <= 0 | level >= 1)
-    stop("parameter 'level': no valid level for confidence interval")
-  ##
-  if (!is.numeric(level.comb) | length(level.comb)!=1)
-    stop("parameter 'level.comb' must be a numeric of length 1")
-  if (level.comb <= 0 | level.comb >= 1)
-    stop("parameter 'level.comb': no valid level for confidence interval")
-  
-  
-  if (sm == "MD"){
+  if (sm == "WMD"){
     TE    <- mean.e - mean.c
     varTE <- sd.e^2/n.e + sd.c^2/n.c
   }
@@ -111,32 +84,8 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
       sqrt(((n.e-1)*sd.e^2 + (n.c-1)*sd.c^2)/(N-2))
     varTE <- N / (n.e*n.c) + TE^2/(2*(N-3.94))
   }
-  ##  
-  ## Studies with zero variance get zero weight in meta-analysis
-  ## (added by sc, 3.6.2008):
-  ##
-  sel <- sd.e==0 | sd.c == 0
-  ##
-  if (any(sel[!is.na(sel)]))
-    warning("Studies with zero values for sd.e or sd.c get no weight in meta-analysis")
-  ##
-  varTE[sel] <- NA
-  ##
-  if (sm == "SMD")
-    TE[sel] <- NA
-  
-  
-  ##
-  ## Recode integer as numeric:
-  ##
-  if (is.integer(n.e))    n.e    <- as.numeric(n.e)
-  if (is.integer(mean.e)) mean.e <- as.numeric(mean.e)
-  if (is.integer(sd.e))   sd.e   <- as.numeric(sd.e)
-  if (is.integer(n.c))    n.c    <- as.numeric(n.c)
-  if (is.integer(mean.c)) mean.c <- as.numeric(mean.c)
-  if (is.integer(sd.c))   sd.c   <- as.numeric(sd.c)
-  
-  
+
+
   m <- metagen(TE, sqrt(varTE))
   
 
@@ -149,8 +98,6 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
               TE.random=m$TE.random, seTE.random=m$seTE.random,
               k=m$k, Q=m$Q, tau=m$tau,
               sm=sm, method=m$method,
-              level=level,
-              level.comb=level.comb,
               call=match.call())
 
   class(res) <- c("metacont", "meta")

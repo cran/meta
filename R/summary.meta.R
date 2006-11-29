@@ -2,39 +2,23 @@ summary.meta <- function(object,
                          byvar,
                          bylab,
                          bystud=FALSE,
-                         level=object$level,
-                         level.comb=object$level.comb,
-                         warn=TRUE,
+                         level.comb=0.95,
                          ...){
-  
   
   if (!inherits(object, "meta"))
     stop("Argument 'object' must be an object of class \"meta\"")
 
-  if (warn){
-    if (inherits(object, "metainf"))
-      warning("Summary method not defined for objects of class  \"metainf\"")
-    ##
-    if (inherits(object, "metacum"))
-      warning("Summary method not defined for objects of class \"metacum\"")
-  }
-  
+  if (inherits(object, "metainf"))
+    stop("Summary method not defined for objects of class  \"metainf\"")
+  ##
+  if (inherits(object, "metacum"))
+    stop("Summary method not defined for objects of class \"metacum\"")
+
   
   sm <- object$sm
   k  <- object$k
   Q  <- object$Q
   
-  
-  if (length(level)==0){
-    warning("level set to 0.95")
-    level <- 0.95
-  }
-  ##
-  if (length(level.comb)==0){
-    ##if (comb.fixed | comb.random)
-    warning("level.comb set to 0.95")
-    level.comb <- 0.95
-  }
   
   ##
   ## Higgins & Thompson (2002), Statistics in Medicine, 21, 1539-58
@@ -63,52 +47,17 @@ summary.meta <- function(object,
 
   ci.lab <- paste(round(100*level.comb, 1), "%-CI", sep="")
   ##
-  ci.study <- ci(object$TE, object$seTE, level)
   ci.f <- ci(object$TE.fixed , object$seTE.fixed , level.comb)
   ci.r <- ci(object$TE.random, object$seTE.random, level.comb)
-  ##
-  ## Calculate exact confidence intervals for individual studies
-  ##
-  ##print(!(inherits(object, "metainf")|inherits(object, "metacum")) &
-  ##      inherits(object, "metaprop"))
-  if (!(inherits(object, "metainf")|inherits(object, "metacum")) &
-      inherits(object, "metaprop")){
-    for ( i in 1:length(ci.study$TE)){
-      cint <- binom.test(object$event[i], object$n[i], conf.level=level)
-      ci.study$TE[i]    <- cint$estimate
-      ci.study$lower[i] <- cint$conf.int[[1]]
-      ci.study$upper[i] <- cint$conf.int[[2]]
-      ci.study$seTE[i]  <- NA
-      ci.study$z[i]     <- NA
-      ci.study$p[i]     <- NA
-      ##
-      ci.f$seTE <- NA
-      ci.f$z    <- NA
-      ci.f$p    <- NA
-      ##
-      ci.r$seTE <- NA
-      ci.r$z    <- NA
-      ci.r$p    <- NA
-    }
-  }
   
   
   if (!missing(byvar)){
 
-    byvar.name <- deparse(substitute(byvar))
-    if (!is.null(object[[byvar.name]]))
-      byvar <- object[[byvar.name]]
-    
-    
     if (any(is.na(byvar))) stop("Missing values in 'byvar'")
-
-    print(object$method)
-    if (object$method == "MH")
-      warning("Test for subgroup differences may be invalid for method=\"MH\"")
-
+    
     by.levs <- unique(byvar)
     
-    if (missing(bylab)) bylab <- byvar.name
+    if (missing(bylab)) bylab <- deparse(substitute(byvar))
     
 
     res.w <- matrix(NA, ncol=4, nrow=length(by.levs))
@@ -130,8 +79,6 @@ summary.meta <- function(object,
                          allstudies=object$allstudies,
                          MH.exact=object$MH.exact,
                          RR.cochrane=object$RR.cochrane,
-                         level=object$level,
-                         level.comb=object$level.comb,
                          warn=object$warn)
       }
       ##
@@ -139,24 +86,12 @@ summary.meta <- function(object,
         meta1 <- metacont(object$n.e[sel], object$mean.e[sel], object$sd.e[sel],
                           object$n.c[sel], object$mean.c[sel], object$sd.c[sel],
                           sm=sm,
-                          studlab=object$studlab[sel],
-                          level=object$level,
-                          level.comb=object$level.comb)
+                          studlab=object$studlab[sel])
       }
       ##
       if (inherits(object, "metagen")){
         meta1 <- metagen(object$TE[sel], object$seTE[sel], sm=sm,
-                         studlab=object$studlab[sel],
-                         level=object$level,
-                         level.comb=object$level.comb)
-      }
-      ##
-      if (inherits(object, "metaprop")){
-        meta1 <- metaprop(object$event[sel], object$n[sel],
-                          studlab=object$studlab[sel],
-                          freeman.tukey=object$freeman.tukey,
-                          level=object$level,
-                          level.comb=object$level.comb)
+                         studlab=object$studlab[sel])
       }
       ##
       if (bystud){
@@ -191,8 +126,7 @@ summary.meta <- function(object,
   }
 
 
-  res <- list(study=ci.study,
-              fixed=ci.f, random=ci.r,
+  res <- list(fixed=ci.f, random=ci.r,
               k=k, Q=Q, tau=object$tau, H=ci.H, I2=ci.I2,
               k.all=length(object$TE),
               Q.CMH=object$Q.CMH,
@@ -210,22 +144,13 @@ summary.meta <- function(object,
   }
   
   
-  class(res) <- "summary.meta"
-  ##
-  if (inherits(object, "metaprop")){
-    res$event  <- object$event
-    res$n      <- object$n
-    res$freeman.tukey <- object$freeman.tukey
-    ##
-    class(res) <- c(class(res), "metaprop")
-  }
-  ##
+
   if (inherits(object, "trimfill")){
     res$object <- object
-    ##
-    class(res) <- c(class(res), "trimfill")
+    class(res) <- c("summary.meta", "trimfill")
   }
-  
-  
+  else
+    class(res) <- c("summary.meta")
+
   res
 }

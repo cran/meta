@@ -1,6 +1,6 @@
 funnel <- function(x, y,
                    xlim=NULL, ylim=NULL, xlab=NULL, ylab=NULL,
-                   comb.fixed=FALSE, axes=TRUE,
+                   comb.f=FALSE, axes=TRUE,
                    pch=1, text=NULL, cex=1, col=NULL,
                    log="", yaxis="se", sm=NULL,
                    level=NULL, ...){
@@ -25,47 +25,29 @@ funnel <- function(x, y,
   if (!is.null(level) && (level<=0|level>=1))
     stop("no valid level for confidence interval")
   
-  iyaxis <- charmatch(yaxis,
-                     c("se", "size", "invvar", "invse"),
-                     nomatch = NA)
-  if(is.na(iyaxis) | iyaxis==0)
-    stop("yaxis should be \"se\", \"size\", \"invvar\", or \"invse\"")
-  ##
-  yaxis <- c("se", "size", "invvar", "invse")[iyaxis]
-  
-  
-  seTE[is.infinite(seTE)] <- NA
-  
-  if ( yaxis == "se" )
-    seTE.min <- 0
-  else
-    seTE.min <- min(seTE, na.rm=TRUE)
-  ##
   seTE.max <- max(seTE, na.rm=TRUE)
   ##
   if (!is.null(level)){
     ##
-    seTE.seq <- seq(seTE.min, seTE.max, length.out=100)
+    ciTE.low <- TE.fixed-qnorm(1-(1-level)/2)*seTE.max
+    ciTE.upp <- TE.fixed+qnorm(1-(1-level)/2)*seTE.max
     ##
-    ciTE <- ci(TE.fixed, seTE.seq, level)
-    ##
-    TE.xlim <- 1.025*c(min(c(TE, ciTE$lower), na.rm=TRUE),
-                       max(c(TE, ciTE$upper), na.rm=TRUE))
+    TE.xlim <- 1.025*c(min(c(TE, ciTE.low), na.rm=TRUE),
+                       max(c(TE, ciTE.upp), na.rm=TRUE))
   }
   ##
   if (match(sm, c("OR", "RR", "HR"), nomatch=0)>0){
     TE <- exp(TE)
     TE.fixed <- exp(TE.fixed)
     if (!is.null(level)){
-      ciTE$lower <- exp(ciTE$lower)
-      ciTE$upper <- exp(ciTE$upper)
+      ciTE.low <- exp(ciTE.low)
+      ciTE.upp <- exp(ciTE.upp)
       TE.xlim <- exp(TE.xlim)
     }
     ##
     if (log=="") log <- "x"
   }
-  
-  
+
   ##
   ## y-value: weight
   ##
@@ -87,23 +69,13 @@ funnel <- function(x, y,
     else if (sm=="RD" ) xlab <- "Risk Difference"
     else if (sm=="RR" ) xlab <- "Relative Risk"
     else if (sm=="SMD") xlab <- "Standardised mean difference"
-    else if (sm=="WMD"|sm=="MD") xlab <- "Mean difference"
+    else if (sm=="WMD") xlab <- "Weighted mean difference"
     else if (sm=="HR" ) xlab <- "Hazard Ratio"
     else if (sm=="AS" ) xlab <- "Arcus Sinus Transformation"
-    else if (sm=="proportion" ){
-      if (inherits(x, "metaprop"))
-        if (!x$freeman.tukey)
-          xlab <- "Proportion (arcsine transformation)"
-        else
-          xlab <- "Proportion (Freeman-Tukey double arcsine transformation)"
-    }
     else xlab <- sm
   }
   ##
-  if (is.null(xlim) & !is.null(level) &
-      (yaxis == "se" |
-       yaxis == "invse" |
-       yaxis == "invvar"))
+  if (is.null(xlim) & !is.null(level) & yaxis == "se")
     xlim <- TE.xlim
   else if (is.null(xlim))
     xlim <- range(TE, na.rm=TRUE)
@@ -140,22 +112,12 @@ funnel <- function(x, y,
       text(TE, weight, labels=text, cex=cex, col=col)
   }
   
-  if (comb.fixed)
-    abline(v=TE.fixed, lty=2)
-  
-  if (!is.null(level) & yaxis=="se"){
-    points(ciTE$lower, seTE.seq, type="l", lty=2)
-    points(ciTE$upper, seTE.seq, type="l", lty=2)
-  }
-  
-  if (!is.null(level) & yaxis=="invvar"){
-    points(ciTE$lower, 1/seTE.seq^2, type="l", lty=2)
-    points(ciTE$upper, 1/seTE.seq^2, type="l", lty=2)
-  }
-  
-  if (!is.null(level) & yaxis=="invse"){
-    points(ciTE$lower, 1/seTE.seq, type="l", lty=2)
-    points(ciTE$upper, 1/seTE.seq, type="l", lty=2)
+  if (comb.f) abline(v=TE.fixed, lty=2)
+
+  if (!is.null(level)){
+    lines(c(TE.fixed, TE.fixed), c(seTE.max, 0), lty=2)
+    lines(c(ciTE.upp, TE.fixed), c(seTE.max, 0), lty=2)
+    lines(c(ciTE.low, TE.fixed), c(seTE.max, 0), lty=2)
   }
   
   invisible(NULL)

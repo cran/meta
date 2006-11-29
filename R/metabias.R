@@ -207,31 +207,9 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
     ##
     ## core function for method linreg and mm
     ##
-    ##
-    ## Check:
-    ##
-    if(length(x) != length(y))
-      stop("length of argument x and y must be equal")
-    ##
-    if (!is.null(w)){
-      if(length(x) != length(w))
-        stop("length of argument x and w must be equal")
-    }
-    ##
-    sel <- !is.na(x) & !is.na(y)
-    if (length(x) != sum(sel))
-      warning(paste(length(x) - sum(sel),
-                    "observation(s) dropped due to missing values"))
-    ##
-    x <- x[sel]
-    y <- y[sel]
     n <- length(x)
     ##
-    if (is.null(w))
-      w <- rep(1, n)
-    else
-      w <- w[sel]
-    ##
+    if (is.null(w)) w <- rep(1, n)
     W <- diag(w)
     ##
     if (n > 2){
@@ -469,13 +447,14 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
       }
     }
   
+    res$null.value <- 0
     res$alternative <- "asymmetry in funnel plot"
     
     res$method <- c(paste("Rank correlation test of funnel plot asymmetry",
                           ifelse(correct==TRUE, " (with continuity correction)", ""),
                           sep=""),
                     "Linear regression test of funnel plot asymmetry",
-                    "Linear regression test of funnel plot asymmetry (methods of moment)",
+                    "Weighted regression test of funnel plot asymmetry",
                     paste("Rank correlation test of funnel plot asymmetry (based on counts)",
                           ifelse(correct==TRUE, " (with continuity correction)", ""),
                           sep=""),
@@ -487,7 +466,7 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
     if (plotit){
       ##
       if (method=="linreg"|method=="mm"){
-        radial(TE, seTE, comb.fixed=FALSE)
+        radial(TE, seTE, comb.f=FALSE)
         abline(lreg$slope, lreg$intercept)
       }
       else if (method=="rank"){
@@ -500,7 +479,7 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
       }
       else if (method=="score"){
         ##
-        radial(TE.score, seTE.score, comb.fixed=FALSE)
+        radial(TE.score, seTE.score, comb.f=FALSE)
         abline(lreg$slope, lreg$intercept)
       }
     }

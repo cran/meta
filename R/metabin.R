@@ -6,9 +6,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                            "OR", "RR"),
                     incr=0.5, allincr=FALSE, addincr=FALSE, allstudies=FALSE,
                     MH.exact=FALSE, RR.cochrane=FALSE,
-                    level=0.95, level.comb=level,
-                    warn=TRUE
-                    ){
+                    warn=TRUE){
   
   
   if (is.null(data)) data <- sys.frame(sys.parent())
@@ -18,8 +16,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   mf <- match.call()
   mf$data <- mf$subset <- mf$method <- mf$sm <- NULL
   mf$incr <- mf$allincr <- mf$addincr <- mf$allstudies <- NULL
-  mf$MH.exact <- mf$RR.cochrane <- NULL
-  mf$level <- mf$level.comb <- mf$warn <- NULL
+  mf$MH.exact <- mf$RR.cochrane <- mf$warn <- NULL
   mf[[1]] <- as.name("data.frame")
   mf <- eval(mf, data)
   ##
@@ -31,8 +28,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   mf2$studlab <- NULL 
   mf2$data <- mf2$method <- mf2$sm <- NULL
   mf2$incr <- mf2$allincr <- mf2$addincr <- mf2$allstudies <- NULL
-  mf2$MH.exact <- mf2$RR.cochrane <- NULL
-  mf2$level <- mf2$level.comb <- mf2$warn <- NULL
+  mf2$MH.exact <- mf2$RR.cochrane <- mf2$warn <- NULL
   mf2[[1]] <- as.name("data.frame")
   ##
   mf2 <- eval(mf2, data)
@@ -44,16 +40,16 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     else
       mf <- mf[mf2$subset,]
   ##
-  event.e <- mf$event.e
-  n.e     <- mf$n.e
-  event.c <- mf$event.c
-  n.c     <- mf$n.c
+  event.e <- as.numeric(mf$event.e)
+  n.e <- as.numeric(mf$n.e)
+  event.c <- as.numeric(mf$event.c)
+  n.c <- as.numeric(mf$n.c)
   ##
   if (!missing(studlab))
     studlab <- as.character(mf$studlab)
   else
     studlab <- row.names(mf)
-  
+
   
   k.all <- length(event.e)
   ##
@@ -77,31 +73,6 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   ##
   if (length(studlab) != k.all)
     stop("Number of studies and labels are different")
-  ##
-  if (!is.numeric(incr)){
-    ##
-    iincr <- charmatch(tolower(incr),
-                       c("tacc"), nomatch = NA)
-    ##
-    if(is.na(iincr))
-      stop("incr should be numeric or the character string \"TACC\"")
-    ##
-    incr <- c("TACC")[iincr]
-  }
-  
-  
-  ##
-  ## Check for levels of confidence interval
-  ##
-  if (!is.numeric(level) | length(level)!=1)
-    stop("parameter 'level' must be a numeric of length 1")
-  if (level <= 0 | level >= 1)
-    stop("parameter 'level': no valid level for confidence interval")
-  ##
-  if (!is.numeric(level.comb) | length(level.comb)!=1)
-    stop("parameter 'level.comb' must be a numeric of length 1")
-  if (level.comb <= 0 | level.comb >= 1)
-    stop("parameter 'level.comb': no valid level for confidence interval")
   
   
   if (sm == "AS") method <- "Inverse"
@@ -116,21 +87,13 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   method <- c("Inverse", "MH", "Peto")[imeth]
   ##
   if (method == "Peto" & sm != "OR")
-    stop("Peto's method only possible with \"sm=OR\"")
+    stop("Peto's method only possible with 'sm=OR'")
   ##
   if (k.all == 1 & method == "MH"){
     warning("For a single trial, inverse variance method used instead of Mantel Haenszel method.")
     method <- "Inverse"
   }
-
-
-  ##
-  ## Recode integer as numeric:
-  ##
-  if (is.integer(event.e)) event.e <- as.numeric(event.e)
-  if (is.integer(n.e))     n.e     <- as.numeric(n.e)
-  if (is.integer(event.c)) event.c <- as.numeric(event.c)
-  if (is.integer(n.c))     n.c     <- as.numeric(n.c)
+  
   
   ##
   ##
@@ -169,92 +132,29 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   ##
   sparse <- any(sel)
   ##
-  ## No need to add anything to cell counts for
-  ##  (i)  arcsine difference
-  ##  (ii) Peto method
-  ## as summary measure.
-  ## Accordingly, no warning will be printed.
-  ##
-  warn2 <- !(sm == "AS" | method == "Peto")
-  ##
   if (addincr){
-    ##
-    if (is.numeric(incr)){
-      incr.e <- rep(incr, k.all)
-      incr.c <- rep(incr, k.all)
-      ##
-      if (warn & warn2 & incr > 0)
-        warning(paste("Increment", incr, "added to each cell frequency of all studies"))
-    }
-    else{
-      if (incr=="TACC"){
-        ##
-        ## Treatment arm continuity correction:
-        ##
-        incr.e <- n.e/(n.e+n.c)
-        incr.c <- n.c/(n.e+n.c)
-        ##
-        if (warn & warn2)
-          warning("Treatment arm continuity correction applied to all studies")
-      }
-    }
-    ##
+    i <- rep(incr, k.all)
+    if (warn & sm != "AS")
+      warning(paste(incr, "added to each cell frequency of all studies"))
   }
   else{
     if (sparse){
       if (allincr){
-        ##
-        if (is.numeric(incr)){
-          incr.e <- rep(incr, k.all)
-          incr.c <- rep(incr, k.all)
-          ##
-          if (warn & warn2 & incr > 0)
-            warning(paste("Increment", incr, "added to each cell frequency of all studies"))
-        }
-        else{
-          if (incr=="TACC"){
-            ##
-            ## Treatment arm continuity correction:
-            ##
-            incr.e <- n.e/(n.e+n.c)
-            incr.c <- n.c/(n.e+n.c)
-            ##
-            if (warn & warn2)
-              warning("Treatment arm continuity correction applied to all studies")
-          }
-        }
+        i <- rep(incr, k.all)
+        if (warn)
+          warning(paste(incr, "added to each cell frequency of all studies"))
       }
       else{
         ##
         ## Bradburn, Deeks, Altman, Stata-procedure "metan":
         ## & SAS PROC FREQ (for method="Inverse")
         ##
-       ##
-        if (is.numeric(incr)){
-          incr.e <- incr*sel
-          incr.c <- incr*sel
-          ##
-           if (warn & warn2 & incr > 0)
-            warning(paste("Increment", incr, "added to each cell in 2x2 tables with zero cell frequencies"))
-        }
-        else{
-          if (incr=="TACC"){
-            ##
-            ## Treatment arm continuity correction:
-            ##
-            incr.e <- n.e/(n.e+n.c)*sel
-            incr.c <- n.c/(n.e+n.c)*sel
-            ##
-            if (warn & warn2)
-              warning("Treatment arm continuity correction applied to studies with zero cell frequencies")
-          }
-        }
+        i <- incr*sel
+        if (warn)
+          warning(paste(incr, "added to each cell in 2x2 tables with zero cell frequencies"))
       }
     }
-    else{
-      incr.e <- rep(0, k.all)
-      incr.c <- rep(0, k.all)
-    }
+    else i <- rep(0, k.all)
   }
   
   
@@ -284,10 +184,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
       ## 
       ## Cooper & Hedges (1994), p. 251-2
       ## 
-      TE <- log(((n11+incr.e)*(n22+incr.c)) /
-                ((n12+incr.e)*(n21+incr.c)))
-      varTE <- (1/(n11+incr.e) + 1/(n12+incr.e) +
-                1/(n21+incr.c) + 1/(n22+incr.c))
+      TE <- log(((n11+i)*(n22+i)) / ((n12+i)*(n21+i)))
+      varTE <- 1/(n11+i) + 1/(n12+i) + 1/(n21+i) + 1/(n22+i)
     }
     else if (method == "Peto"){
       ## 
@@ -306,16 +204,12 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     ## Cooper & Hedges (1994), p. 247-8
     ## 
     if (!RR.cochrane){
-      TE <- log(((n11+incr.e)/(n1.+incr.e))/
-                ((n21+incr.c)/(n2.+incr.c)))
-      varTE <- (1/(n11+incr.e) - 1/(n1.+incr.e) +
-                1/(n21+incr.c) - 1/(n2.+incr.c))
+      TE <- log(((n11+i)/(n1.+i))/((n21+i)/(n2.+i)))
+      varTE <- 1/(n11+i) - 1/(n1.+i) + 1/(n21+i) - 1/(n2.+i)
       }
     else{
-      TE <- log(((n11+incr.e)/(n1.+2*incr.e))/
-                ((n21+incr.c)/(n2.+2*incr.c)))
-      varTE <- (1/(n11+incr.e) - 1/(n1.+2*incr.e) +
-                1/(n21+incr.c) - 1/(n2.+2*incr.c))
+      TE <- log(((n11+i)/(n1.+2*i))/((n21+i)/(n2.+2*i)))
+      varTE <- 1/(n11+i) - 1/(n1.+2*i) + 1/(n21+i) - 1/(n2.+2*i)
     }
   }
   else if (sm == "RD"){
@@ -323,10 +217,9 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     ## Cooper & Hedges (1994), p. 246-7
     ## 
     ##TE <- (n11+i)/(n1.+2*i) - (n21+i)/(n2.+2*i)
-    ##
     TE <- n11/n1. - n21/n2.
-    varTE <- (n11+incr.e)*(n12+incr.e)/(n1.+2*incr.e)^3 +
-      (n21+incr.c)*(n22+incr.c)/(n2.+2*incr.c)^3
+    varTE <- (n11+i)*(n12+i)/(n1.+2*i)^3 +
+      (n21+i)*(n22+i)/(n2.+2*i)^3
   }
   else if (sm == "AS"){
     ## 
@@ -363,8 +256,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     if (!is.logical(MH.exact))
       stop("MH.exact must be of type 'logical'")
     ##
-    incr.e <- incr.e*(!MH.exact)
-    incr.c <- incr.c*(!MH.exact)
+    i <- i*(!MH.exact)
     ##
     if (sm == "OR"){
       ## 
@@ -373,10 +265,10 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
       ## Bradburn, Deeks, Altman, Stata-procedure "metan"
       ## und RevMan 3.1 (MH.exact==FALSE)
       ## 
-      A <- (n11+incr.e)*(n22+incr.c)/(n..+2*incr.e+2*incr.c)
-      B <- (n11+incr.e + n22+incr.c)/(n..+2*incr.e+2*incr.c)
-      C <- (n12+incr.e)*(n21+incr.c)/(n..+2*incr.e+2*incr.c)
-      D <- (n12+incr.e + n21+incr.c)/(n..+2*incr.e+2*incr.c)
+      A <- (n11+i)*(n22+i)/(n..+4*i)
+      B <- (n11+i + n22+i)/(n..+4*i)
+      C <- (n12+i)*(n21+i)/(n..+4*i)
+      D <- (n12+i + n21+i)/(n..+4*i)
       ##
       ## Cooper & Hedges (1994), p. 265-6
       ##
@@ -395,16 +287,14 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
       ## Bradburn, Deeks, Altman, Stata-procedure "metan"
       ## (MH.exact==FALSE)
       ##
-      D <- ((n1.+2*incr.e)*(n2.+2*incr.c)*(n.1+incr.e+incr.c) -
-            (n11+incr.e)*(n21+incr.c)*(n..+2*incr.e+2*incr.c))/
-              (n..+2*incr.e+2*incr.c)^2
-      R <- (n11+incr.e)*(n2.+2*incr.c)/(n..+2*incr.e+2*incr.c)
-      S <- (n21+incr.c)*(n1.+2*incr.e)/(n..+2*incr.e+2*incr.c)
+      D <- ((n1.+2*i)*(n2.+2*i)*(n.1+2*i) -
+            (n11+i)*(n21+i)*(n..+4*i))/(n..+4*i)^2
+      R <- (n11+i)*(n2.+2*i)/(n..+4*i)
+      S <- (n21+i)*(n1.+2*i)/(n..+4*i)
       ##
       w.fixed <- S
       TE.fixed <- log(sum(R, na.rm=TRUE)/sum(S, na.rm=TRUE))
-      varTE.fixed <- sum(D, na.rm=TRUE)/(sum(R, na.rm=TRUE)*
-                              sum(S, na.rm=TRUE))
+      varTE.fixed <- sum(D, na.rm=TRUE)/(sum(R, na.rm=TRUE)*sum(S, na.rm=TRUE))
     }
     else if (sm == "RD"){
       ##
@@ -413,10 +303,9 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
       ## Bradburn, Deeks, Altman, Stata-procedure "metan"
       ## und RevMan 3.1 (MH.exact==FALSE)
       ## 
-      R <- ((n11+incr.e)*(n12+incr.e)*(n2.+2*incr.c)^3 +
-            (n21+incr.c)*(n22+incr.c)*(n1.+2*incr.e)^3)/
-              ((n1.+2*incr.e)*(n2.+2*incr.c)*(n..+2*incr.e+2*incr.c)^2)
-      ##
+      R <- ((n11+i)*(n12+i)*(n2.+2*i)^3 +
+            (n21+i)*(n22+i)*(n1.+2*i)^3)/
+              ((n1.+2*i)*(n2.+2*i)*(n..+4*i)^2)
       S <- n1.*n2./n..
       ##
       w.fixed <- S
@@ -474,10 +363,6 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
               allstudies=allstudies,
               MH.exact=MH.exact,
               RR.cochrane=RR.cochrane,
-              incr.e=incr.e,
-              incr.c=incr.c,
-              level=level,
-              level.comb=level.comb,
               call=match.call(),
               warn=warn)
   

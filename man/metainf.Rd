@@ -2,7 +2,7 @@
 \alias{metainf}
 \title{Influence analysis in meta-analysis}
 \description{
-  Performs a influence analysis. Poooled estimates are calculated
+  Performs a influence analysis. Pooled estimates are calculated
   omitting one study at a time.
 }
 \usage{
@@ -27,6 +27,8 @@ metainf(x, pooled="fixed", sortvar)
   \item{TE, seTE}{Estimated treatment effect and standard error of
     pooled estimate in influence analysis.}
   \item{studlab}{Study label describing omision of studies.}
+  \item{p.value}{P-value for test of overall effect.}
+  \item{I2}{Heterogeneity statistic I2.}
   \item{sm}{Summary measure.}
   \item{method}{Method used for pooling.}
   \item{k}{Number of studies combined in meta-analysis.}

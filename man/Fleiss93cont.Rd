@@ -31,7 +31,8 @@
 data(Fleiss93cont)
 metacont(n.e, mean.e, sd.e,
          n.c, mean.c, sd.c,
-         data=Fleiss93cont)
+         data=Fleiss93cont,
+         studlab=paste(study, year))
 }
 
 \keyword{datasets}

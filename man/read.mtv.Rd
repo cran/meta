@@ -8,7 +8,7 @@
 read.mtv(file)
 }
 \arguments{
-  \item{file}{The name of the file which the data are to be read from.}
+  \item{file}{The name of a file to read data values from.}
 }
 \details{
   Reads a file created with RevMan 4 (Menu: "File" - "Export" -
@@ -58,5 +58,17 @@ filename <- paste(searchpaths()[seq(along=search())[search()==
                   "package:meta"]], "/data/FLEISS93.MTV", sep="")
 ##
 fleiss93.cc <- read.mtv(filename)
+
+## Same result: example(Fleiss93)
+##
+metabin(event.e, n.e, event.c, n.c,
+        data=fleiss93.cc, subset=type=="D",
+        studlab=paste(studlab, year))
+
+## Same result: example(Fleiss93cont)
+##
+metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c,
+        data=fleiss93.cc, subset=type=="C",
+        studlab=paste(studlab, year))
 }
 \keyword{datagen}

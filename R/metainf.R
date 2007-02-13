@@ -11,8 +11,8 @@ metainf <- function(x, pooled="fixed", sortvar){
         stop("'pooled' should be \"fixed\" or \"random\"")
   ##
   pooled <- c("fixed", "random")[imeth]
-
-
+  
+  
   k.all <- length(x$TE)
   sort <- !missing(sortvar)
 
@@ -65,7 +65,7 @@ metainf <- function(x, pooled="fixed", sortvar){
   }
 
   
-  res.i <- matrix(NA, ncol=2, nrow=k.all)
+  res.i <- matrix(NA, ncol=4, nrow=k.all)
   ##
   for (i in 1:k.all){
     sel <- -i
@@ -88,15 +88,21 @@ metainf <- function(x, pooled="fixed", sortvar){
       m <- metagen(TE[sel], seTE[sel], sm=x$sm)
     }
     ##
+    tres <- summary(m)
+    ##
     if (pooled == "fixed"){
-      res.i[i,] <- c(m$TE.fixed, m$seTE.fixed)
+      res.i[i,] <- c(m$TE.fixed, m$seTE.fixed,
+                     tres$fixed$p, tres$I2$TE)
       TE.sum <- x$TE.fixed
       seTE.sum <- x$seTE.fixed
+      pval.sum <- summary(x)$fixed$p
     }
     if (pooled == "random"){
-      res.i[i,] <- c(m$TE.random, m$seTE.random)
+      res.i[i,] <- c(m$TE.random, m$seTE.random,
+                     tres$random$p, tres$I2$TE)
       TE.sum <- x$TE.random
       seTE.sum <- x$seTE.random
+      pval.sum <- summary(x)$random$p
     }
   }
   
@@ -106,6 +112,8 @@ metainf <- function(x, pooled="fixed", sortvar){
   res <- list(TE=c(res.i[,1], NA, TE.sum),
               seTE=c(res.i[,2], NA, seTE.sum),
               studlab=c(rev(rev(slab)[-1]), " ", rev(slab)[1]),
+              p.value=c(res.i[,3], NA, pval.sum),
+              I2=c(res.i[,4], NA, summary(x)$I2$TE),
               sm=x$sm, method=x$method, k=x$k,
               pooled=pooled)
   

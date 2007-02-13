@@ -26,6 +26,8 @@ metacum(x, pooled="fixed", sortvar)
   \item{TE, seTE}{Estimated treatment effect and standard error of
     pooled estimate in cumulative meta-analyses.}
   \item{studlab}{Study label describing addition of studies.}
+  \item{p.value}{P-value for test of overall effect.}
+  \item{I2}{Heterogeneity statistic I2.}
   \item{sm}{Summary measure.}
   \item{method}{Method used for pooling.}
   \item{k}{Number of studies combined in meta-analysis.}

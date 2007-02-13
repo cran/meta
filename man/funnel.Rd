@@ -92,27 +92,18 @@ meta1 <- metabin(event.e, n.e, event.c, n.c,
                  data=Olkin95, subset=c(41,47,51,59),
                  sm="RR", meth="I")
 
-##
-## Same results:
-##
-oldpar <- par(mfrow=c(2,2))
+oldpar <- par(mfrow=c(2, 2))
+
 funnel(meta1)
+##
+## Same result as code above:
+##
 funnel(meta1$TE, meta1$seTE, sm="RR")
-par(oldpar)
 
-
-oldpar <- par(mfrow=c(2,2))
-funnel(meta1)
-funnel(meta1, yaxis="invvar")
-funnel(meta1, yaxis="size")
-par(oldpar)
-
-
-funnel(meta1, comb.f=TRUE, xlim=c(0.1, 10), axes=FALSE)
-box()
-axis(1, at=c(0.1, 0.5, 1, 2, 10))
-axis(2)
+funnel(meta1, comb.f=TRUE, level=0.95)
 
 radial(meta1, level=0.95)
+
+par(oldpar)
 }
 \keyword{hplot}

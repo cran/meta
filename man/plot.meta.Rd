@@ -5,14 +5,14 @@
   Draws a forest plot in the active graphics window.
 }
 \usage{
-plot.meta(x, byvar, bylab, sortvar, studlab = TRUE, level = 0.95,
-          level.comb = level, comb.f = FALSE, comb.r = FALSE,
-          text.f = "Fixed effect model", text.r = "Random effects model",
-          lty.f = 2, lty.r = 3, xlab=NULL, xlim, ylim, lwd = 1, cex = 1,
-          cex.comb = 1.2 * cex, cex.axis=cex, cex.lab=cex,
-          log = ifelse(x$sm == "RR" | x$sm == "OR" | x$sm == "HR", "x", ""),
-          axes = TRUE, allstudies = TRUE, weight = "fixed", scale.diamond = 1,
-          scale.square =  1, col.i = "black", ...)
+\method{plot}{meta}(x, byvar, bylab, sortvar, studlab = TRUE, level = 0.95,
+     level.comb = level, comb.f = FALSE, comb.r = FALSE,
+     text.f = "Fixed effect model", text.r = "Random effects model",
+     lty.f = 2, lty.r = 3, xlab=NULL, xlim, ylim, lwd = 1, cex = 1,
+     cex.comb = 1.2 * cex, cex.axis=cex, cex.lab=cex,
+     log = ifelse(x$sm == "RR" | x$sm == "OR" | x$sm == "HR", "x", ""),
+     axes = TRUE, allstudies = TRUE, weight = "fixed", scale.diamond = 1,
+     scale.square =  1, col.i = "black", ...)
 }
 \arguments{
   \item{x}{An object of class \code{meta}).}
@@ -85,8 +85,12 @@ meta1 <- metabin(event.e, n.e, event.c, n.c,
                  data=Olkin95, subset=c(41,47,51,59),
                  sm="RR", meth="I")
 
+oldpar <- par(mfrow=c(2, 2))
+
 plot(meta1)
 plot(meta1, byvar=c(1,2,1,2), bylab="label")
 plot(meta1, byvar=1:4, xlim=c(0.02, 10))
+
+par(oldpar)
 }
 \keyword{hplot}

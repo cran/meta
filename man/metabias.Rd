@@ -11,7 +11,7 @@ metabias(x, seTE, TE.fixed, seTE.fixed,
          plotit = FALSE, correct = FALSE)
 }
 \arguments{
-  \item{x}{An object of class \code{meta}, or estimated treatment
+  \item{x}{An object of class \code{meta} or estimated treatment
     effect in individual studies.}
   \item{seTE}{Standard error of estimated treatment effect (mandatory if
     \code{x} not of class \code{meta}).}
@@ -21,10 +21,12 @@ metabias(x, seTE, TE.fixed, seTE.fixed,
     (mandatory if \code{x} not of class \code{meta} and \code{method} =
     \code{"rank"}).}
   \item{method}{A character string indicating which test is to be
-    used. Either \code{"rank"}, \code{"linreg"}, \code{"mm"} or
-    \code{"count"}, can be abbreviated.}
+    used. Either \code{"rank"}, \code{"linreg"}, \code{"mm"},
+    \code{"count"}, \code{"score"}, or \code{"peters"}, can be
+    abbreviated.}
   \item{plotit}{A logical indicating whether a plot should be produced
-    for method \code{"rank"}, \code{"linreg"} or \code{"mm"}.}
+    for method \code{"rank"}, \code{"linreg"}, \code{"mm"}, or
+    \code{"score"}.}
   \item{correct}{A logical indicating whether a continuity corrected
     statistic is used for rank correlation methods \code{"rank"} and \code{"count"}.}
 }
@@ -38,25 +40,37 @@ metabias(x, seTE, TE.fixed, seTE.fixed,
   1990).
   
   If \code{method} is \code{"linreg"}, the test statistic is based on a
-  linear regression of the standardised treatment effect (standard
-  normal deviate) on the inverse of the standard error of the treatment
-  estimate (Egger et al., 1997). The test statistic follows a t
+  weighted linear regression of the treatment effect on its standard
+  error (Egger et al., 1997). The test statistic follows a t
   distribution with \code{number of studies - 2} degrees of freedom.
   
   If \code{method} is \code{"mm"}, the test statistic is based on a
-  weighted linear regression using the method of moments estimator of
-  the additive between-study variance component (method 3a in Thompson,
-  Sharp, 1999). The test statistic follows a t distribution with
-  \code{number of studies - 2} degrees of freedom.
+  weighted linear regression of the treatment effect on its standard
+  error using the method of moments estimator for the additive
+  between-study variance component (method 3a in Thompson, Sharp,
+  1999). The test statistic follows a t distribution with \code{number
+  of studies - 2} degrees of freedom.
 
-  If \code{method} is \code{"count"}, the test statistic is based on the
-  rank correlation between a standardised cell frequency and the inverse
-  of the variance of the cell frequency; Kendall's tau is used as
-  correlation measure (Schwarzer, 2006). The test statistic
+  If \code{method} is \code{"count"}, the test statistic is based on
+  the rank correlation between a standardised cell frequency and the
+  inverse of the variance of the cell frequency; Kendall's tau is used
+  as correlation measure (Schwarzer et al., 2007). The test statistic
   follows a standard normal distribution. By default (if \code{correct}
   is FALSE), no continuity correction is utilised (Kendall & Gibbons,
   1990).
+  
+  If \code{method} is \code{"score"}, the test statistic is based on a
+  weighted linear regression utilising efficient score and score
+  variance (Harbord et al., 2006). The test statistic follows a t
+  distribution with \code{number of studies - 2} degrees of freedom.
+  
+  If \code{method} is \code{"peters"}, the test statistic is based on a
+  weighted linear regression of the treatment effect on the inverse of
+  the total sample size using the variance of the average event rate as
+  weights (Peters et al., 2006). The test statistic follows a t
+  distribution with \code{number of studies - 2} degrees of freedom.
 }
+
 \value{
   A list with class \code{"htest"} containing the following components:
   \item{estimate}{the estimated degree of funnel plot asymmetry, with
@@ -66,32 +80,39 @@ metabias(x, seTE, TE.fixed, seTE.fixed,
   \item{parameter}{The degrees of freedom of the test statistic in the
     case that it follows a t distribution.}
   \item{p.value}{The p-value for the test.}
-  \item{null.value}{The value of test statistic under the
-    null hypothesis, always \code{0}.}
   \item{alternative}{A character string describing the alternative
     hypothesis.}
   \item{method}{A character string indicating what type of test was used.}
   \item{data.name}{A character string giving the names of the data.}
 }
 \references{
-  Begg CB & Berlin JA (1994), Operating characteristics of a
+  Begg CB & Mazumdar M (1994), Operating characteristics of a
   rank correlation test for publication bias. \emph{Biometrics},
   \bold{50}, 1088--1101.
-
-  Kendall M & Gibbons JD (1990),
-  \emph{Rank Correlation Methods}.
-  London: Edward Arnold.
 
   Egger M, Smith GD, Schneider M & Minder C (1997),
   Bias in meta-analysis detected by a simple,
   graphical test. \emph{British Medical Journal}, \bold{315}, 629--634.
 
-  Schwarzer G, Antes G, Schumacher M (2006),
-  A test for publication bias in meta-analysis with sparse binary data.
-  \emph{Statistics in Medicine},
-  DOI: 10.1002/sim.2588, http://dx.doi.org/10.1002/sim.2588
+  Harbord RM, Egger M & Sterne J (2006),
+  A modified test for small-study effects in meta-analyses of controlled
+  trials with binary endpoints.
+  \emph{Statistics in Medicine}, \bold{25}, 3443--3457.
 
-  Thompson SG, Sharp, SJ (1999),
+  Kendall M & Gibbons JD (1990),
+  \emph{Rank Correlation Methods}.
+  London: Edward Arnold.
+
+  Peters JL, Sutton AJ, Jones DR,  Abrams KR & Rushton L (2006),
+  Comparison of two methods to detect publication bias in meta-analysis.
+  \emph{Journal of the American Medical Association},
+  \bold{295}, 676--680.
+
+  Schwarzer G, Antes G & Schumacher M (2007),
+  A test for publication bias in meta-analysis with sparse binary data.
+  \emph{Statistics in Medicine}, \bold{26}, 721--733.
+
+  Thompson SG & Sharp, SJ (1999),
   Explaining heterogeneity in meta-analysis: A comparison of methods,
   \emph{Statistics in Medicine}, \bold{18}, 2693--2708.
 }

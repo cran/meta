@@ -4,7 +4,6 @@ Olkin95                 Thrombolytic Therapy after Acute Myocardial
                         Infarction
 ci                      Calculation of confidence intervals (normal
                         approximation)
-copas                   Copas analysis
 funnel                  Plot to assess funnel plot asymmetry
 metabias                Test for funnel plot asymmetry
 metabin                 Meta-analysis of binary outcome data
@@ -12,10 +11,7 @@ metacont                Meta-analysis of continuous outcome data
 metacum                 Cumulative meta-analysis
 metagen                 Generic inverse variance meta-analysis
 metainf                 Influence analysis in meta-analysis
-plot.copas              Plot diagnostics for an object of class copas
 plot.meta               Plot function for objects of class meta
-print.copas             Print and summary method for objects of class
-                        copas
 print.meta              Print and summary method for objects of class
                         meta
 read.mtv                Import RevMan data files (.mtv)

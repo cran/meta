@@ -96,8 +96,19 @@ print.meta <- function(x,
     else w.random.p <- x$w.random
     
     if (inherits(x, "metainf")|inherits(x, "metacum")){
-      res <- cbind(format.TE(TE), p.ci(format(lowTE), format(uppTE)))
-      dimnames(res) <- list(x$studlab, c(x$sm, ci.lab))
+      I2 <- 100*x$I2
+      sel1 <- is.na(I2)
+      I2 <- ifelse(sel1, "", format(round(I2, 1)))
+      ##
+      sel2 <- is.na(x$p.value)
+      p.value <- format.p(x$p.value)
+      p.value <- ifelse(sel2, "", p.value)
+      ##
+      res <- cbind(format.TE(TE), p.ci(format(lowTE), format(uppTE)),
+                   p.value,
+                   paste("    ", I2, ifelse(sel1, "", "%"), sep=""))
+      dimnames(res) <- list(paste(x$studlab, "  ", sep=""),
+                            c(x$sm, ci.lab, "p.value", "I^2"))
       
       if (inherits(x, "metainf")){
         if (x$pooled=="fixed")
@@ -113,7 +124,7 @@ print.meta <- function(x,
           cat("\nCumulative meta-analysis (Random effects model)\n")
       }
       cat("\n")
-      prmatrix(res, quote=FALSE, right=TRUE, na.print="--")
+      prmatrix(res, quote=FALSE, right=TRUE)
       
       method <- ifelse(x$method=="MH",
                        "Mantel-Haenszel method",

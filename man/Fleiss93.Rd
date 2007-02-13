@@ -26,7 +26,9 @@
 
 \examples{
 data(Fleiss93)
-metabin(event.e, n.e, event.c, n.c, data=Fleiss93)
+metabin(event.e, n.e, event.c, n.c,
+        data=Fleiss93,
+        studlab=paste(study, year))
 }
 
 \keyword{datasets}

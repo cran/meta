@@ -6,7 +6,8 @@
   standard errors; inverse variance weighting is used for pooling.
 }
 \usage{
-metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="")
+metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
+        level = 0.95, level.comb = level)
 }
 \arguments{
   \item{TE}{Estimate of treatment effect.}
@@ -15,8 +16,12 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="")
   \item{data}{An optional data frame containing the study information.}
   \item{subset}{An optional vector specifying a subset of studies to be used.}
   \item{sm}{A character string indicating underlying summary measure,
-    e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"WMD"},
-    \code{"SMD"}.}
+    e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"AS"},
+    \code{"MD"}, \code{"SMD"}.}
+  \item{level}{The level used to calculate confidence intervals for
+    individual studies.}
+  \item{level.comb}{The level used to calculate confidence intervals for
+    pooled estimates.}
 }
 \details{
   Generic method for meta-analysis, only treatment estimates and their
@@ -42,6 +47,10 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="")
   \item{tau}{Square-root of between-study variance (moment estimator of
     DerSimonian-Laird).}
   \item{method}{Pooling method: \code{"Inverse"}.}
+  \item{level}{The level used to calculate confidence intervals for
+    individual studies.}
+  \item{level.comb}{The level used to calculate confidence intervals for
+    pooled estimates.}
   \item{call}{Function call.}
 }
 \references{

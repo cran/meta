@@ -487,7 +487,7 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
     if (plotit){
       ##
       if (method=="linreg"|method=="mm"){
-        radial(TE, seTE, comb.f=FALSE)
+        radial(TE, seTE, comb.fixed=FALSE)
         abline(lreg$slope, lreg$intercept)
       }
       else if (method=="rank"){
@@ -500,7 +500,7 @@ metabias <- function(x, seTE, TE.fixed, seTE.fixed,
       }
       else if (method=="score"){
         ##
-        radial(TE.score, seTE.score, comb.f=FALSE)
+        radial(TE.score, seTE.score, comb.fixed=FALSE)
         abline(lreg$slope, lreg$intercept)
       }
     }

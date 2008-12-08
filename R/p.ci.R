@@ -1,6 +1,8 @@
-p.ci <- function(lower, upper){
-  lower <- rmSpace(lower)
-  upper <- rmSpace(upper)
+p.ci <- function(lower, upper, rmspace=TRUE){
+  if (rmspace){
+    lower <- rmSpace(lower)
+    upper <- rmSpace(upper)
+  }
   ##
   ifelse (lower=="NA" & upper=="NA",
           "",

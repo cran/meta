@@ -7,12 +7,13 @@
   Print and summary method for objects of class \code{meta}.
 }
 \usage{
-\method{print}{meta}(x, sortvar, level=0.95, level.comb=level,
-      details=FALSE, ma=TRUE, digits=max(0, .Options$digits - 3), ...)
+\method{print}{meta}(x, sortvar, level=x$level, level.comb=x$level.comb,
+      details=FALSE, ma=TRUE, digits=max(4, .Options$digits - 3), ...)
 
-\method{summary}{meta}(object, byvar, bylab, bystud=FALSE, level.comb=0.95, ...)
+\method{summary}{meta}(object, byvar, bylab, bystud=FALSE,
+        level=object$level, level.comb=object$level.comb, warn=TRUE, ...)
 
-\method{print}{summary.meta}(x, digits = max(0, .Options$digits - 3),
+\method{print}{summary.meta}(x, digits = max(3, .Options$digits - 3),
       print.byvar = TRUE, ...)
 }
 \arguments{
@@ -36,23 +37,27 @@
   \item{digits}{Minimal number of significant digits, see \code{print.default}.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
     variable should be printed in front of the group labels.}
+  \item{warn}{A logical indicating whether the use of
+  \code{summary.meta} in connection with \code{metacum} or
+  \code{metainf} should result in a warning.}
   \item{...}{other arguments}
 }
 \value{
   A list is returned by the function \code{summary.meta} with the
   following elements:
+  \item{study}{Results for individual studies (a list with elements TE,
+    seTE, lower, upper, z, p, level).}
   \item{fixed}{Results for fixed effect model (a list with elements TE,
     seTE, lower, upper, z, p, level).}
   \item{random}{Results for random effects model (a list with elements
     TE, seTE, lower, upper, z, p, level).}
-  \item{random}{A list with elements TE, lower, upper, seTE, z, p, level,
-    scale.}
   \item{k}{Number of studies combined in meta-analysis.}
   \item{Q}{Heterogeneity statistic Q.}
   \item{tau}{Square-root of between-study variance (moment estimator of
     DerSimonian-Laird).}
   \item{H}{Heterogeneity statistic H  (a list with elements TE, lower, upper).}
-  \item{I2}{Heterogeneity statistic I2 (a list with elements TE, lower, upper).}
+  \item{I2}{Heterogeneity statistic I2 (a list with elements TE, lower,
+    upper), see Higgins & Thompson (2002).}
   \item{k.all}{Total number of trials.}
   \item{Q.CMH}{Cochrane-Mantel-Haenszel heterogeneity statistic.}
   \item{sm}{A character string indicating underlying summary measure.}
@@ -70,6 +75,10 @@
   Cooper H & Hedges LV (1994),
   \emph{The Handbook of Research Synthesis}.
   Newbury Park, CA: Russell Sage Foundation.
+
+  Higgins JPT & Thompson SG (2002),
+  Quantifying heterogeneity in a meta-analysis.
+  \emph{Statistics in Medicine}, \bold{21}, 1539--1558.
 }
 \author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
 \seealso{\code{\link{metabin}}, \code{\link{metacont}}, \code{\link{metagen}}}
@@ -78,6 +87,6 @@
 data(Fleiss93cont)
 meta1 <- metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, data=Fleiss93cont, sm="SMD")
 summary(meta1)
-summary(meta1, byvar=c(1,2,1,1,2), bylab="label")
+summary(meta1, byvar=c(1,2,1,1,2), bylab="group")
 }
 \keyword{print}

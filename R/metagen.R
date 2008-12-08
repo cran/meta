@@ -1,4 +1,8 @@
-metagen <- function(TE, seTE, studlab, data=NULL, subset=NULL, sm=""){
+metagen <- function(TE, seTE,
+                    studlab, data=NULL, subset=NULL,
+                    sm="",
+                    level=0.95, level.comb=level
+                    ){
 
   if (is.null(data)) data <- sys.frame(sys.parent())
   ##
@@ -6,6 +10,7 @@ metagen <- function(TE, seTE, studlab, data=NULL, subset=NULL, sm=""){
   ##
   mf <- match.call()
   mf$data <- mf$subset <- mf$sm <- NULL
+  mf$level <- mf$level.comb <- NULL
   mf[[1]] <- as.name("data.frame")
   mf <- eval(mf, data)
   ##
@@ -15,6 +20,7 @@ metagen <- function(TE, seTE, studlab, data=NULL, subset=NULL, sm=""){
   mf2$TE <- mf2$seTE <- NULL
   mf2$studlab <- NULL
   mf2$data <- mf2$sm <- NULL
+  mf2$level <- mf2$level.comb <- NULL
   mf2[[1]] <- as.name("data.frame")
   ##
   mf2 <- eval(mf2, data)
@@ -51,12 +57,40 @@ metagen <- function(TE, seTE, studlab, data=NULL, subset=NULL, sm=""){
   if (!(is.numeric(TE) & is.numeric(seTE)))
     stop("Non-numeric value for TE or seTE")
   ##
-  if ( any(seTE[!is.na(seTE)] <= 0) )
-    stop("seTE must be larger than zero")
+  ## Studies with zero standard error will be included in
+  ## meta-analysis, however with zero weight
+  ## (if-statement commented out by sc, 3.6.2008):
+  ##
+  ##if ( any(seTE[!is.na(seTE)] <= 0) )
+  ##  stop("seTE must be larger than zero")
   ##
   if ( length(studlab) != k.all )
     stop("Number of studies and labels differ")
-
+  
+  
+  ##
+  ## Check for levels of confidence interval
+  ##
+  if (!is.numeric(level) | length(level)!=1)
+    stop("parameter 'level' must be a numeric of length 1")
+  if (level <= 0 | level >= 1)
+    stop("parameter 'level': no valid level for confidence interval")
+  ##
+  if (!is.numeric(level.comb) | length(level.comb)!=1)
+    stop("parameter 'level.comb' must be a numeric of length 1")
+  if (level.comb <= 0 | level.comb >= 1)
+    stop("parameter 'level.comb': no valid level for confidence interval")
+  
+  
+  ##
+  ## Replace zero standard errors with NAs
+  ## (added by sc, 3.6.2008):
+  ##
+  if (any(seTE[!is.na(seTE)] <= 0)){
+    warning("Zero values in seTE replaced by NAs")
+    seTE[!is.na(seTE) & seTE==0] <- NA
+  }
+  
   
   k <- sum(!is.na(seTE))
 
@@ -116,6 +150,8 @@ metagen <- function(TE, seTE, studlab, data=NULL, subset=NULL, sm=""){
               TE.random=TE.random, seTE.random=seTE.random,
               k=k, Q=Q, tau=sqrt(tau2),
               sm=sm, method="Inverse",
+              level=level,
+              level.comb=level.comb,
               call=match.call())
 
   class(res) <- c("metagen", "meta")

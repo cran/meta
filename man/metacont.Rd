@@ -8,7 +8,8 @@
 }
 \usage{
 metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
-         data=NULL, subset=NULL, sm="WMD")
+         data=NULL, subset=NULL, sm="MD",
+         level = 0.95, level.comb = level)
 }
 %- maybe also `usage' for other objects documented here.
 \arguments{
@@ -19,19 +20,26 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{mean.c}{Estimated mean in control group.}
   \item{sd.c}{Standard deviation in control group.}
   \item{studlab}{An optional vector with study labels.}
-  \item{data}{An optional data frame containing the study information,
-    i.e., n.e, mean.e, sd.e, n.c, mean.c, and n.c.}
-  \item{subset}{An optional vector specifying a subset of studies to be used.}
+  \item{data}{An optional data frame containing the study information.}
+  \item{subset}{An optional vector specifying a subset of studies to be
+  used.}
+  \item{level}{The level used to calculate confidence intervals for
+    individual studies.}
+  \item{level.comb}{The level used to calculate confidence intervals for
+    pooled estimates.}
   \item{sm}{A character string indicating which summary measure
-    (\code{"WMD"} or \code{"SMD"}) is to be used for pooling of
+    (\code{"MD"} or \code{"SMD"}) is to be used for pooling of
     studies.}
 }
 \details{
   Calculation of fixed and random effects estimates for meta-analyses
   with continuous outcome data; inverse variance weighting is used for
   pooling. The DerSimonian-Laird estimate is used in the
-  random effects model. For the summary measure \code{"SMD"},
-  Hedges' adjusted g is utilised for pooling.
+  random effects model. The mean difference is used as measure of
+  treatment effect if \code{sm="MD"} -- which correspond to
+  \code{sm="WMD"} in older versions (<0.9) of the meta package. For the
+  summary measure \code{"SMD"}, Hedges' adjusted g is utilised for
+  pooling.
 
   The function \code{metagen} is called internally to calculate
   individual and overall treatment estimates and standard errors.  
@@ -44,7 +52,7 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{n.c, mean.c, sd.c,}{As defined above.}
   \item{studlab, sm}{}
   \item{TE, seTE}{Estimated treatment effect and standard error of individual studies.}
-  \item{w.fixed, w.random}{Weight of indiviudal studies (in fixed and
+  \item{w.fixed, w.random}{Weight of individual studies (in fixed and
     random effects model).}
   \item{TE.fixed, seTE.fixed}{Estimated overall treatment effect and
     standard error (fixed effect model).}
@@ -55,6 +63,10 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{tau}{Square-root of between-study variance (moment estimator of
     DerSimonian-Laird).}
   \item{method}{Pooling method: \code{"Inverse"}.}
+  \item{level}{The level used to calculate confidence intervals for
+    individual studies.}
+  \item{level.comb}{The level used to calculate confidence intervals for
+    pooled estimates.}
   \item{call}{Function call.}
 }
 \references{

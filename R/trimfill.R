@@ -1,6 +1,7 @@
 trimfill <- function(x, seTE, left=NULL, ma.fixed=TRUE,
                      type="L", n.iter.max=50,
                      sm=NULL, studlab=NULL,
+                     level, level.comb,
                      silent=TRUE){
   
   
@@ -8,6 +9,19 @@ trimfill <- function(x, seTE, left=NULL, ma.fixed=TRUE,
     stop("This function is not usable for an object of class \"metacum\"")
   if (inherits(x, "metainf"))
     stop("This function is not usable for an object of class \"metainf\"")
+  
+  
+  if (missing(level))
+    if (! "level" %in% names(x))
+      level <- 0.95
+    else
+      level <- x$level
+  ##
+  if (missing(level.comb))
+    if (! "level.comb" %in% names(x))
+      level.comb <- 0.95
+    else
+      level.comb <- x$level.comb
   
   
   estimate.missing <- function(TE, seTE, TE.sum, type){
@@ -164,9 +178,11 @@ trimfill <- function(x, seTE, left=NULL, ma.fixed=TRUE,
   
   
   if (!left)
-    m <- metagen(-TE, seTE, studlab=studlab)
+    m <- metagen(-TE, seTE, studlab=studlab,
+                 level=level, level.comb=level.comb)
   else
-    m <- metagen(TE, seTE, studlab=studlab)
+    m <- metagen(TE, seTE, studlab=studlab,
+                 level=level, level.comb=level.comb)
   
   ##
   res <- list(studlab=m$studlab,
@@ -186,7 +202,8 @@ trimfill <- function(x, seTE, left=NULL, ma.fixed=TRUE,
               n.iter.max=n.iter.max,
               n.iter=n.iter,
               trimfill=trimfill,
-              k0=sum(trimfill))
+              k0=sum(trimfill),
+              level=level, level.comb=level.comb)
   ##
   class(res) <- c("metagen", "meta", "trimfill")
   ##

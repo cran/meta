@@ -101,7 +101,11 @@ summary.meta <- function(object,
     
     
     if (any(is.na(byvar))) stop("Missing values in 'byvar'")
-    
+
+    print(object$method)
+    if (object$method == "MH")
+      warning("Test for subgroup differences may be invalid for method=\"MH\"")
+
     by.levs <- unique(byvar)
     
     if (missing(bylab)) bylab <- byvar.name

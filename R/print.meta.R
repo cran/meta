@@ -6,7 +6,7 @@ print.meta <- function(x,
                        ...
                        ){
   
-  
+  print(class(x))
   if (!inherits(x, "meta"))
     stop("Argument 'x' must be an object of class \"meta\"")
   
@@ -105,7 +105,7 @@ print.meta <- function(x,
 
 
   if (k.all == 1 & !inherits(x, "metaprop")){
-    if (inherits(x, "metabin"))
+    if (inherits(x, "metabin") & x$method=="MH")
       print(summary(metabin(x$event.e, x$n.e,
                             x$event.c, x$n.c,
                             sm=x$sm,
@@ -115,7 +115,7 @@ print.meta <- function(x,
                             allincr=x$allincr,
                             allstudies=x$allstudies,
                             MH.exact=x$MH.exact,
-                            warn=x$warn), level.comb=level.comb),
+                            warn=FALSE), level.comb=level.comb),
             digits=digits)
     else
       print(summary(x, level.comb=level.comb), digits=digits)

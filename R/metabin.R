@@ -44,10 +44,10 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     else
       mf <- mf[mf2$subset,]
   ##
-  event.e <- as.numeric(mf$event.e)
-  n.e <- as.numeric(mf$n.e)
-  event.c <- as.numeric(mf$event.c)
-  n.c <- as.numeric(mf$n.c)
+  event.e <- mf$event.e
+  n.e     <- mf$n.e
+  event.c <- mf$event.c
+  n.c     <- mf$n.c
   ##
   if (!missing(studlab))
     studlab <- as.character(mf$studlab)
@@ -175,7 +175,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
       incr.e <- rep(incr, k.all)
       incr.c <- rep(incr, k.all)
       ##
-      if (warn & warn2)
+      if (warn & warn2 & incr > 0)
         warning(paste("Increment", incr, "added to each cell frequency of all studies"))
     }
     else{
@@ -200,7 +200,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
           incr.e <- rep(incr, k.all)
           incr.c <- rep(incr, k.all)
           ##
-          if (warn & warn2)
+          if (warn & warn2 & incr > 0)
             warning(paste("Increment", incr, "added to each cell frequency of all studies"))
         }
         else{
@@ -226,7 +226,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
           incr.e <- incr*sel
           incr.c <- incr*sel
           ##
-           if (warn & warn2)
+           if (warn & warn2 & incr > 0)
             warning(paste("Increment", incr, "added to each cell in 2x2 tables with zero cell frequencies"))
         }
         else{

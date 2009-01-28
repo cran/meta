@@ -82,7 +82,10 @@ print.summary.meta <- function(x,
     
     prmatrix(res, quote=FALSE, right=TRUE, ...)
 
-    cat(paste("\nMethod: Inverse variance method\n"))
+    method <- ifelse(x$method=="Peto",
+                     "Peto method", "Inverse variance method")
+    ##
+    cat(paste("\nMethod:", method, "\n"))
   }
   else{
 

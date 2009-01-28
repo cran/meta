@@ -12,7 +12,7 @@ forest <- function(x,
                    text.random="Random effects model",
                    lty.fixed=2, lty.random=3,
                    ##
-                   xlab=NULL, xlim,
+                   xlab=NULL, xlab.pos=ref, xlim,
                    ##
                    allstudies=TRUE,
                    weight=ifelse(comb.random & !comb.fixed, "random", "fixed"),
@@ -151,7 +151,8 @@ forest <- function(x,
       ##if ((!is.na(size) && size > 0) |
       ##    (!is.na(size) && (size == 0 & print.infinite))){
       if (!is.na(size)){
-        lineCol <- if ((convertX(unit(eff, "native") + unit(0.5*size, "lines"),
+        lineCol <- if (size > 0 &&
+                       (convertX(unit(eff, "native") + unit(0.5*size, "lines"),
                                  "native", valueOnly=TRUE) > upp) &&
                        (convertX(unit(eff, "native") - unit(0.5*size, "lines"),
                                  "native", valueOnly=TRUE) < low))
@@ -163,27 +164,31 @@ forest <- function(x,
         ## convertX() used to convert between coordinate systems
         ##if (convertX(unit(upp, "native"), "npc", valueOnly=TRUE) > 1)
         ##
-        if (low >= min & upp <= max)
+        if (!is.na(low) && !is.na(upp) &&
+            (low >= min & upp <= max))
           grid.lines(x=unit(c(low, upp), "native"), y=0.5,
                      gp=gpar(col=lineCol, lwd=lwd))
         ##
-        if (low < min & upp > max)
+        if (!is.na(low) && !is.na(upp) &&
+            (low < min & upp > max))
           grid.lines(x=unit(c(min, max), "native"), y=0.5,
                      gp=gpar(col=lineCol, lwd=lwd))
         ##
-        if (low < min & (upp <= max & upp > min))
+        if (!is.na(low) && !is.na(upp) &&
+            (low < min & (upp <= max & upp > min)))
           grid.lines(x=unit(c(min, upp), "native"), y=0.5,
                      gp=gpar(col=lineCol, lwd=lwd))
         ##
-        if ((low >= min & low < max) & upp > max)
+        if (!is.na(low) && !is.na(upp) &&
+            ((low >= min & low < max) & upp > max))
           grid.lines(x=unit(c(low, max), "native"), y=0.5,
                      gp=gpar(col=lineCol, lwd=lwd))
         ##
-        if (low < min)
+        if (!is.na(low) && low < min)
           grid.lines(x=unit(c(min-0.00001, min), "native"), y=0.5,
                      gp=gpar(col=lineCol, lwd=lwd),
                      arrow=arrow(ends="first", length=unit(0.05, "inches")))
-        if (upp > max)
+        if (!is.na(upp) && upp > max)
           grid.lines(x=unit(c(max, max+0.00001), "native"), y=0.5,
                      gp=gpar(col=lineCol, lwd=lwd),
                      arrow=arrow(ends="last", length=unit(0.05, "inches")))
@@ -284,8 +289,9 @@ forest <- function(x,
     ## Label on x-axis:
     ##
     grid.text(xlab,
-              x=unit(ref, "native"),
+              x=unit(xlab.pos, "native"),
               y=unit(-2.35, "lines"),
+              just=c("center", "top"),
               gp=gpar(fontsize=fontsize))
     ##
     popViewport()

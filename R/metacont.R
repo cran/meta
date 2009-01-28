@@ -39,12 +39,12 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##  else
   ##    mf <- mf[mf2$subset,]
   ##
-  n.e     <- as.numeric(mf$n.e)
-  mean.e  <- as.numeric(mf$mean.e)
-  sd.e    <- as.numeric(mf$sd.e)
-  n.c     <- as.numeric(mf$n.c)
-  mean.c  <- as.numeric(mf$mean.c)
-  sd.c    <- as.numeric(mf$sd.c)
+  n.e     <- mf$n.e
+  mean.e  <- mf$mean.e
+  sd.e    <- mf$sd.e
+  n.c     <- mf$n.c
+  mean.c  <- mf$mean.c
+  sd.c    <- mf$sd.c
   ##
   if (!missing(studlab))
     studlab <- as.character(mf$studlab)

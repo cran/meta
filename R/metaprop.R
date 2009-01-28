@@ -33,8 +33,8 @@ metaprop <- function(event, n, studlab,
     else
       mf <- mf[mf2$subset,]
   ##
-  event <- as.numeric(mf$event)
-  n <- as.numeric(mf$n)
+  event <- mf$event
+  n     <- mf$n
   ##
   if (!missing(studlab))
     studlab <- as.character(mf$studlab)

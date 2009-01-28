@@ -10,7 +10,8 @@ forest(x, byvar, bylab, print.byvar=TRUE, sortvar, studlab=TRUE,
        level=x$level, level.comb=x$level.comb,
        comb.fixed=FALSE, comb.random=FALSE, overall=comb.fixed|comb.random,
        text.fixed="Fixed effect model", text.random="Random effects model",
-       lty.fixed=2, lty.random=3, xlab=NULL, xlim, allstudies=TRUE,
+       lty.fixed=2, lty.random=3, xlab=NULL, xlab.pos=ref, xlim,
+       allstudies=TRUE,
        weight=ifelse(comb.random & !comb.fixed, "random", "fixed"),
        ref=ifelse(x$sm \%in\% c("RR", "OR", "HR"), 1, 0),
        leftcols=NULL, rightcols=NULL,
@@ -56,6 +57,8 @@ forest(x, byvar, bylab, print.byvar=TRUE, sortvar, studlab=TRUE,
   \item{lty.fixed}{Line type (pooled fixed effect estimate).}
   \item{lty.random}{Line type (pooled random effects estimate).}
   \item{xlab}{A label for the x axis.}
+  \item{xlab.pos}{A numeric specifying the center of the label
+    on the x axis.}
   \item{xlim}{The x limits (min,max) of the plot.}
   \item{allstudies}{A logical indicating whether studies with inestimable
     treatment effects should be plotted.}

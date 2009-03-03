@@ -6,7 +6,6 @@ print.meta <- function(x,
                        ...
                        ){
   
-  print(class(x))
   if (!inherits(x, "meta"))
     stop("Argument 'x' must be an object of class \"meta\"")
   

@@ -126,6 +126,17 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     TE[sel] <- NA
   
   
+  ##
+  ## Recode integer as numeric:
+  ##
+  if (is.integer(n.e))    n.e    <- as.numeric(n.e)
+  if (is.integer(mean.e)) mean.e <- as.numeric(mean.e)
+  if (is.integer(sd.e))   sd.e   <- as.numeric(sd.e)
+  if (is.integer(n.c))    n.c    <- as.numeric(n.c)
+  if (is.integer(mean.c)) mean.c <- as.numeric(mean.c)
+  if (is.integer(sd.c))   sd.c   <- as.numeric(sd.c)
+  
+  
   m <- metagen(TE, sqrt(varTE))
   
 

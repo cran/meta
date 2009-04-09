@@ -80,6 +80,13 @@ metaprop <- function(event, n, studlab,
   method <- "Inverse"
   
   
+  ##
+  ## Recode integer as numeric:
+  ##
+  if (is.integer(event)) event <- as.numeric(event)
+  if (is.integer(n))     n     <- as.numeric(n)
+  
+  
   if (freeman.tukey)
     TE <- asin(sqrt(event/(n+1))) + asin(sqrt((event+1)/(n+1)))
   else

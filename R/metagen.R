@@ -92,6 +92,13 @@ metagen <- function(TE, seTE,
   }
   
   
+  ##
+  ## Recode integer as numeric:
+  ##
+  if (is.integer(TE))   TE   <- as.numeric(TE)
+  if (is.integer(seTE)) seTE <- as.numeric(seTE)
+  
+  
   k <- sum(!is.na(seTE))
 
   

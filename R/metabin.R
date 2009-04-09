@@ -122,7 +122,15 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     warning("For a single trial, inverse variance method used instead of Mantel Haenszel method.")
     method <- "Inverse"
   }
-  
+
+
+  ##
+  ## Recode integer as numeric:
+  ##
+  if (is.integer(event.e)) event.e <- as.numeric(event.e)
+  if (is.integer(n.e))     n.e     <- as.numeric(n.e)
+  if (is.integer(event.c)) event.c <- as.numeric(event.c)
+  if (is.integer(n.c))     n.c     <- as.numeric(n.c)
   
   ##
   ##

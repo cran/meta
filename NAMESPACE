@@ -1,11 +1,13 @@
-export(ci, funnel, metabias, metabin, metacont,
-       metacum, metagen, metainf, radial, read.mtv,
-       plot.meta, print.meta, print.summary.meta, summary.meta,
-       trimfill)
+export(ci, forest, funnel, addvar, as.data.frame.meta,
+       metabias, metabin, metacont, metacr, metaprop,
+       metacum, metagen, metainf, radial, read.mtv, read.rm5,
+       plot.meta, print.meta, print.metabias, print.summary.meta,
+       summary.meta, trimfill)
 
 # not visible
-# format.p, meta-internal, p.ci, rmSpace, print.trimfill
+# format.p, meta-internal, p.ci, rmSpace
 
+S3method(as.data.frame, meta)
 S3method(plot, meta)
 S3method(print, meta)
 S3method(print, summary.meta)

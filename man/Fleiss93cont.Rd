@@ -27,12 +27,15 @@
   \emph{Statistical Methods in Medical Research}, \bold{2}, 121--145.
 }
 
+\seealso{\code{\link{Fleiss93}}}
+
 \examples{
 data(Fleiss93cont)
 metacont(n.e, mean.e, sd.e,
          n.c, mean.c, sd.c,
          data=Fleiss93cont,
-         studlab=paste(study, year))
+         studlab=paste(study, year),
+         comb.random=FALSE)
 }
 
 \keyword{datasets}

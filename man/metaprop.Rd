@@ -1,31 +1,33 @@
-\name{metagen}
+\name{metaprop}
+\alias{metaprop}
 
-\alias{metagen}
-
-\title{Generic inverse variance meta-analysis}
+\title{Meta-analysis of single proportions}
 
 \description{
-  Fixed and random effects meta-analysis based on estimates and their
-  standard errors; inverse variance weighting is used for pooling.
+  Calculation of an overall proportion from studies reporting a single
+  proportion.
 }
 
 \usage{
-metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
-        level = 0.95, level.comb = level,
-        comb.fixed=TRUE, comb.random=TRUE,
-        title="", complab="", outclab="",
-        byvar, bylab, print.byvar=TRUE)
+metaprop(event, n, studlab,
+         data = NULL, subset = NULL,
+         freeman.tukey=TRUE,
+         level = 0.95, level.comb = level,
+         comb.fixed=TRUE, comb.random=TRUE,
+         title="", complab="", outclab="",
+         byvar, bylab, print.byvar=TRUE)
 }
 
 \arguments{
-  \item{TE}{Estimate of treatment effect.}
-  \item{seTE}{Standard error of treatment estimate.}
+  \item{event}{Number of events.}
+  \item{n}{Number of observations.}
   \item{studlab}{An optional vector with study labels.}
-  \item{data}{An optional data frame containing the study information.}
+  \item{data}{An optional data frame containing the study information,
+    i.e., event and n.}
   \item{subset}{An optional vector specifying a subset of studies to be used.}
-  \item{sm}{A character string indicating underlying summary measure,
-    e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"AS"},
-    \code{"MD"}, \code{"SMD"}.}
+  \item{freeman.tukey}{A logical indicating if the Freeman-Tukey Double
+    arcsine transformation should be used; otherwise the arcsine
+    transformation is used.}
   \item{level}{The level used to calculate confidence intervals for
     individual studies.}
   \item{level.comb}{The level used to calculate confidence intervals for
@@ -38,18 +40,17 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
   \item{byvar}{An optional vector containing grouping information (must
-    be of same length as \code{TE}).}
+    be of same length as \code{event.e}).}
   \item{bylab}{A character string with a label for the grouping variable.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
     variable should be printed in front of the group labels.}
 }
 
 \details{
-  Generic method for meta-analysis, only treatment estimates and their
-  standard error are needed. The method is useful, e.g., for pooling of
-  log hazard ratios. The inverse variance method is used for
-  pooling. Random effects estimate is based on the DerSimonian-Laird
-  method.
+  Fixed effect and random effects meta-analysis of single proportions
+  using either the Freeman-Tukey Double arcsine transformation or the
+  arcsine transformation of proportions to calculate an overall
+  proportion.
 
   Internally, both fixed effect and random effects models are calculated
   regardless of values choosen for arguments \code{comb.fixed} and
@@ -63,47 +64,50 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
 }
 
 \value{
-  An object of class \code{c("metagen", "meta")} with corresponding
+  An object of class \code{c("metaprop", "meta")} with corresponding
   \code{print}, \code{summary}, \code{plot} function. The object is a
   list containing the following components:
-  \item{TE, seTE, studlab,}{}
-  \item{sm, level, level.comb,}{}
+  \item{event, n, studlab,}{}
+  \item{freeman.tukey, level, level.comb,}{}
   \item{comb.fixed, comb.random,}{}
   \item{byvar, bylab, print.byvar}{As defined above.}
+  \item{TE, seTE}{Arcsine transformation of proportion and its standard
+  error for individual studies.}
   \item{w.fixed, w.random}{Weight of individual studies (in fixed and
     random effects model).}
-  \item{TE.fixed, seTE.fixed}{Estimated overall treatment effect and
-    standard error (fixed effect model).}
-  \item{TE.random, seTE.random}{Estimated overall treatment effect and
-    standard error (random effects model).}
+  \item{TE.fixed, seTE.fixed}{Estimated overall arcsine transformed
+  proportion and standard error (fixed effect model).}
+  \item{TE.random, seTE.random}{Estimated overall arcsine transformed
+  proportion and standard error (random effects model).}
   \item{k}{Number of studies combined in meta-analysis.}
-  \item{Q}{Heterogeneity statistic.}
+  \item{Q}{Heterogeneity statistic Q.}
   \item{tau}{Square-root of between-study variance (moment estimator of
     DerSimonian-Laird).}
-  \item{method}{Pooling method: \code{"Inverse"}.}
+  \item{sm}{A character string: \code{"proportion"}}
+  \item{method}{A character string indicating method used
+    for pooling: \code{"Inverse"}}
   \item{call}{Function call.}
 }
 
 \references{
-  Cooper H & Hedges LV (1994),
-  \emph{The Handbook of Research Synthesis}.
-  Newbury Park, CA: Russell Sage Foundation.
+  Freeman MF & Tukey JW (1950),
+  Transformations related to the angular and the square
+  root. \emph{Annals of Mathematical Statistics},
+  \bold{21}, 607--611.
+
+  Miller JJ (1978),
+  The inverse of the Freeman-Tukey double arcsine
+  transformation. \emph{The American Statistician},
+  \bold{32}, 138.
 }
 
 \author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
 
-\seealso{\code{\link{metabin}}, \code{\link{metacont}}, \code{\link{print.meta}}}
+\seealso{\code{\link{metacont}}, \code{\link{metagen}}, \code{\link{print.meta}}}
 
 \examples{
-data(Fleiss93)
-meta1 <- metabin(event.e, n.e, event.c, n.c, data=Fleiss93, sm="RR", meth="I")
-meta1
-
-##
-## Identical results by using the following commands:
-##
-meta1
-metagen(meta1$TE, meta1$seTE, sm="RR")
+metaprop(0, 10)
+metaprop(0, 10, freeman.tukey=FALSE)
 }
 
 \keyword{htest}

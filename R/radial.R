@@ -2,7 +2,7 @@ radial <- function(x, y,
                    xlim=NULL, ylim=NULL,
                    xlab="Inverse of standard error",
 		   ylab="Standardised treatment effect (z-score)",
-		   comb.f=TRUE, axes=TRUE,
+		   comb.fixed=TRUE, axes=TRUE,
                    pch=1, text=NULL, cex=1, col=NULL,
                    level=NULL, ...){
 
@@ -49,7 +49,7 @@ radial <- function(x, y,
       text(1/seTE, zscore, labels=text, cex=cex, col=col)
   }
 
-  if (comb.f){
+  if (comb.fixed){
     lmcomb <- lm(zscore ~ I(1/seTE) - 1)
     abline(lmcomb, lty=4)
     if (!is.null(level)){

@@ -8,7 +8,7 @@
 }
 \usage{
 funnel(x, y, xlim=NULL, ylim=NULL, xlab=NULL, ylab=NULL,
-       comb.f=FALSE, axes=TRUE,
+       comb.fixed=FALSE, axes=TRUE,
        pch=1, text=NULL, cex=1, col=NULL,
        log="", yaxis="se", sm=NULL,
        level=NULL, ...)
@@ -16,7 +16,7 @@ funnel(x, y, xlim=NULL, ylim=NULL, xlab=NULL, ylab=NULL,
 radial(x, y, xlim=NULL, ylim=NULL,
        xlab="Inverse of standard error",
        ylab="Standardised treatment effect (z-score)",
-       comb.f=TRUE, axes=TRUE,
+       comb.fixed=TRUE, axes=TRUE,
        pch=1, text=NULL, cex=1, col=NULL,
        level=NULL, ...)
 }
@@ -29,7 +29,7 @@ radial(x, y, xlim=NULL, ylim=NULL,
   \item{ylim}{The y limits (min,max) of the plot.}
   \item{xlab}{A label for the x axis.}
   \item{ylab}{A label for the y axis.}
-  \item{comb.f}{A logical indicating whether the pooled fixed effects
+  \item{comb.fixed}{A logical indicating whether the pooled fixed effect
     estimate should be plotted.}
   \item{axes}{A logical indicating whether axes should be drawn on the
     plot.}
@@ -37,7 +37,7 @@ radial(x, y, xlim=NULL, ylim=NULL,
   \item{text}{A character vector specifying the text to be used instead
     of plotting symbol.}
   \item{cex}{The magnification to be used for plotting symbol.}
-  \item{col}{A vector with color of plotting symbols.}
+  \item{col}{A vector with colour of plotting symbols.}
   \item{log}{A character string which contains \code{"x"} if the x axis
     is to be logarithmic, \code{"y"} if the y axis is to be logarithmic
     and \code{"xy"} or \code{"yx"} if both axes are to be logarithmic
@@ -46,16 +46,17 @@ radial(x, y, xlim=NULL, ylim=NULL,
     to be used. Either \code{"se"}, \code{"invvar"}, \code{"invse"}, or \code{"size"}
     (applies only to function \code{funnel}). }
   \item{sm}{A character string indicating underlying summary measure,
-    e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"WMD"},
+    e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"AS"}, \code{"MD"},
     \code{"SMD"} (applies only to function \code{funnel}).}
-  \item{level}{The confidence level utilised in the plot.}
+  \item{level}{The confidence level utilised in the plot. For the funnel
+  plot, confidence limits are not drawn if \code{yaxis="size"}.}
   \item{\dots}{Graphical parameters as in \code{par} may also be
     passed as arguments.}
 }
 \details{
   A funnel plot or radial plot, also called Galbraith plot, is drawn in
-  the active graphics window. If \code{comb.f} is TRUE, the pooled
-  estimate of the fixed effects model is plotted. If \code{level} is not
+  the active graphics window. If \code{comb.fixed} is TRUE, the pooled
+  estimate of the fixed effect model is plotted. If \code{level} is not
   NULL, the corresponding confidence limits are drawn.
 
   In the funnel plot, if \code{yaxis} is \code{"se"}, the standard error
@@ -76,7 +77,7 @@ radial(x, y, xlim=NULL, ylim=NULL,
   
   Light RJ & Pillemer DB (1984),
   \emph{Summing Up. The Science of Reviewing Research}.
-  Cambridge: Havard University Press.
+  Cambridge: Harvard University Press.
 
   Sterne JAC & Egger M (2001),
   Funnel plots for detecting bias in meta-analysis: Guidelines on choice
@@ -100,7 +101,7 @@ funnel(meta1)
 ##
 funnel(meta1$TE, meta1$seTE, sm="RR")
 
-funnel(meta1, comb.f=TRUE, level=0.95)
+funnel(meta1, comb.fixed=TRUE, level=0.95)
 
 radial(meta1, level=0.95)
 

@@ -28,7 +28,8 @@
 data(Fleiss93)
 metabin(event.e, n.e, event.c, n.c,
         data=Fleiss93,
-        studlab=paste(study, year))
+        studlab=paste(study, year),
+        sm="OR", comb.random=FALSE)
 }
 
 \keyword{datasets}

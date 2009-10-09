@@ -16,6 +16,9 @@ metacr <- function(x, comp.no=1, outcome.no=1,
   complab <- unique(x$complab[sel])
   outclab <- unique(x$outclab[sel])
   ##
+  label.e <- unique(x$label.e[sel])
+  label.c <- unique(x$label.c[sel])
+  ##
   type <- unique(x$type[sel])
   meth <- unique(x$meth[sel])
   totals <- unique(x$totals[sel])
@@ -39,6 +42,7 @@ metacr <- function(x, comp.no=1, outcome.no=1,
                   comb.fixed=comb.fixed, comb.random=comb.random,
                   title=title,
                   complab=complab, outclab=outclab,
+                  label.e=label.e, label.c=label.c,
                   RR.cochrane=RR.cochrane)
   ##
   if (type=="C")
@@ -47,28 +51,32 @@ metacr <- function(x, comp.no=1, outcome.no=1,
                    sm=sm, studlab=x$studlab[sel],
                    comb.fixed=comb.fixed, comb.random=comb.random,
                    title=title,
-                   complab=complab, outclab=outclab)
+                   complab=complab, outclab=outclab,
+                   label.e=label.e, label.c=label.c)
   ##
   if (type=="P")
     m1 <- metagen(x$O.E[sel]/x$V[sel], sqrt(1/x$V[sel]),
                   sm=sm, studlab=x$studlab[sel],
                   comb.fixed=comb.fixed, comb.random=comb.random,
                   title=title,
-                  complab=complab, outclab=outclab)
+                  complab=complab, outclab=outclab,
+                  label.e=label.e, label.c=label.c)
   ##
   if (type=="I" & meth!="Peto")
     m1 <- metagen(x$TE[sel], x$seTE[sel],
                   sm=sm, studlab=x$studlab[sel],
                   comb.fixed=comb.fixed, comb.random=comb.random,
                   title=title,
-                  complab=complab, outclab=outclab)
+                  complab=complab, outclab=outclab,
+                  label.e=label.e, label.c=label.c)
   ##
   if (type=="I" & meth=="Peto")
     m1 <- metagen(x$O.E[sel]/x$V[sel], sqrt(1/x$V[sel]),
                   sm=sm, studlab=x$studlab[sel],
                   comb.fixed=comb.fixed, comb.random=comb.random,
                   title=title,
-                  complab=complab, outclab=outclab)
+                  complab=complab, outclab=outclab,
+                  label.e=label.e, label.c=label.c)
   ##
   if (length(unique(x$group.no[sel]))>1){
     m1$byvar <- x$grplab[sel]

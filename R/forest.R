@@ -24,8 +24,8 @@ forest <- function(x,
                    leftcols=NULL, rightcols=NULL,
                    leftlabs=NULL, rightlabs=NULL,
                    ##
-                   lab.e="Experimental",
-                   lab.c="Control",
+                   lab.e=x$label.e,
+                   lab.c=x$label.c,
                    ##
                    lab.e.attach.to.col=NULL,
                    lab.c.attach.to.col=NULL,
@@ -70,7 +70,15 @@ forest <- function(x,
   if (length(print.byvar)==0){
     print.byvar <- TRUE
   }
-
+  ##
+  if (length(lab.e)==0){
+    lab.e <- "Experimental"
+  }
+  ##
+  if (length(lab.c)==0){
+    lab.c <- "Control"
+  }
+  
   
   if (length(level)==0){
     warning("level set to 0.95")
@@ -280,8 +288,11 @@ forest <- function(x,
         x100  <- c(0.01 , 0.1, 1,  10, 100)
         x10   <- c(0.1  , 0.5, 1,   2, 10)
         x5    <- c(0.2  , 0.5, 1,   2, 5)
-        x2    <- c(0.5, 1, 2)
-        x1    <- c(0.91 , 1, 1.1)
+        x2    <- c(0.5  , 1, 2)
+        x2    <- c(0.5  , 1, 2)
+        x1.5  <- c(0.75 , 1, 1.5)
+        x1.25 <- c(0.8  , 1, 1.25)
+        x1    <- c(0.9  , 1, 1.1)
         ##
         tval.min <- min(exp(col$range[1]), 1)
         tval.max <- max(exp(col$range[2]), 1)
@@ -298,9 +309,12 @@ forest <- function(x,
         else if (all(x5 >= tval.min) &
             all(x5 <= tval.max))
           label <- x5
-        else if (all(x2 >= tval.min) &
-            all(x2 <= tval.max))
-          label <- x2
+        else if (all(x1.5 >= tval.min) &
+            all(x1.5 <= tval.max))
+          label <- x1.5
+        else if (all(x1.25 >= tval.min) &
+            all(x1.25 <= tval.max))
+          label <- x1.25
         else if (all(x1 >= tval.min) &
             all(x1 <= tval.max))
           label <- x1

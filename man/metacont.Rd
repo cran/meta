@@ -16,6 +16,7 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
          level = 0.95, level.comb = level,
          comb.fixed=TRUE, comb.random=TRUE,
          title="", complab="", outclab="",
+         label.e="Experimental", label.c="Control",
          byvar, bylab, print.byvar=TRUE)
 }
 
@@ -41,6 +42,8 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
+  \item{label.e}{Label for experimental group.}
+  \item{label.c}{Label for control group.}
   \item{sm}{A character string indicating which summary measure
     (\code{"MD"} or \code{"SMD"}) is to be used for pooling of
     studies.}

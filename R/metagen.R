@@ -4,6 +4,7 @@ metagen <- function(TE, seTE,
                     level=0.95, level.comb=level,
                     comb.fixed=TRUE, comb.random=TRUE,
                     title="", complab="", outclab="",
+                    label.e="Experimental", label.c="Control",
                     byvar, bylab, print.byvar=TRUE
                     ){
 
@@ -167,6 +168,8 @@ metagen <- function(TE, seTE,
               title=title,
               complab=complab,
               outclab=outclab,
+              label.e=label.e,
+              label.c=label.c,
               call=match.call())
   ##
   if (!missing(byvar)) res$byvar <- byvar

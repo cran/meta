@@ -14,6 +14,7 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
         level = 0.95, level.comb = level,
         comb.fixed=TRUE, comb.random=TRUE,
         title="", complab="", outclab="",
+        label.e="Experimental", label.c="Control",
         byvar, bylab, print.byvar=TRUE)
 }
 
@@ -37,6 +38,8 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
+  \item{label.e}{Label for experimental group.}
+  \item{label.c}{Label for control group.}
   \item{byvar}{An optional vector containing grouping information (must
     be of same length as \code{TE}).}
   \item{bylab}{A character string with a label for the grouping variable.}

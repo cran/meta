@@ -22,7 +22,7 @@ forest(x, byvar=x$byvar, bylab=x$bylab,
        ref=ifelse(x$sm \%in\% c("RR", "OR", "HR"), 1, 0),
        leftcols=NULL, rightcols=NULL,
        leftlabs=NULL, rightlabs=NULL,
-       lab.e="Experimental", lab.c="Control",
+       lab.e=x$label.e, lab.c=x$label.c,
        lab.e.attach.to.col=NULL, lab.c.attach.to.col=NULL,
        lwd=1,
        at=NULL, label=TRUE,
@@ -168,6 +168,10 @@ forest(x, byvar=x$byvar, bylab=x$bylab,
   "W(random)")}. For additional columns the column name
   will be used as label. It is possible to only provide labels for new
   columns (see Examples).
+
+  If parameters \code{lab.e} and \code{lab.c} are \code{NULL},
+  "Experimental" and "Control" are used as labels for experimental and
+  control group, respectively.
   
   Review Manager 5 (RevMan 5) is the current software used for
   preparing and maintaining Cochrane Reviews

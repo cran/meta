@@ -7,7 +7,10 @@ ci                      Calculation of confidence intervals (normal
                         approximation)
 forest                  Forest plot (new plot function for objects of
                         class meta)
-funnel                  Plot to assess funnel plot asymmetry
+funnel                  Generic function to produce a funnel plot.
+funnel.meta             Plot to assess funnel plot asymmetry
+labbe                   L\'Abbe plot
+labbe.metabin           L\'Abbe plot
 metabias                Test for funnel plot asymmetry
 metabin                 Meta-analysis of binary outcome data
 metacont                Meta-analysis of continuous outcome data

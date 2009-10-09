@@ -129,7 +129,7 @@ metabias(x, seTE, TE.fixed, seTE.fixed,
 }
 \author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
 
-\seealso{\code{\link{funnel}}, \code{\link{metabin}}, \code{\link{metacont}}, \code{\link{metagen}}}
+\seealso{\code{\link{funnel}}, \code{\link{funnel.meta}}, \code{\link{metabin}}, \code{\link{metacont}}, \code{\link{metagen}}}
 
 \examples{
 data(Olkin95)

@@ -1,3 +1,14 @@
+2012-05-03, version 2.0-4
+
+Function metaprop:
+- modified so that variance estimate for log- and logit-transformation
+  (sm="PLN" and sm="PLOGIT") is based on Pettigrew et al. (1986).
+
+Reference Pettigrew et al. (1986) has been added to the following help
+pages:
+- metabin, metaprop
+
+
 2012-04-17, version 2.0-2
 
 Function metaprop:

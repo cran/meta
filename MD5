@@ -1,8 +1,8 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
 146a4ebebf95de5ebaef99711f4f121e *COPYRIGHT
-2b531d5daa2d263470fbe7b0074eacfd *DESCRIPTION
+21a1d52c59c998101b1dc692e89f7c49 *DESCRIPTION
 dc5b96d90ab7647af661853f3eb5d0f4 *NAMESPACE
-c961402dd7cb2a92425a4b9ee6f6c19f *NEWS
+bda7a28320a064020a16d87ba3817318 *NEWS
 737c999a396b81dc40e0f92c0766c59f *R/addvar.R
 094b946cc45e94c01b309220fd51a4cb *R/as.data.frame.meta.R
 25e017c1da012a876103697dd44099a9 *R/asin2p.R
@@ -43,7 +43,7 @@ f892f3794c9c56e7349e3c065499a5d6 *R/p.ci.R
 da976fe44f9239497600ca34483e9096 *R/print.meta.R
 9ec2390653b6830ff4c8925b599d1a4b *R/print.metabias.R
 7ef3b758cf1dfc0cfb418aad1c4ecd63 *R/print.rm5.R
-c078c91432b786398a7c557324804d76 *R/print.summary.meta.R
+f7b9a1aa8a0aee433afa5de86150a7d4 *R/print.summary.meta.R
 9003e2d1596053a7f5f9b40abdd3d6d5 *R/print.summary.rm5.R
 59daee1e1f974a1a30623fccf083eccd *R/radial.R
 3899f77880fb2006faa34fe876cfefd7 *R/radial.default.R
@@ -51,7 +51,7 @@ c078c91432b786398a7c557324804d76 *R/print.summary.meta.R
 162be376b273de945757f515e1a7dda9 *R/read.mtv.R
 94ea70b0a6cbe64686cbb5856a09bd63 *R/read.rm5.R
 1c4bd078828d34854c523a07e45ac23c *R/rmSpace.R
-c9c49178108c0fc9855987f7e9b34b62 *R/summary.meta.R
+711fa4fc6503061b5a926eb6cc419570 *R/summary.meta.R
 cd70431af89547d12a5922efd33274dd *R/summary.rm5.R
 351076dd9dcec3136a92adfd3cc11fa4 *R/trimfill.R
 ee04937bba733ec6480f79cd7a58b24f *R/trimfill.default.R

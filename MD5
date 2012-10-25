@@ -1,8 +1,8 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
 146a4ebebf95de5ebaef99711f4f121e *COPYRIGHT
-21a1d52c59c998101b1dc692e89f7c49 *DESCRIPTION
+b77a07645ae4370e33cd0dd22bb4250b *DESCRIPTION
 dc5b96d90ab7647af661853f3eb5d0f4 *NAMESPACE
-bda7a28320a064020a16d87ba3817318 *NEWS
+87357756b31aa624667eeed92bdca662 *NEWS
 737c999a396b81dc40e0f92c0766c59f *R/addvar.R
 094b946cc45e94c01b309220fd51a4cb *R/as.data.frame.meta.R
 25e017c1da012a876103697dd44099a9 *R/asin2p.R
@@ -10,7 +10,7 @@ e331db5731112742dfdbc5c2f3a282b9 *R/catmeth.R
 c2f0ca9c2bd0d7dbcfbe7d11d5224c7c *R/ci.R
 fd98d7e26d3964b612eac9fb29fe9b5e *R/crtitle.R
 c5d8e61a4475cc5b465ecc2a32a7a465 *R/forest.R
-8592f8c75b53ad964968878803ef87f8 *R/forest.meta.R
+e8f4f11a2dc71b871d906648b755388a *R/forest.meta.R
 15dfc83a44bf1792a66dea3cd3252c6b *R/format.p.R
 4b38b46ce435d62ce262fbf30cb9032f *R/funnel.R
 45155d1329e2c6241d2c27ff2203dc76 *R/funnel.default.R
@@ -32,9 +32,9 @@ eff6fea248472191703f6099a913b0df *R/metabias.meta.R
 2cac10acbd00a3370da06932cf1ef960 *R/metacont.R
 a5e4d6c6ed6574a332333fd6ea365bf6 *R/metacor.R
 bad76c7566e0c12f2e6b8817ae878735 *R/metacr.R
-957ca5738acbceddeed0933d48a0d86c *R/metacum.R
+f5b76bdc327892f8d973c4b6c3bc13c8 *R/metacum.R
 58036704d998b46a64a018f77e470ec4 *R/metagen.R
-08c39f7ba090eb67f671fd24804e1bf7 *R/metainf.R
+b30b69d0dbdb4fa9f1a7fb938cf429d6 *R/metainf.R
 1d5af96189ffc23a711ea8a06c8702f5 *R/metaprop.R
 91da7656215eb1d6a1da4698a56b943e *R/metareg.R
 f892f3794c9c56e7349e3c065499a5d6 *R/p.ci.R
@@ -51,7 +51,7 @@ f7b9a1aa8a0aee433afa5de86150a7d4 *R/print.summary.meta.R
 162be376b273de945757f515e1a7dda9 *R/read.mtv.R
 94ea70b0a6cbe64686cbb5856a09bd63 *R/read.rm5.R
 1c4bd078828d34854c523a07e45ac23c *R/rmSpace.R
-711fa4fc6503061b5a926eb6cc419570 *R/summary.meta.R
+8ca668e46779995ecee9d4efa18e3764 *R/summary.meta.R
 cd70431af89547d12a5922efd33274dd *R/summary.rm5.R
 351076dd9dcec3136a92adfd3cc11fa4 *R/trimfill.R
 ee04937bba733ec6480f79cd7a58b24f *R/trimfill.default.R

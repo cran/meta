@@ -1,8 +1,8 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
 146a4ebebf95de5ebaef99711f4f121e *COPYRIGHT
-1039e1f504411e369be76534dcfa228b *DESCRIPTION
+c65f31043dbf19bb25cf03f2f90ad901 *DESCRIPTION
 dc5b96d90ab7647af661853f3eb5d0f4 *NAMESPACE
-a80a8a836f75311a385a68940c168852 *NEWS
+5fabed519ee50fef465c552025d95087 *NEWS
 737c999a396b81dc40e0f92c0766c59f *R/addvar.R
 094b946cc45e94c01b309220fd51a4cb *R/as.data.frame.meta.R
 dfef6712d55020a3c29a396d2b742cf1 *R/asin2p.R
@@ -10,8 +10,8 @@ e331db5731112742dfdbc5c2f3a282b9 *R/catmeth.R
 c2f0ca9c2bd0d7dbcfbe7d11d5224c7c *R/ci.R
 fd98d7e26d3964b612eac9fb29fe9b5e *R/crtitle.R
 c5d8e61a4475cc5b465ecc2a32a7a465 *R/forest.R
-05353f8af90ec5bfecd607fb1c125643 *R/forest.meta.R
-15dfc83a44bf1792a66dea3cd3252c6b *R/format.p.R
+1c09030be99b69f352263dffd196d72f *R/forest.meta.R
+4b2544be5aa240ca4d5d48d7e1e7c4dd *R/format.p.R
 4b38b46ce435d62ce262fbf30cb9032f *R/funnel.R
 45155d1329e2c6241d2c27ff2203dc76 *R/funnel.default.R
 822f8e35b95e92ab5e9f35c2a1e30030 *R/funnel.meta.R
@@ -19,8 +19,8 @@ c5d8e61a4475cc5b465ecc2a32a7a465 *R/forest.R
 c567f061a6cf383b795550379b6c2825 *R/is.installed.metafor.R
 38837521ec229a55a0c921ab4878bb29 *R/kentau.R
 e034df92dd4d9ebade6c7022a0d384b7 *R/labbe.R
-7140e7b61828efc0f9e441032fb7e913 *R/labbe.default.R
-58c04588a334dcc3a9a7f2dc042edd8d *R/labbe.metabin.R
+983712bd948293ecf534137aa0947527 *R/labbe.default.R
+13c84468f939fce166dd3ba4ef2b76d2 *R/labbe.metabin.R
 1f41b1f308ebddc2cfc20506cd944c66 *R/linregcore.R
 1fda2ce96192c286cf0c3233ddd6733d *R/logit2p.R
 27cc4552cbb659e2c49c85d4313a26e1 *R/meta-internal.R
@@ -73,7 +73,7 @@ c1d222e9f27f5df6c145f103ae912dc6 *man/amlodipine.Rd
 d7f8f48daff6c9b82b6b0a753cfc09ff *man/ci.Rd
 33571871998e14434e0fee056e52b46b *man/cisapride.Rd
 10b53541ca48db39fc0b72d08a1ef8b3 *man/forest.Rd
-df2538d3894779f2ddbb3cd27fa9cfb4 *man/forest.meta.Rd
+752c0b70f95ed57a19ac249541105974 *man/forest.meta.Rd
 1aa2fbc1ff8547585aca6f2d7d0751c1 *man/funnel.Rd
 7402e0217b82f6b382f0992c7fbefc6b *man/funnel.meta.Rd
 22985e48e5ae08deb9eefd938a8e1265 *man/labbe.Rd

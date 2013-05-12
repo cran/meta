@@ -1,8 +1,8 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
 146a4ebebf95de5ebaef99711f4f121e *COPYRIGHT
-c65f31043dbf19bb25cf03f2f90ad901 *DESCRIPTION
+e338f4932bc439e7acccd3b3a5356c75 *DESCRIPTION
 dc5b96d90ab7647af661853f3eb5d0f4 *NAMESPACE
-5fabed519ee50fef465c552025d95087 *NEWS
+990a666349a665dd2de85f821b1e88d4 *NEWS
 737c999a396b81dc40e0f92c0766c59f *R/addvar.R
 094b946cc45e94c01b309220fd51a4cb *R/as.data.frame.meta.R
 dfef6712d55020a3c29a396d2b742cf1 *R/asin2p.R
@@ -10,7 +10,7 @@ e331db5731112742dfdbc5c2f3a282b9 *R/catmeth.R
 c2f0ca9c2bd0d7dbcfbe7d11d5224c7c *R/ci.R
 fd98d7e26d3964b612eac9fb29fe9b5e *R/crtitle.R
 c5d8e61a4475cc5b465ecc2a32a7a465 *R/forest.R
-1c09030be99b69f352263dffd196d72f *R/forest.meta.R
+43fb09a43ca0ac82893ca813d193b08f *R/forest.meta.R
 4b2544be5aa240ca4d5d48d7e1e7c4dd *R/format.p.R
 4b38b46ce435d62ce262fbf30cb9032f *R/funnel.R
 45155d1329e2c6241d2c27ff2203dc76 *R/funnel.default.R
@@ -28,7 +28,7 @@ ec1bb7a66b9a750ed6ccd0faefdc9cc0 *R/metabias.R
 d237123f0fd4f63a75360caa395bef34 *R/metabias.default.R
 eff6fea248472191703f6099a913b0df *R/metabias.meta.R
 0b21543e36e9f5020aec5af55df956bf *R/metabias.rm5.R
-71f2bb418199411ec46081a963ca8462 *R/metabin.R
+5c7eb3fe01952a55e179c07870ec3475 *R/metabin.R
 2cac10acbd00a3370da06932cf1ef960 *R/metacont.R
 a5e4d6c6ed6574a332333fd6ea365bf6 *R/metacor.R
 bad76c7566e0c12f2e6b8817ae878735 *R/metacr.R
@@ -73,7 +73,7 @@ c1d222e9f27f5df6c145f103ae912dc6 *man/amlodipine.Rd
 d7f8f48daff6c9b82b6b0a753cfc09ff *man/ci.Rd
 33571871998e14434e0fee056e52b46b *man/cisapride.Rd
 10b53541ca48db39fc0b72d08a1ef8b3 *man/forest.Rd
-752c0b70f95ed57a19ac249541105974 *man/forest.meta.Rd
+4e046fb6a6ea3787293a5f484a17465f *man/forest.meta.Rd
 1aa2fbc1ff8547585aca6f2d7d0751c1 *man/funnel.Rd
 7402e0217b82f6b382f0992c7fbefc6b *man/funnel.meta.Rd
 22985e48e5ae08deb9eefd938a8e1265 *man/labbe.Rd
@@ -82,7 +82,7 @@ bc2364c4a0b2cc91e5243f75c1bfed93 *man/metabias.Rd
 ca6eb7841c81b19364f8c771c796dc0b *man/metabias.meta.Rd
 0896198af15c3671a8386b65beca6c99 *man/metabin.Rd
 7872071e2504dcd50fc7c4c0d58ec2bd *man/metacont.Rd
-830337fd42a6027aa176f18a498651f7 *man/metacor.Rd
+a4c4920dec010bf7581e2c00bf6e768d *man/metacor.Rd
 41d9ae99a46a07908702e1c8b7805e02 *man/metacr.Rd
 491a4fb79aae53200f4590a4e51e56b0 *man/metacum.Rd
 28421c7e1232bfd548d0f76fbec040a3 *man/metagen.Rd

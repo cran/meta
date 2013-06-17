@@ -22,6 +22,8 @@ metabin(event.e, n.e, event.c, n.c, studlab,
         comb.fixed=TRUE, comb.random=TRUE,
         hakn=FALSE,
         method.tau="DL", tau.preset=NULL, TE.tau=NULL,
+        tau.common=FALSE,
+        prediction=FALSE, level.predict=level,
         method.bias=NULL,
         title="", complab="", outclab="",
         label.e="Experimental", label.c="Control",
@@ -75,6 +77,10 @@ metabin(event.e, n.e, event.c, n.c, studlab,
     meta-analysis should be conducted.}
   \item{comb.random}{A logical indicating whether a random effects
     meta-analysis should be conducted.}
+  \item{prediction}{A logical indicating whether a prediction interval
+    should be printed.}
+  \item{level.predict}{The level used to calculate prediction interval
+    for a new study.}
   \item{hakn}{A logical indicating whether the method by Hartung and
           Knapp should be used to adjust test statistics and
           confidence intervals.}
@@ -85,6 +91,8 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   \item{tau.preset}{Prespecified value for between-study variance \eqn{\tau^2}.}
   \item{TE.tau}{Overall treatment effect used to estimate the
   between-study variance \eqn{\tau^2}.}
+  \item{tau.common}{A logical indicating whether tau-squared should be
+    the same across subgroups.}
   \item{method.bias}{A character string indicating which test for
     funnel plot asymmetry is to be used. Either \code{"rank"},
     \code{"linreg"}, \code{"mm"}, \code{"count"}, \code{"score"}, or
@@ -188,6 +196,10 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   \code{rma.uni} of R package metafor is called internally. See help
   page of R function \code{rma.uni} for more details on the various
   methods to estimate between-study variance \eqn{\tau^2}{tau^2}.
+
+  A prediction interval for treatment effect of a new study is
+  calculated (Higgins et al., 2009) if arguments \code{prediction} and
+  \code{comb.random} are \code{TRUE}.
 }
 
 \value{
@@ -199,6 +211,7 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   \item{allstudies, MH.exact, RR.cochrane, warn,}{}
   \item{level, level.comb, comb.fixed, comb.random,}{}
   \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{}
+  \item{tau.common, title, complab, outclab,}{}
   \item{label.e, label.c, label.left, label.right,}{}
   \item{byvar, bylab, print.byvar}{As defined above.}
   \item{TE, seTE}{Estimated treatment effect and standard error of individual studies.}
@@ -209,24 +222,30 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   \item{lower.fixed, upper.fixed}{Lower and upper confidence interval limits
   (fixed effect model).}
   \item{zval.fixed, pval.fixed}{z-value and p-value for test of
-  overall treatment effect (fixed effect model).}
+    overall treatment effect (fixed effect model).}
   \item{TE.random, seTE.random}{Estimated overall treatment effect and
     standard error (random effects model).}
   \item{lower.random, upper.random}{Lower and upper confidence interval limits
-  (random effects model).}
+    (random effects model).}
   \item{zval.random, pval.random}{z-value or t-value and corresponding
     p-value for test of overall treatment effect (random effects
     model).}
+  \item{prediction, level.predict}{As defined above.}
+  \item{seTE.predict}{Standard error utilised for prediction interval.}
+  \item{lower.predict, upper.predict}{Lower and upper limits of prediction interval.}
   \item{k}{Number of studies combined in meta-analysis.}
   \item{Q}{Heterogeneity statistic Q.}
   \item{tau}{Square-root of between-study variance.}
+  \item{se.tau}{Standard error of square-root of between-study variance.}
+  \item{C}{Scaling factor utilised internally to calculate common
+    tau-squared across subgroups.}
   \item{Q.CMH}{Cochran-Mantel-Haenszel test statistic for overall effect.}
   \item{incr.e, incr.c}{Increment added to cells in the experimental and
     control group, respectively}
   \item{sparse}{Logical flag indicating if any study included in
     meta-analysis has any zero cell frequencies.}
   \item{df.hakn}{Degrees of freedom for test of treatment effect for
-  Hartung-Knapp method (only if \code{hakn=TRUE}).}
+    Hartung-Knapp method (only if \code{hakn=TRUE}).}
   \item{call}{Function call.}
   \item{version}{Version of R package meta used to create object.}
 }
@@ -236,7 +255,7 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   \emph{The Handbook of Research Synthesis}.
   Newbury Park, CA: Russell Sage Foundation.
 
-  Diamond GA, Bax L, Kaul S (2007,
+  Diamond GA, Bax L, Kaul S (2007),
   Uncertain Effects of Rosiglitazone on the Risk for Myocardial
   Infarction and Cardiovascular Death.
   \emph{Annals of Internal Medicine}, \bold{147}, 578--581.
@@ -257,6 +276,11 @@ metabin(event.e, n.e, event.c, n.c, studlab,
   A Refined Method for the Meta-analysis of Controlled Clinical Trials
   with Binary Outcome.
   \emph{Statistics in Medicine}, \bold{20}, 3875--89.
+  
+  Higgins JPT, Thompson SG, Spiegelhalter DJ (2009),
+  A re-evaluation of random-effects meta-analysis.
+  \emph{Journal of the Royal Statistical Society: Series A},
+  \bold{172}, 137-159.
 
   Knapp G & Hartung J (2003),
   Improved Tests for a Random Effects Meta-regression with a Single

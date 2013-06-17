@@ -5,6 +5,8 @@ metagen <- function(TE, seTE,
                     comb.fixed=TRUE, comb.random=TRUE,
                     hakn=FALSE,
                     method.tau="DL", tau.preset=NULL, TE.tau=NULL,
+                    tau.common=FALSE,
+                    prediction=FALSE, level.predict=level,
                     method.bias="linreg",
                     n.e=NULL, n.c=NULL,
                     title="", complab="", outclab="",
@@ -14,13 +16,23 @@ metagen <- function(TE, seTE,
                     warn=TRUE
                     ){
   
+  
+  Ccalc <- function(x){
+    res <- (sum(x  , na.rm=TRUE) -
+            sum(x^2, na.rm=TRUE)/
+            sum(x  , na.rm=TRUE))
+    ##
+    res
+  }
+  
+  
   if (is.null(data)) data <- sys.frame(sys.parent())
   ##
   ## Catch TE, seTE, studlab (possibly), byvar (possibly) from data:
   ##
   mf <- match.call()
   mf$data <- mf$subset <- mf$sm <- NULL
-  mf$level <- mf$level.comb <- NULL
+  mf$level <- mf$level.comb <- mf$level.predict <- mf$prediction <- NULL
   mf$hakn <- mf$method.tau <- mf$tau.preset <- mf$TE.tau <- NULL
   mf$method.bias <- mf$n.e <- mf$n.c <- NULL
   mf[[1]] <- as.name("data.frame")
@@ -32,7 +44,7 @@ metagen <- function(TE, seTE,
   mf2$TE <- mf2$seTE <- NULL
   mf2$studlab <- NULL
   mf2$data <- mf2$sm <- NULL
-  mf2$level <- mf2$level.comb <- NULL
+  mf2$level <- mf2$level.comb <- mf2$level.predict <- mf2$prediction <- NULL
   mf2$hakn <- mf2$method.tau <- mf2$tau.preset <- mf2$TE.tau <- NULL
   mf2$method.bias <- mf2$n.e <- mf2$n.c <- NULL
   mf2$byvar <- NULL
@@ -55,7 +67,8 @@ metagen <- function(TE, seTE,
   TE   <- mf$TE
   seTE <- mf$seTE
   ##
-  if (!missing(byvar)){
+  missing.byvar <- missing(byvar)
+  if (!missing.byvar){
     byvar.name <- deparse(substitute(byvar))
     byvar <- mf$byvar
   }
@@ -100,6 +113,11 @@ metagen <- function(TE, seTE,
     stop("parameter 'level.comb' must be a numeric of length 1")
   if (level.comb <= 0 | level.comb >= 1)
     stop("parameter 'level.comb': no valid level for confidence interval")
+  ##
+  if (!is.numeric(level.predict) | length(level.predict)!=1)
+    stop("parameter 'level.predict' must be a numeric of length 1")
+  if (level.predict <= 0 | level.predict >= 1)
+    stop("parameter 'level.predict': no valid level for confidence interval")
   
   
   imethod.tau <- charmatch(tolower(method.tau),
@@ -132,6 +150,8 @@ metagen <- function(TE, seTE,
   k <- sum(!is.na(seTE))
 
   
+  tau2 <- NA
+  
   if (k==0){
     TE.fixed <- NA
     seTE.fixed <- NA
@@ -152,8 +172,30 @@ metagen <- function(TE, seTE,
     Q <- NA
     tau2 <- NA
     se.tau2 <- NA
+    ##
+    Cval <- NA
   }
   else{
+    ##
+    ## Subgroup analysis with equal tau^2:
+    ##
+    if (!missing.byvar & tau.common){
+      sm1 <- summary(metagen(TE, seTE,
+                             byvar=byvar,
+                             method.tau=method.tau))
+      sQ.w <- sum(sm1$Q.w)
+      sk.w <- sum(sm1$k.w-1)
+      sC.w <- sum(sm1$C.w)
+      ##
+      if (round(sQ.w, digits=18)<=sk.w) tau2 <- 0
+      else tau2 <- (sQ.w-sk.w)/sC.w
+      ##
+      if (!is.null(tau.preset)){
+        warning("Value for argument 'tau.preset' overwritten as argument 'tau.common=TRUE'")
+        tau.preset <- sqrt(tau2)
+      }
+    }
+    ##
     if (method.tau=="DL" & hakn==FALSE){
       ##
       ## Fixed effects estimate
@@ -180,13 +222,20 @@ metagen <- function(TE, seTE,
       else
         Q <- sum(w.fixed * (TE - TE.tau  )^2, na.rm=TRUE)
       ##
+      ## Calculate scaling factor C
+      ##
+      Cval <- Ccalc(w.fixed)
+      ##
       ## Calculate between-study heterogeneity tau^2 
       ##
       if (is.null(tau.preset)){
-        if (round(Q, digits=18)<=(k-1)) tau2 <- 0
-        else tau2 <- (Q-(k-1))/(sum(w.fixed  , na.rm=TRUE) -
-                                sum(w.fixed^2, na.rm=TRUE)/
-                                sum(w.fixed  , na.rm=TRUE))
+        ##
+        ## Following check is necessary because of argument tau.common
+        ##
+        if (is.na(tau2)){
+          if (round(Q, digits=18)<=(k-1)) tau2 <- 0
+          else tau2 <- (Q-(k-1))/Cval
+        }
       }
       else
         tau2 <- tau.preset^2
@@ -221,6 +270,7 @@ metagen <- function(TE, seTE,
       TE.fixed <- as.numeric(tres.f$b[,1])
       seTE.fixed <- tres.f$se
       w.fixed <- 1 / tres.f$vi
+      Cval <- Ccalc(w.fixed)
       ##
       zval.fixed <- tres.f$zval
       pval.fixed <- tres.f$pval
@@ -254,17 +304,42 @@ metagen <- function(TE, seTE,
         se.tau2 <- NULL
     }
   }
+
+  if (k>=3){
+    seTE.predict <- sqrt(seTE.random^2 + tau2)
+    ci.p <- ci(TE.random, seTE.predict, level.predict, k-2)
+    p.lower <- ci.p$lower
+    p.upper <- ci.p$upper
+  }
+  else{
+    seTE.predict <- NA
+    p.lower <- NA
+    p.upper <- NA
+  }
+  
+  
+  if (!missing.byvar & tau.common)
+    tau.preset <- NULL
+  
   
   res <- list(TE=TE, seTE=seTE,
               studlab=studlab,
               w.fixed=w.fixed, w.random=w.random,
+              ##
               TE.fixed=TE.fixed, seTE.fixed=seTE.fixed,
               lower.fixed=lower.fixed, upper.fixed=upper.fixed,
               zval.fixed=zval.fixed, pval.fixed=pval.fixed,
+              ##
               TE.random=TE.random, seTE.random=seTE.random,
               lower.random=lower.random, upper.random=upper.random,
               zval.random=zval.random, pval.random=pval.random,
+              ##
+              seTE.predict=seTE.predict,
+              lower.predict=p.lower, upper.predict=p.upper,
+              level.predict=level.predict,
+              ##
               k=k, Q=Q, tau=sqrt(tau2), se.tau2=se.tau2,
+              C=Cval,
               sm=sm, method="Inverse",
               level=level,
               level.comb=level.comb,
@@ -275,6 +350,8 @@ metagen <- function(TE, seTE,
               method.tau=method.tau,
               tau.preset=tau.preset,
               TE.tau=if (!missing(TE.tau) & method.tau=="DL") TE.tau else NULL,
+              tau.common=tau.common,
+              prediction=prediction,
               method.bias=method.bias,
               n.e=n.e,
               n.c=n.c,

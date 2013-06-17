@@ -10,9 +10,16 @@ forest.meta <- function(x,
                         ##
                         comb.fixed=x$comb.fixed, comb.random=x$comb.random,
                         overall=TRUE,
-                        text.fixed="Fixed effect model",
-                        text.random="Random effects model",
+                        text.fixed=if (level!=level.comb) paste("Fixed effect model (",
+                                         round(level.comb*100), "%-CI)", sep="") else "Fixed effect model",
+                        text.random=if (level!=level.comb) paste("Random effects model (",
+                                          round(level.comb*100), "%-CI)", sep="") else "Random effects model",
                         lty.fixed=2, lty.random=3,
+                        ##
+                        prediction=x$prediction,
+                        level.predict=if (length(x$level.predict)==0) level else x$level.predict,
+                        text.predict=if (level!=level.predict) paste("Prediction interval (",
+                                           round(level.predict*100), "%)", sep="") else "Prediction interval",
                         ##
                         text.fixed.w=text.fixed,
                         text.random.w=text.random,
@@ -59,6 +66,9 @@ forest.meta <- function(x,
                         col.diamond.fixed.lines=col.diamond.lines,
                         col.diamond.random.lines=col.diamond.lines,
                         ##
+                        col.predict="red",
+                        col.predict.lines="black",
+                        ##
                         col.by="darkgray",
                         ##
                         print.I2=TRUE,
@@ -73,9 +83,11 @@ forest.meta <- function(x,
                         fs.heading=fontsize,
                         fs.fixed=fontsize,
                         fs.random=fs.fixed,
+                        fs.predict=fs.fixed,
                         fs.study=fontsize,
                         fs.fixed.labels=fs.fixed,
                         fs.random.labels=fs.random,
+                        fs.predict.labels=fs.predict,
                         fs.study.labels=fs.study,
                         fs.hetstat=fontsize-2,
                         fs.axis=fontsize,
@@ -83,13 +95,14 @@ forest.meta <- function(x,
                         fs.xlab=fontsize,
                         fs.lr=fontsize,
                         ##
-                        ##fontface="bold",
                         ff.heading="bold",
                         ff.fixed="bold",
                         ff.random=ff.fixed,
+                        ff.predict=ff.fixed,
                         ff.study="plain",
                         ff.fixed.labels=ff.fixed,
                         ff.random.labels=ff.random,
+                        ff.predict.labels=ff.predict,
                         ff.study.labels=ff.study,
                         ff.hetstat="bold.italic",
                         ff.axis="plain",
@@ -122,8 +135,10 @@ forest.meta <- function(x,
   if (new)
     grid.newpage()
   
-  if (inherits(x, "metainf")|inherits(x, "metacum"))
+  if (inherits(x, "metainf")|inherits(x, "metacum")){
     hetstat <- FALSE
+    prediction <- FALSE
+  }
   
   x.name <- deparse(substitute(x))
   
@@ -141,6 +156,12 @@ forest.meta <- function(x,
   if (length(comb.random)==0){
     comb.random <- FALSE
   }
+  ##
+  if (length(prediction)==0){
+    prediction <- FALSE
+  }
+  if (x$k < 3)
+    prediction <- FALSE
   ##
   if (length(print.byvar)==0){
     print.byvar <- TRUE
@@ -164,6 +185,32 @@ forest.meta <- function(x,
       warning("level.comb set to 0.95")
     level.comb <- 0.95
   }
+  ##
+  if (length(level.predict)==0){
+    if (prediction & comb.random)
+      warning("level.predict set to 0.95")
+    level.predict <- 0.95
+  }
+  
+  
+  ##
+  ## Check for levels of confidence interval
+  ##
+  if (!is.numeric(level) | length(level)!=1)
+    stop("parameter 'level' must be a numeric of length 1")
+  if (level <= 0 | level >= 1)
+    stop("parameter 'level': no valid level for confidence interval")
+  ##
+  if (!is.numeric(level.comb) | length(level.comb)!=1)
+    stop("parameter 'level.comb' must be a numeric of length 1")
+  if (level.comb <= 0 | level.comb >= 1)
+    stop("parameter 'level.comb': no valid level for confidence interval")
+  ##
+  if (!is.numeric(level.predict) | length(level.predict)!=1)
+    stop("parameter 'level.predict' must be a numeric of length 1")
+  if (level.predict <= 0 | level.predict >= 1)
+    stop("parameter 'level.predict': no valid level for confidence interval")
+  
   
   if (!missing(boxsize))
       warning("Use of parameter 'boxsize' is deprecated, please use parameter 'squaresize' instead")
@@ -229,12 +276,21 @@ forest.meta <- function(x,
                                   fontface=ff.random)
                                 )
     ##
+    ## Prediction interval:
+    ##
+    res$labels[[4]] <- textGrob(y[3],
+                                x=xpos, just=just,
+                                gp=gpar(
+                                  fontsize=fs.predict,
+                                  fontface=ff.predict)
+                                )
+    ##
     if (by)
       for (i in 1:n.by){
         ##
         ## Fixed effect estimates:
         ##
-        res$labels[[3+i]] <- textGrob(y[2+i],
+        res$labels[[4+i]] <- textGrob(y[3+i],
                                       x=xpos, just=just,
                                       gp=
                                       gpar(
@@ -245,7 +301,7 @@ forest.meta <- function(x,
         ##
         ## Random effects estimates:
         ##
-        res$labels[[3+n.by+i]] <- textGrob(y[2+n.by+i],
+        res$labels[[4+n.by+i]] <- textGrob(y[3+n.by+i],
                                            x=xpos, just=just,
                                            gp=
                                            gpar(
@@ -396,6 +452,27 @@ forest.meta <- function(x,
                    ##y=unit(0.5 + c(0, 0.25*size, 0, -0.25*size), "npc"),
                    y=unit(0.5 + c(0, 0.3*size, 0, -0.3*size), "npc"),
                    gp=gpar(fill=col.diamond, col=col.diamond.lines))
+  }
+  
+  
+  drawPredictionCI <- function(low, upp, size, min, max,
+                               col.predict, col.predict.lines) {
+    ##
+    ## Function to draw a prediction interval
+    ##
+    ##if (!(is.na(low) | is.na(upp)) &&
+    ##    ((min <= low & low <= max) |
+    ##     (min <= upp & upp <= max)))
+    if (!(is.na(low) | is.na(upp))){
+      ## Plot prediction interval only within plotting range
+      ##if (low < min) low <- min
+      ##if (upp > max) upp <- max
+      if ((min <= low & low <= max) |
+          (min <= upp & upp <= max))
+        grid.polygon(x=unit(c(low, low, upp, upp), "native"),
+                     y=unit(0.5 + c(-0.1*size, 0.1*size, 0.1*size, -0.1*size), "npc"),
+                     gp=gpar(fill=col.predict, col=col.predict.lines))
+    }
   }
   
   
@@ -558,12 +635,19 @@ forest.meta <- function(x,
                        col=col$col[i], col.square=col$col.square[i],
                        col.square.lines=col$col.square.lines[i],
                        col.i.inside.square=col$col.i.inside.square[i])
-        else
+        else if (col$type[i] == "s")
           drawSummaryCI(low=col$low[i], eff=col$eff[i], upp=col$upp[i],
                         size=col$sizes[i],
                         min=col$range[1], max=col$range[2],
                         col.diamond=col.diamond[i],
                         col.diamond.lines=col.diamond.lines[i])
+        else if (col$type[i] == "p"){
+          drawPredictionCI(low=col$low[i], upp=col$upp[i],
+                           size=col$sizes[i],
+                           min=col$range[1], max=col$range[2],
+                           col.predict=col.diamond[i],
+                           col.predict.lines=col.diamond.lines[i])
+        }
         popViewport()
       }
     }
@@ -592,6 +676,8 @@ forest.meta <- function(x,
   testchar(col.diamond.lines)
   testchar(col.diamond.fixed.lines)
   testchar(col.diamond.random.lines)
+  testchar(col.predict)
+  testchar(col.predict.lines)
   
   
   iweight <- charmatch(tolower(weight),
@@ -1061,6 +1147,8 @@ forest.meta <- function(x,
   ##
   if (inherits(x, "metaprop")){
     m1 <- metaprop(x$event.e, x$n.e, sm=x$sm,
+                   incr=x$incr, allincr=x$allincr,
+                   addincr=x$addincr,
                    hakn=x$hakn, method.tau=x$method.tau,
                    tau.preset=x$tau.preset, TE.tau=x$TE.tau,
                    warn=x$warn)
@@ -1088,6 +1176,9 @@ forest.meta <- function(x,
     TE.random    <- x$TE.random
     lowTE.random <- x$lower.random
     uppTE.random <- x$upper.random
+    ##
+    lowTE.predict <- NA
+    uppTE.predict <- NA
     ##
     Q    <- NA
     df   <- NA
@@ -1150,13 +1241,39 @@ forest.meta <- function(x,
       }
     }
     ##
+    if (ancientmeta){
+      ## Only use (re)calculated pooled estimate for
+      ## very old versions of R package meta
+      prediction <- FALSE
+      lowTE.predict <- NA
+      uppTE.predict <- NA
+    }
+    else{
+      if (!prediction){
+        lowTE.predict <- NA
+        uppTE.predict <- NA
+      }
+      else{
+        ## Use available values for pooled estimate
+        if (!is.null(x$level.predict) && x$level.predict == level.predict){
+          lowTE.predict <- x$lower.predict
+          uppTE.predict <- x$upper.predict
+        }
+        else{
+          ci.p <- ci(x$TE.random, x$seTE.predict, level=level.predict, x$k-2)
+          lowTE.predict <- ci.p$lower
+          uppTE.predict <- ci.p$upper
+        }
+      }
+    } 
+    ##
     Q    <- sm1$Q
     df   <- sm1$k-1
     I2   <- sm1$I2$TE
     tau2 <- sm1$tau^2
   }
   
-
+  
   if (overall.hetstat){
     dummy <- FALSE
     ##
@@ -1241,6 +1358,8 @@ forest.meta <- function(x,
       ##
       if (inherits(x, "metaprop")){
         m.w <- metaprop(x$event.e[sel], x$n.e[sel], sm=x$sm,
+                        incr=x$incr, allincr=x$allincr,
+                        addincr=x$addincr,
                         hakn=x$hakn, method.tau=x$method.tau,
                         tau.preset=x$tau.preset, TE.tau=x$TE.tau,
                         warn=x$warn)
@@ -1417,6 +1536,9 @@ forest.meta <- function(x,
       lowTE.random <- pscale*asin2p(lowTE.random, value="lower")
       uppTE.random <- pscale*asin2p(uppTE.random, value="upper")
       ##
+      lowTE.predict <- pscale*asin2p(lowTE.predict, value="lower")
+      uppTE.predict <- pscale*asin2p(uppTE.predict, value="upper")
+      ##
       if (by){
         TE.w    <- pscale*asin2p(TE.w, value="mean")
         lowTE.w <- pscale*asin2p(lowTE.w, value="lower")
@@ -1433,6 +1555,9 @@ forest.meta <- function(x,
         TE.random    <- pscale*asin2p(TE.random, x$n.harmonic.mean.random, value="mean")
         lowTE.random <- pscale*asin2p(lowTE.random, x$n.harmonic.mean.random, value="lower")
         uppTE.random <- pscale*asin2p(uppTE.random, x$n.harmonic.mean.random, value="upper")
+        ##
+        lowTE.predict <- NA
+        uppTE.predict <- NA
       }
       else{
         TE.fixed    <- pscale*asin2p(TE.fixed, 1/mean(1/x$n), value="mean")
@@ -1442,6 +1567,9 @@ forest.meta <- function(x,
         TE.random    <- pscale*asin2p(TE.random, 1/mean(1/x$n), value="mean")
         lowTE.random <- pscale*asin2p(lowTE.random, 1/mean(1/x$n), value="lower")
         uppTE.random <- pscale*asin2p(uppTE.random, 1/mean(1/x$n), value="upper")
+        ##
+        lowTE.predict <- NA
+        uppTE.predict <- NA
         ##
         if (by){
           TE.w    <- pscale*asin2p(TE.w, 1/harmonic.mean.w, value="mean")
@@ -1473,6 +1601,9 @@ forest.meta <- function(x,
     lowTE.random <- pscale*exp(lowTE.random)
     uppTE.random <- pscale*exp(uppTE.random)
     ##
+    lowTE.predict <- pscale*exp(lowTE.predict)
+    uppTE.predict <- pscale*exp(uppTE.predict)
+    ##
     if (by){
       TE.w    <- pscale*exp(TE.w)
       lowTE.w <- pscale*exp(lowTE.w)
@@ -1501,6 +1632,9 @@ forest.meta <- function(x,
     lowTE.random <- pscale*logit2p(lowTE.random)
     uppTE.random <- pscale*logit2p(uppTE.random)
     ##
+    lowTE.predict <- pscale*logit2p(lowTE.predict)
+    uppTE.predict <- pscale*logit2p(uppTE.predict)
+    ##
     if (by){
       TE.w    <- pscale*logit2p(TE.w)
       lowTE.w <- pscale*logit2p(lowTE.w)
@@ -1520,6 +1654,9 @@ forest.meta <- function(x,
     lowTE.random <- z2cor(lowTE.random)
     uppTE.random <- z2cor(uppTE.random)
     ##
+    lowTE.predict <- z2cor(lowTE.predict)
+    uppTE.predict <- z2cor(uppTE.predict)
+    ##
     if (by){
       TE.w    <- z2cor(TE.w)
       lowTE.w <- z2cor(lowTE.w)
@@ -1537,6 +1674,11 @@ forest.meta <- function(x,
     TE.random <- NA
     lowTE.random <- NA
     uppTE.random <- NA
+  }
+  ##
+  if (!prediction){
+    lowTE.predict <- NA
+    uppTE.predict <- NA
   }
   
   
@@ -1588,67 +1730,69 @@ forest.meta <- function(x,
     if (length(text.random.w)==1&n.by>1)
       text.random.w <- rep(text.random.w, n.by)
     ##
-    modlabs <- c(text.fixed, text.random, hetstat.overall,
+    modlabs <- c(text.fixed, text.random, hetstat.overall, text.predict,
                  bylab, text.fixed.w, text.random.w, hetstat.w,
                  studlab)
     ##
-    TEs    <- c(TE.fixed, TE.random, TE.w, TE)
-    lowTEs <- c(lowTE.fixed, lowTE.random, lowTE.w, lowTE)
-    uppTEs <- c(uppTE.fixed, uppTE.random, uppTE.w, uppTE)
+    TEs    <- c(TE.fixed, TE.random, NA, TE.w, TE)
+    lowTEs <- c(lowTE.fixed, lowTE.random, lowTE.predict, lowTE.w, lowTE)
+    uppTEs <- c(uppTE.fixed, uppTE.random, uppTE.predict, uppTE.w, uppTE)
     ##
-    TEs.study <- c("", "", rep("", 3*n.by),
+    TEs.study <- c("", "", "", rep("", 3*n.by),
                    ifelse(is.na(TE.orig), lab.NA,
                           format(round(TE.orig, digits),
                                  scientific=FALSE))
                    )
-    seTEs.study <- c("", "", rep("", 3*n.by),
+    seTEs.study <- c("", "", "", rep("", 3*n.by),
                      ifelse(is.na(seTE), lab.NA,
                             format(round(seTE, 4),
                                    scientific=FALSE))
                      )
     ##
-    w.fixeds  <- c(100, "--", format(c(weight.w.p, w.fixed.p), scientific=FALSE))
-    w.randoms <- c("--", 100, format(c(weight.w.p, w.random.p), scientific=FALSE))
+    w.fixeds  <- c(100, "--", "", format(c(weight.w.p, w.fixed.p), scientific=FALSE))
+    w.randoms <- c("--", 100, "", format(c(weight.w.p, w.random.p), scientific=FALSE))
     ##
     sel.fixed  <- w.fixeds=="--"
     sel.random <- w.randoms=="--"
     ##
-    sel.fixed[2+n.by+1:n.by] <- TRUE
-    sel.random[2+1:n.by] <- TRUE
+    sel.fixed[3+n.by+1:n.by] <- TRUE
+    sel.random[3+1:n.by] <- TRUE
     ##
-    col.diamond <- c(col.diamond.fixed, col.diamond.random,
+    col.diamond <- c(col.diamond.fixed, col.diamond.random, col.predict,
                      rep(col.diamond.fixed, n.by),
                      rep(col.diamond.random, n.by))
     col.diamond.lines <- c(col.diamond.fixed.lines, col.diamond.random.lines,
-                     rep(col.diamond.fixed.lines, n.by),
-                     rep(col.diamond.random.lines, n.by))
+                           col.predict.lines,
+                           rep(col.diamond.fixed.lines, n.by),
+                           rep(col.diamond.random.lines, n.by))
   }
   else{
-    modlabs <- c(text.fixed, text.random, hetstat.overall, studlab)
+    modlabs <- c(text.fixed, text.random, hetstat.overall, text.predict, studlab)
     ##
-    TEs    <- c(TE.fixed, TE.random, TE)
-    lowTEs <- c(lowTE.fixed, lowTE.random, lowTE)
-    uppTEs <- c(uppTE.fixed, uppTE.random, uppTE)
+    TEs    <- c(TE.fixed, TE.random, NA, TE)
+    lowTEs <- c(lowTE.fixed, lowTE.random, lowTE.predict, lowTE)
+    uppTEs <- c(uppTE.fixed, uppTE.random, uppTE.predict, uppTE)
     ##
-    TEs.study <- c("", "",
+    TEs.study <- c("", "", "",
                    ifelse(is.na(TE.orig), lab.NA,
                           format(round(TE.orig, digits),
                                  scientific=FALSE))
                    )
-    seTEs.study <- c("", "",
+    seTEs.study <- c("", "", "",
                      ifelse(is.na(seTE), lab.NA,
                             format(round(seTE, 4),
                                    scientific=FALSE))
                      )
     ##
-    w.fixeds  <- c(100, "--", format(w.fixed.p, scientific=FALSE))
-    w.randoms <- c("--", 100, format(w.random.p, scientific=FALSE))
+    w.fixeds  <- c(100, "--", "", format(w.fixed.p, scientific=FALSE))
+    w.randoms <- c("--", 100, "", format(w.random.p, scientific=FALSE))
     ##
     sel.fixed <- w.fixeds=="--"
     sel.random <- w.randoms=="--"
     ##
-    col.diamond <- c(col.diamond.fixed, col.diamond.random)
-    col.diamond.lines <- c(col.diamond.fixed.lines, col.diamond.random.lines)
+    col.diamond <- c(col.diamond.fixed, col.diamond.random, col.predict)
+    col.diamond.lines <- c(col.diamond.fixed.lines, col.diamond.random.lines,
+                           col.predict.lines)
   }
   ##
   ## Treatment effect and confidence interval
@@ -1674,12 +1818,15 @@ forest.meta <- function(x,
   w.fixed.format  <- paste(w.fixeds, "%", sep="")
   w.random.format <- paste(w.randoms, "%", sep="")
   ##
+  w.fixed.format[w.fixed.format=="%"] <- ""
+  w.random.format[w.random.format=="%"] <- ""
+  ##
   w.fixed.format[sel.fixed] <- "--"
   if (by)
-    w.fixed.format[2+2*n.by+1:n.by] <- ""
+    w.fixed.format[3+2*n.by+1:n.by] <- ""
   w.random.format[sel.random] <- "--"
   if (by)
-    w.random.format[2+2*n.by+1:n.by] <- ""
+    w.random.format[3+2*n.by+1:n.by] <- ""
   ##
   ## Treatment estimate and its standard error
   ##
@@ -1695,38 +1842,38 @@ forest.meta <- function(x,
   ##
   if (by){
     if (pooled.totals){
-      Ne <- c(sum.n.e, sum.n.e, n.e.w, n.e.w, rep(NA, n.by), x$n.e)
-      Nc <- c(sum.n.c, sum.n.c, n.c.w, n.c.w, rep(NA, n.by), x$n.c)
+      Ne <- c(sum.n.e, sum.n.e, NA, n.e.w, n.e.w, rep(NA, n.by), x$n.e)
+      Nc <- c(sum.n.c, sum.n.c, NA, n.c.w, n.c.w, rep(NA, n.by), x$n.c)
     }
     else{
-      Ne <- c(NA, NA, rep(NA, 3*n.by), x$n.e)
-      Nc <- c(NA, NA, rep(NA, 3*n.by), x$n.c)
+      Ne <- c(NA, NA, NA, rep(NA, 3*n.by), x$n.e)
+      Nc <- c(NA, NA, NA, rep(NA, 3*n.by), x$n.c)
     }
     if (pooled.events){
-      Ee <- c(sum.e.e, sum.e.e, e.e.w, e.e.w, rep(NA, n.by), x$event.e)
-      Ec <- c(sum.e.c, sum.e.c, e.c.w, e.c.w, rep(NA, n.by), x$event.c)
+      Ee <- c(sum.e.e, sum.e.e, NA, e.e.w, e.e.w, rep(NA, n.by), x$event.e)
+      Ec <- c(sum.e.c, sum.e.c, NA, e.c.w, e.c.w, rep(NA, n.by), x$event.c)
     }
     else{
-      Ee <- c(NA, NA, rep(NA, 3*n.by), x$event.e)
-      Ec <- c(NA, NA, rep(NA, 3*n.by), x$event.c)
+      Ee <- c(NA, NA, NA, rep(NA, 3*n.by), x$event.e)
+      Ec <- c(NA, NA, NA, rep(NA, 3*n.by), x$event.c)
     }
   }
   else{
     if (pooled.totals){
-      Ne <- c(sum.n.e, sum.n.e, x$n.e)
-      Nc <- c(sum.n.c, sum.n.c, x$n.c)
+      Ne <- c(sum.n.e, sum.n.e, NA, x$n.e)
+      Nc <- c(sum.n.c, sum.n.c, NA, x$n.c)
     }
     else{
-      Ne <- c(NA, NA, x$n.e)
-      Nc <- c(NA, NA, x$n.c)
+      Ne <- c(NA, NA, NA, x$n.e)
+      Nc <- c(NA, NA, NA, x$n.c)
     }
     if (pooled.events){
-      Ee <- c(sum.e.e, sum.e.e, x$event.e)
-      Ec <- c(sum.e.c, sum.e.c, x$event.c)
+      Ee <- c(sum.e.e, sum.e.e, NA, x$event.e)
+      Ec <- c(sum.e.c, sum.e.c, NA, x$event.c)
     }
     else{
-      Ee <- c(NA, NA, x$event.e)
-      Ec <- c(NA, NA, x$event.c)
+      Ee <- c(NA, NA, NA, x$event.e)
+      Ec <- c(NA, NA, NA, x$event.c)
     }
   }
   ##
@@ -1741,26 +1888,26 @@ forest.meta <- function(x,
     Ee.format[2] <- ""
     Ec.format[2] <- ""
     if (by){
-      Ne.format[2+n.by+1:n.by] <- ""
-      Nc.format[2+n.by+1:n.by] <- ""
-      Ee.format[2+n.by+1:n.by] <- ""
-      Ec.format[2+n.by+1:n.by] <- ""
+      Ne.format[3+n.by+1:n.by] <- ""
+      Nc.format[3+n.by+1:n.by] <- ""
+      Ee.format[3+n.by+1:n.by] <- ""
+      Ec.format[3+n.by+1:n.by] <- ""
     }
   }
   ##
   ## Mean and standard deviation
   ##
   if (by){
-    Me <- c("", "", rep("", 3*length(n.e.w)), format(x$mean.e, scientific=FALSE))
-    Mc <- c("", "", rep("", 3*length(n.c.w)), format(x$mean.c, scientific=FALSE))
-    Se <- c("", "", rep("", 3*length(n.e.w)), format(x$sd.e, scientific=FALSE))
-    Sc <- c("", "", rep("", 3*length(n.c.w)), format(x$sd.c, scientific=FALSE))
+    Me <- c("", "", "", rep("", 3*length(n.e.w)), format(x$mean.e, scientific=FALSE))
+    Mc <- c("", "", "", rep("", 3*length(n.c.w)), format(x$mean.c, scientific=FALSE))
+    Se <- c("", "", "", rep("", 3*length(n.e.w)), format(x$sd.e, scientific=FALSE))
+    Sc <- c("", "", "", rep("", 3*length(n.c.w)), format(x$sd.c, scientific=FALSE))
   }
   else{
-    Me <- c("", "", format(x$mean.e, scientific=FALSE))
-    Mc <- c("", "", format(x$mean.c, scientific=FALSE))
-    Se <- c("", "", format(x$sd.e, scientific=FALSE))
-    Sc <- c("", "", format(x$sd.c, scientific=FALSE))
+    Me <- c("", "", "", format(x$mean.e, scientific=FALSE))
+    Mc <- c("", "", "", format(x$mean.c, scientific=FALSE))
+    Se <- c("", "", "", format(x$sd.e, scientific=FALSE))
+    Sc <- c("", "", "", format(x$sd.c, scientific=FALSE))
   }
   ##
   Me.format <- Me
@@ -1958,8 +2105,9 @@ forest.meta <- function(x,
   ##
   ##
   ##
-  yTE.fixed  <- NA
-  yTE.random <- NA
+  yTE.fixed   <- NA
+  yTE.random  <- NA
+  yTE.predict <- NA
   ##
   if (comb.fixed & comb.random & overall){
     yTE.fixed  <- max.yTE+2
@@ -1980,13 +2128,16 @@ forest.meta <- function(x,
         text.fixed <- "Overall"
   }
   ##
+  if (!is.na(yTE.random) & prediction)
+    yTE.predict <- yTE.random+1
+  ##
   if (overall.hetstat)
     if (is.na(yTE.fixed) & is.na(yTE.random))
       yTE.hetstat <- max.yTE+2
     else
-      yTE.hetstat <- max(max.yTE, yTE.fixed, yTE.random, na.rm=TRUE)+1
+      yTE.hetstat <- max(max.yTE, yTE.fixed, yTE.random, yTE.predict, na.rm=TRUE)+1
   else if (!overall.hetstat & addspace)
-      yTE.hetstat <- max(max.yTE, yTE.fixed, yTE.random, na.rm=TRUE)+1
+      yTE.hetstat <- max(max.yTE, yTE.fixed, yTE.random, yTE.predict, na.rm=TRUE)+1
   else
     yTE.hetstat <- NA
   
@@ -1994,6 +2145,7 @@ forest.meta <- function(x,
   ##if (!comb.fixed) text.fixed <- ""
   if (!comb.fixed & !pooled.totals) text.fixed <- ""
   if (!comb.random) text.random <- ""
+  if (!prediction) text.predict <- ""
   
   
   ##
@@ -2002,6 +2154,7 @@ forest.meta <- function(x,
   yTE         <- yHead + yTE + addspace
   yTE.fixed   <- yHead + yTE.fixed + addspace
   yTE.random  <- yHead + yTE.random + addspace
+  yTE.predict <- yHead + yTE.predict + addspace
   yTE.hetstat <- yHead + yTE.hetstat + addspace
   ##
   if (by){
@@ -2012,15 +2165,15 @@ forest.meta <- function(x,
   
   if (by){
     yLab <- c(yHead,
-              yTE.fixed, yTE.random, yTE.hetstat,
+              yTE.fixed, yTE.random, yTE.hetstat, yTE.predict,
               yBylab, yTE.w,
               yTE)
     ##
-    yS <- c(yHead, yTE.fixed, yTE.random, yTE.w, yTE)
+    yS <- c(yHead, yTE.fixed, yTE.random, yTE.predict, yTE.w, yTE)
   }
   else{
-    yLab <- c(yHead, yTE.fixed, yTE.random, yTE.hetstat, yTE)
-    yS   <- c(yHead, yTE.fixed, yTE.random, yTE)
+    yLab <- c(yHead, yTE.fixed, yTE.random, yTE.hetstat, yTE.predict, yTE)
+    yS   <- c(yHead, yTE.fixed, yTE.random, yTE.predict, yTE)
   }
   
   
@@ -2099,12 +2252,21 @@ forest.meta <- function(x,
                                         fontface=ff.hetstat)
                                       )
   ##
+  ## Prediction interval:
+  ##
+  col.studlab$labels[[5]] <- textGrob(text.predict,
+                                      x=0, just="left",
+                                      gp=gpar(
+                                        fontsize=fs.predict.labels,
+                                        fontface=ff.predict.labels)
+                                      )
+  ##
   if (by){
     for (i in 1:n.by){
       ##
       ## Subgroup labels:
       ##
-      col.studlab$labels[[4+i]] <- textGrob(bylab[i],
+      col.studlab$labels[[5+i]] <- textGrob(bylab[i],
                                             x=0, just="left",
                                             gp=
                                             gpar(
@@ -2115,7 +2277,7 @@ forest.meta <- function(x,
       ##
       ## Fixed effect estimates:
       ##
-      col.studlab$labels[[4+n.by+i]] <- textGrob(text.fixed.w[i],
+      col.studlab$labels[[5+n.by+i]] <- textGrob(text.fixed.w[i],
                                                  x=0, just="left",
                                                  gp=
                                                  gpar(
@@ -2126,7 +2288,7 @@ forest.meta <- function(x,
       ##
       ## Random effects estimates:
       ##
-      col.studlab$labels[[4+2*n.by+i]] <- textGrob(text.random.w[i],
+      col.studlab$labels[[5+2*n.by+i]] <- textGrob(text.random.w[i],
                                                    x=0, just="left",
                                                    gp=
                                                    gpar(
@@ -2137,7 +2299,7 @@ forest.meta <- function(x,
       ##
       ## Heterogeneity statistics:
       ##
-      col.studlab$labels[[4+3*n.by+i]] <- textGrob(hetstat.w[i],
+      col.studlab$labels[[5+3*n.by+i]] <- textGrob(hetstat.w[i],
                                                    x=0, just="left",
                                                    gp=
                                                    gpar(
@@ -2192,9 +2354,9 @@ forest.meta <- function(x,
                      upp=uppTEs,
                      rows=yS[-1],
                      ##
-                     ## "s" means summary, "n" means normal
+                     ## "p" means prediction, "s" means summary, "n" means normal
                      ##
-                     type=c(rep("s", length(TEs)-length(TE)), rep("n", length(TE))),
+                     type=c("s", "s", "p", rep("s", length(TEs)-length(TE)-3), rep("n", length(TE))),
                      col=c(rep("", length(TEs)-length(TE)), col.i),
                      col.square=c(rep("", length(TEs)-length(TE)), col.square),
                      col.square.lines=c(rep("", length(TEs)-length(TE)), col.square.lines),
@@ -2240,9 +2402,9 @@ forest.meta <- function(x,
   
   
   if (by)
-    nrow <- max(c(yTE, yTE.fixed, yTE.random, yTE.hetstat, yTE.w), na.rm=TRUE)
+    nrow <- max(c(yTE, yTE.fixed, yTE.random, yTE.hetstat, yTE.predict, yTE.w), na.rm=TRUE)
   else
-    nrow <- max(c(yTE, yTE.fixed, yTE.random, yTE.hetstat), na.rm=TRUE)
+    nrow <- max(c(yTE, yTE.fixed, yTE.random, yTE.hetstat, yTE.predict), na.rm=TRUE)
   
   
   cols <- list(col.studlab=col.studlab,
@@ -2269,13 +2431,10 @@ forest.meta <- function(x,
     if (by){
       for (i in seq(along=rightcols.new)){
         tname <- paste("col.", rightcols.new[i], sep="")
-        ##cols[[tname]] <- formatcol(ifelse(missing(rightlabs),
-        ##                                  rightcols.new[[i]],
-        ##                                  rightlabs[i]),
         tmp.r <- x[[rightcols.new[i]]]
         tmp.r <- ifelse(is.na(tmp.r), "", tmp.r)
         cols[[tname]] <- formatcol(rightlabs.new[i],
-                                   c("", "",
+                                   c("", "", "",
                                      rep("", length(TE.w)),
                                      tmp.r[o]),
                                    yS,
@@ -2283,13 +2442,10 @@ forest.meta <- function(x,
       }
       for (i in seq(along=leftcols.new)){
         tname <- paste("col.", leftcols.new[i], sep="")
-        ##cols[[tname]] <- formatcol(ifelse(missing(leftlabs),
-        ##                                  leftcols.new[[i]],
-        ##                                  leftlabs[i]),
         tmp.l <- x[[leftcols.new[i]]]
         tmp.l <- ifelse(is.na(tmp.l), "", tmp.l)
         cols[[tname]] <- formatcol(leftlabs.new[i],
-                                   c("", "",
+                                   c("", "", "",
                                      rep("", length(TE.w)),
                                      tmp.l[o]),
                                    yS,
@@ -2302,7 +2458,7 @@ forest.meta <- function(x,
         tmp.r <- x[[rightcols.new[i]]]
         tmp.r <- ifelse(is.na(tmp.r), "", tmp.r)
         cols[[tname]] <- formatcol(rightlabs.new[i],
-                                   c("", "",
+                                   c("", "", "",
                                      if (sort) tmp.r[o] else tmp.r
                                      ),
                                    yS,
@@ -2313,7 +2469,7 @@ forest.meta <- function(x,
         tmp.l <- x[[leftcols.new[i]]]
         tmp.l <- ifelse(is.na(tmp.l), "", tmp.l)
         cols[[tname]] <- formatcol(leftlabs.new[i],
-                                   c("", "",
+                                   c("", "", "",
                                      if (sort) tmp.l[o] else tmp.l
                                      ),
                                    yS,

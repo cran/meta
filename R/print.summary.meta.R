@@ -3,6 +3,7 @@ print.summary.meta <- function(x,
                                print.byvar=x$print.byvar,
                                comb.fixed=x$comb.fixed,
                                comb.random=x$comb.random,
+                               prediction=x$prediction,
                                header=TRUE,
                                print.CMH=x$print.CMH,
                                bylab.nchar=35,
@@ -36,11 +37,20 @@ print.summary.meta <- function(x,
   if (length(comb.random)==0)
     comb.random <- TRUE
   ##
+  if (length(prediction)==0)
+    prediction <- FALSE
+  ##
   if (length(print.byvar)==0)
     print.byvar <- TRUE
   ##
   if (length(print.CMH)==0)
     print.CMH <- FALSE
+  ##
+  if (length(x$tau.common)==0)
+    x$tau.common <- FALSE
+  
+  
+  prediction <- prediction & k>=3
   
   
   TE.fixed    <- x$fixed$TE
@@ -50,6 +60,9 @@ print.summary.meta <- function(x,
   TE.random    <- x$random$TE
   lowTE.random <- x$random$lower
   uppTE.random <- x$random$upper
+  ##
+  lowTE.predict <- x$predict$lower
+  uppTE.predict <- x$predict$upper
   ##
   if (!is.null(x$bylab)){
     TE.fixed.w     <- x$within.fixed$TE
@@ -74,6 +87,9 @@ print.summary.meta <- function(x,
     lowTE.random <- exp(lowTE.random)
     uppTE.random <- exp(uppTE.random)
     ##
+    lowTE.predict <- exp(lowTE.predict)
+    uppTE.predict <- exp(uppTE.predict)
+    ##
      if (!is.null(x$bylab)){
       TE.fixed.w     <- exp(TE.fixed.w)
       lowTE.fixed.w  <- exp(lowTE.fixed.w)
@@ -91,6 +107,9 @@ print.summary.meta <- function(x,
     TE.random    <- asin2p(TE.random, 1/mean(1/x$n), value="mean")
     lowTE.random <- asin2p(lowTE.random, 1/mean(1/x$n), value="lower")
     uppTE.random <- asin2p(uppTE.random, 1/mean(1/x$n), value="upper")
+    ##
+    lowTE.predict <- NA # asin2p(lowTE.predict, 1/mean(1/x$n), value="lower")
+    uppTE.predict <- NA # asin2p(uppTE.predict, 1/mean(1/x$n), value="upper")
     ##
     if (!is.null(x$bylab)){
       TE.fixed.w     <- asin2p(TE.fixed.w, 1/harmonic.mean.fixed.w, value="mean")
@@ -110,6 +129,9 @@ print.summary.meta <- function(x,
     lowTE.random <- asin2p(lowTE.random, value="lower")
     uppTE.random <- asin2p(uppTE.random, value="upper")
     ##
+    lowTE.predict <- asin2p(lowTE.predict, value="lower")
+    uppTE.predict <- asin2p(uppTE.predict, value="upper")
+    ##
     if (!is.null(x$bylab)){
       TE.fixed.w     <- asin2p(TE.fixed.w, value="mean")
       lowTE.fixed.w  <- asin2p(lowTE.fixed.w, value="lower")
@@ -128,6 +150,9 @@ print.summary.meta <- function(x,
     lowTE.random <- logit2p(lowTE.random)
     uppTE.random <- logit2p(uppTE.random)
     ##
+    lowTE.predict <- logit2p(lowTE.predict)
+    uppTE.predict <- logit2p(uppTE.predict)
+    ##
     if (!is.null(x$bylab)){
       TE.fixed.w     <- logit2p(TE.fixed.w)
       lowTE.fixed.w  <- logit2p(lowTE.fixed.w)
@@ -145,6 +170,9 @@ print.summary.meta <- function(x,
     TE.random    <- z2cor(TE.random)
     lowTE.random <- z2cor(lowTE.random)
     uppTE.random <- z2cor(uppTE.random)
+    ##
+    lowTE.predict <- z2cor(lowTE.predict)
+    uppTE.predict <- z2cor(uppTE.predict)
     ##
     if (!is.null(x$bylab)){
       TE.fixed.w     <- z2cor(TE.fixed.w)
@@ -168,6 +196,9 @@ print.summary.meta <- function(x,
   uppTE.random <- round(uppTE.random, digits)
   pTE.random <- x$random$p
   zTE.random <- round(x$random$z, digits)
+  ##
+  lowTE.predict <- round(lowTE.predict, digits)
+  uppTE.predict <- round(uppTE.predict, digits)
   ##
   k.w <- x$k.w
   ##
@@ -211,7 +242,9 @@ print.summary.meta <- function(x,
     
     ## Print information on summary method:
     ##
-    catmeth(x$method, sm=sm, k.all=x$k.all,
+    catmeth(method=x$method,
+            sm=sm,
+            k.all=x$k.all,
             metaprop=inherits(x, "metaprop"))
   }
   else{
@@ -224,15 +257,23 @@ print.summary.meta <- function(x,
                   " (with ", x$k0, " added studies)\n\n", sep=""))
       
       res <- cbind(format(c(if (comb.fixed) TE.fixed,
-                            if (comb.random) TE.random)),
+                            if (comb.random) TE.random,
+                            if (comb.random & prediction) NA)),
                    p.ci(format(c(if (comb.fixed) lowTE.fixed,
-                                 if (comb.random) lowTE.random)),
+                                 if (comb.random) lowTE.random,
+                                 if (comb.random & prediction) lowTE.predict)),
                         format(c(if (comb.fixed) uppTE.fixed,
-                                 if (comb.random) uppTE.random))),
+                                 if (comb.random) uppTE.random,
+                                 if (comb.random & prediction) uppTE.predict))),
                    format(round(c(if (comb.fixed) zTE.fixed,
-                                  if (comb.random) zTE.random),4)),
+                                  if (comb.random) zTE.random,
+                                  if (comb.random & prediction) NA),4)),
                    format.p(c(if (comb.fixed) pTE.fixed,
-                              if (comb.random) pTE.random)))
+                              if (comb.random) pTE.random,
+                              if (comb.random & prediction) NA)))
+      
+      if (prediction)
+        res[dim(res)[1], c(1,3:4)] <- ""
       
       if (!is.null(x$hakn) && x$hakn){
         if (comb.fixed & comb.random)
@@ -245,8 +286,10 @@ print.summary.meta <- function(x,
       else
         zlab <- "z"
       
+      
       dimnames(res) <- list(c(if (comb.fixed) "Fixed effect model",
-                              if (comb.random) "Random effects model"),  
+                              if (comb.random) "Random effects model",
+                              if (comb.random & prediction) "Prediction interval"),  
                             c(sm.lab, x$ci.lab, zlab, "p.value"))
       
       prmatrix(res, quote=FALSE, right=TRUE, ...)
@@ -286,20 +329,7 @@ print.summary.meta <- function(x,
                              ""),
                       sep=""),
                 "\n", sep=""))
-    ##
-    ##    cat(paste("\nQuantifying heterogeneity:\n",
-    ##              "tau^2 = ", round(x$tau^2, 4), 
-    ##              ifelse(k>2,
-    ##                     paste("; H = ", round(H, 2),
-    ##                           p.ci(round(lowH, 2), round(uppH, 2)), "; ",
-    ##                           "I^2 = ", round(100*I2, 1), "%",
-    ##                           p.ci(paste(round(100*lowI2, 1), "%", sep=""),
-    ##                                paste(round(100*uppI2, 1), "%", sep="")),
-    ##                           sep=""),
-    ##                     ""),
-    ##              "\n", sep=""))
     
-
     
     if (k > 1 & (comb.fixed|comb.random)){
       
@@ -524,13 +554,14 @@ print.summary.meta <- function(x,
     
     ## Print information on summary method:
     ##
-    catmeth(x$method,
-            if (comb.random) x$method.tau else "",
-            sm,
-            x$k.all,
-            !is.null(x$hakn) && (x$hakn & comb.random),
+    catmeth(method=x$method,
+            method.tau=if (comb.random) x$method.tau else "",
+            sm=sm,
+            k.all=x$k.all,
+            hakn=!is.null(x$hakn) && (x$hakn & comb.random),
             metaprop=inherits(x, "metaprop"),
-            inherits(x, "trimfill"))
+            trimfill=inherits(x, "trimfill"),
+            tau.common=!is.null(x$bylab)&x$tau.common)
   }
   
   invisible(NULL)

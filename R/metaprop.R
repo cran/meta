@@ -1,12 +1,13 @@
 metaprop <- function(event, n, studlab,
                      data=NULL, subset=NULL,
-                     sm="PFT",
-                     freeman.tukey,
+                     sm="PLOGIT",
                      incr=0.5, allincr=FALSE, addincr=FALSE,
                      level=0.95, level.comb=level,
                      comb.fixed=TRUE, comb.random=TRUE,
                      hakn=FALSE,
                      method.tau="DL", tau.preset=NULL, TE.tau=NULL,
+                     tau.common=FALSE,
+                     prediction=FALSE, level.predict=level,
                      method.bias="linreg",
                      title="", complab="", outclab="",
                      byvar, bylab, print.byvar=TRUE,
@@ -20,7 +21,7 @@ metaprop <- function(event, n, studlab,
   ##
   mf <- match.call()
   mf$data <- mf$subset <- mf$sm <- NULL
-  mf$freeman.tukey <- mf$level <- mf$level.comb <- NULL
+  mf$level <- mf$level.comb <- mf$level.predict <- mf$prediction <- NULL
   mf$incr <- mf$allincr <- mf$addincr <- NULL
   mf$hakn <- mf$method.tau <- mf$tau.preset <- mf$TE.tau <- mf$method.bias <- NULL
   mf[[1]] <- as.name("data.frame")
@@ -31,8 +32,8 @@ metaprop <- function(event, n, studlab,
   mf2 <- match.call()
   mf2$event <- mf2$n <- NULL
   mf2$studlab <- NULL
-  mf2$data <- mf2$sm <- mf2$freeman.tukey <- NULL
-  mf2$level <- mf2$level.comb <- NULL
+  mf2$data <- mf2$sm <- NULL
+  mf2$level <- mf2$level.comb <- mf2$level.predict <- mf2$prediction <- NULL
   mf2$incr <- mf2$allincr <- mf2$addincr <- NULL
   mf2$hakn <- mf2$method.tau <- mf2$tau.preset <- mf2$TE.tau <- mf2$method.bias <- NULL
   mf2$byvar <- NULL
@@ -50,7 +51,8 @@ metaprop <- function(event, n, studlab,
   event <- mf$event
   n     <- mf$n
   ##
-  if (!missing(byvar)){
+  missing.byvar <- missing(byvar)
+  if (!missing.byvar){
     byvar.name <- deparse(substitute(byvar))
     byvar <- mf$byvar
   }
@@ -86,12 +88,6 @@ metaprop <- function(event, n, studlab,
   ##
   sm <- c("PFT", "PAS", "PRAW", "PLN", "PLOGIT")[imeth]
   ##
-  if (!missing(freeman.tukey))
-    warning(paste("Use of parameter freeman.tukey is deprecated.",
-                  "Effect measure used:", sm))
-  ##if (!is.logical(freeman.tukey))
-  ##  stop("Parameter freeman.tukey must be of type 'logical'")
-  ##
   if (any(n < 10) & sm=="PFT")
     warning("Sample size very small (below 10) in at least one study. Accordingly, backtransformation for pooled effect may be misleading for Freeman-Tukey transformation. Please look at results for other transformations (e.g. sm='PAS' or sm='PLOGIT'), too.")
   
@@ -108,6 +104,11 @@ metaprop <- function(event, n, studlab,
     stop("parameter 'level.comb' must be a numeric of length 1")
   if (level.comb <= 0 | level.comb >= 1)
     stop("parameter 'level.comb': no valid level for confidence interval")
+  ##
+  if (!is.numeric(level.predict) | length(level.predict)!=1)
+    stop("parameter 'level.predict' must be a numeric of length 1")
+  if (level.predict <= 0 | level.predict >= 1)
+    stop("parameter 'level.predict': no valid level for confidence interval")
   
   
   ##
@@ -191,27 +192,78 @@ metaprop <- function(event, n, studlab,
   }
   
   
+  ##
+  ## Subgroup analysis with equal tau^2:
+  ##
+  if (!missing.byvar & tau.common){
+    if (!is.null(tau.preset))
+      warning("Value for argument 'tau.preset' not considered as argument 'tau.common=TRUE'")
+    ##
+    sm1 <- summary(metagen(TE, seTE, byvar=byvar,
+                           method.tau=method.tau))
+    sQ.w <- sum(sm1$Q.w)
+    sk.w <- sum(sm1$k.w-1)
+    sC.w <- sum(sm1$C.w)
+    ##
+    if (round(sQ.w, digits=18)<=sk.w) tau2 <- 0
+    else tau2 <- (sQ.w-sk.w)/sC.w
+    tau.preset <- sqrt(tau2)
+  }
+  
+  
   if (!is.null(tau.preset))
     m <- metagen(TE, seTE,
                  hakn=hakn, method.tau=method.tau,
-                 tau.preset=tau.preset, TE.tau=TE.tau)
+                 tau.preset=tau.preset, TE.tau=TE.tau,
+                 level=level,
+                 level.comb=level.comb,
+                 prediction=prediction,
+                 level.predict=level.predict)
   else
     m <- metagen(TE, seTE,
                  hakn=hakn, method.tau=method.tau,
-                 TE.tau=TE.tau)
+                 TE.tau=TE.tau,
+                 level=level,
+                 level.comb=level.comb,
+                 prediction=prediction,
+                 level.predict=level.predict)
+  
+  
+  if (m$k>=3){
+    seTE.predict <- sqrt(m$seTE.random^2 + m$tau^2)
+    ci.p <- ci(m$TE.random, seTE.predict, level.predict, m$k-2)
+    p.lower <- ci.p$lower
+    p.upper <- ci.p$upper
+  }
+  else{
+    seTE.predict <- NA
+    p.lower <- NA
+    p.upper <- NA
+  }
+  
+  
+  if (!missing.byvar & tau.common)
+    tau.preset <- NULL
   
   
   res <- list(event=event, n=n,
               studlab=studlab,
               TE=TE, seTE=seTE,
               w.fixed=m$w.fixed, w.random=m$w.random,
+              ##
               TE.fixed=m$TE.fixed, seTE.fixed=m$seTE.fixed,
               lower.fixed=m$lower.fixed, upper.fixed=m$upper.fixed,
               zval.fixed=m$zval.fixed, pval.fixed=m$pval.fixed,
               TE.random=m$TE.random, seTE.random=m$seTE.random,
               lower.random=m$lower.random, upper.random=m$upper.random,
               zval.random=m$zval.random, pval.random=m$pval.random,
+              ##
+              seTE.predict=seTE.predict,
+              lower.predict=p.lower, upper.predict=p.upper,
+              level.predict=level.predict,
+              ##
               k=m$k, Q=m$Q, tau=m$tau, se.tau2=m$se.tau2,
+              C=m$C,
               sm=sm,
               method=m$method,
               level=level, level.comb=level.comb,
@@ -222,6 +274,8 @@ metaprop <- function(event, n, studlab,
               method.tau=method.tau,
               tau.preset=tau.preset,
               TE.tau=if (!missing(TE.tau) & method.tau=="DL") TE.tau else NULL,
+              tau.common=tau.common,
+              prediction=prediction,
               method.bias=method.bias,
               title="", complab="", outclab="",
               call=match.call(),

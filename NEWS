@@ -1,3 +1,45 @@
+2013-06-17, version 2.4-0
+
+Functions metagen, metabin, metacont, metaprop, metacor:
+- new arguments prediction and level.predict
+  (prediction interval for a new study)
+- new argument tau.common (common tau-squared across subgroups)
+- help pages updated accordingly
+
+Function metaprop:
+- new default summary measure (sm="PLOGIT")
+- argument freeman.tukey removed
+
+Function summary.meta:
+- new arguments prediction and level.predict
+  (prediction interval for a new study)
+- new list component tau.common considered internally (for objects of
+  type metagen, metabin, metacont, metaprop, metacor)
+- modified such that correct values for list components incr, allincr,
+  and addincr of metaprop object are considered in calculations
+
+Function forest.meta:
+- modified such that prediction interval can be plotted
+  (new arguments: prediction, level.predict, text.predict,
+   col.predict, col.predict.lines, fs.predict, fs.predict.labels,
+   ff.predict, ff.predict.labels)
+- modified such that correct values for list components incr, allincr,
+  and addincr of metaprop object are considered in calculations
+- modified such that information on confidence limits is printed for
+  pooled estimates if CI level is different from CI level for
+  individual studies
+
+Function print.summary.meta:
+- modified such that a prediction interval is printed if argument
+  prediction is TRUE
+- new list component tau.common considered internally (for objects of
+  type metagen, metabin, metacont, metaprop, metacor)
+
+Function catmeth (only used internally):
+- print information if common tau-squared assumed across
+  subgroups (argument tau.common)
+
+
 2013-05-12, version 2.3-0
 
 Function forest.meta:

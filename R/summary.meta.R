@@ -7,6 +7,8 @@ summary.meta <- function(object,
                          level.comb=object$level.comb,
                          comb.fixed=object$comb.fixed,
                          comb.random=object$comb.random,
+                         prediction=object$prediction,
+                         level.predict=object$level.predict,
                          print.CMH=object$print.CMH,
                          warn=object$warn,
                          ...){
@@ -40,12 +42,20 @@ summary.meta <- function(object,
     comb.random <- TRUE
   }
   ##
+  if (length(prediction)==0){
+    comb.random <- FALSE
+  }
+  ##
   if (length(print.byvar)==0){
     print.byvar <- TRUE
   }
   ##
   if (length(print.CMH)==0){
     print.CMH <- FALSE
+  }
+  ##
+  if (length(object$tau.common)==0){
+    object$tau.common <- FALSE
   }
   
   
@@ -60,6 +70,31 @@ summary.meta <- function(object,
       warning("level.comb set to 0.95")
     level.comb <- 0.95
   }
+  ##
+  if (length(level.predict)==0){
+    if (comb.random & warn)
+      warning("level.predict set to 0.95")
+    level.predict <- 0.95
+  }
+  
+  
+  ##
+  ## Check for levels of confidence interval
+  ##
+  if (!is.numeric(level) | length(level)!=1)
+    stop("parameter 'level' must be a numeric of length 1")
+  if (level <= 0 | level >= 1)
+    stop("parameter 'level': no valid level for confidence interval")
+  ##
+  if (!is.numeric(level.comb) | length(level.comb)!=1)
+    stop("parameter 'level.comb' must be a numeric of length 1")
+  if (level.comb <= 0 | level.comb >= 1)
+    stop("parameter 'level.comb': no valid level for confidence interval")
+  ##
+  if (!is.numeric(level.predict) | length(level.predict)!=1)
+    stop("parameter 'level.predict' must be a numeric of length 1")
+  if (level.predict <= 0 | level.predict >= 1)
+    stop("parameter 'level.predict': no valid level for confidence interval")
   
   
   ##
@@ -95,8 +130,6 @@ summary.meta <- function(object,
   ##
   ## Calculate exact confidence intervals for individual studies
   ##
-  ##print(!(inherits(object, "metainf")|inherits(object, "metacum")) &
-  ##      inherits(object, "metaprop"))
   if (!(inherits(object, "metainf")|inherits(object, "metacum")) &
       inherits(object, "metaprop")){
     for ( i in 1:length(ci.study$TE)){
@@ -135,8 +168,14 @@ summary.meta <- function(object,
       by.levs <- unique(byvar)
     
     if (length(bylab)==0) bylab <- byvar.name
+
+    if (object$tau.common){
+      if (!is.null(object$tau.preset) & warn)
+        warning("Value for argument 'tau.preset' not considered as argument 'tau.common=TRUE'")
+      object$tau.preset <- object$tau
+    }
     
-    res.w <- matrix(NA, ncol=14, nrow=length(by.levs))
+    res.w <- matrix(NA, ncol=15, nrow=length(by.levs))
     j <- 0
     ##
     for (i in by.levs){
@@ -217,6 +256,9 @@ summary.meta <- function(object,
                           level=level, level.comb=level.comb,
                           comb.fixed=comb.fixed,
                           comb.random=comb.random,
+                          incr=object$incr,
+                          allincr=object$allincr,
+                          addincr=object$addincr,
                           hakn=object$hakn,
                           method.tau=object$method.tau,
                           tau.preset=object$tau.preset, TE.tau=object$TE.tau,
@@ -257,6 +299,7 @@ summary.meta <- function(object,
                      unlist(sm1$H),
                      unlist(sm1$I2),
                      sm1$tau,
+                     meta1$C,
                      mean(1/object$n[sel]))
     }
     ##
@@ -277,7 +320,9 @@ summary.meta <- function(object,
     ##
     tau.w <- res.w[,13]
     ##
-    harmonic.mean.w <- res.w[,14]
+    C.w   <- res.w[,14]
+    ##
+    harmonic.mean.w <- res.w[,15]
     ##
     ci.fixed.w  <- ci(TE.fixed.w, seTE.fixed.w, level.comb)
     ##
@@ -293,10 +338,24 @@ summary.meta <- function(object,
     ##
     if (bystud) cat("\n")
   }
+
+
+  ## Calculate prediction interval
+  ##
+  if (k>=3){
+    ci.p <- ci(object$TE.random,
+               sqrt(object$seTE.random^2+object$tau^2),
+               level.predict, object$k-2)
+    ci.p$TE <- NA
+  }
+  else
+    ci.p <- list(TE=NA, seTE=NA,
+                 lower=NA, upper=NA, z=NA, p=NA)
   
   
   res <- list(study=ci.study,
               fixed=ci.f, random=ci.r,
+              predict=ci.p,
               k=k, Q=Q, tau=object$tau, H=ci.H, I2=ci.I2,
               k.all=length(object$TE),
               Q.CMH=object$Q.CMH,
@@ -304,7 +363,8 @@ summary.meta <- function(object,
               call=match.call(),
               ci.lab=ci.lab,
               comb.fixed=comb.fixed,
-              comb.random=comb.random)
+              comb.random=comb.random,
+              prediction=prediction)
   
   
   res$se.tau2    <- object$se.tau2
@@ -312,6 +372,7 @@ summary.meta <- function(object,
   res$df.hakn    <- object$df.hakn
   res$method.tau <- object$method.tau
   res$TE.tau     <- object$TE.tau
+  res$C          <- object$C
   
   
   if (length(byvar)>0){
@@ -322,9 +383,11 @@ summary.meta <- function(object,
     res$Q.b.fixed     <- Q.b
     res$Q.b.random    <- summary(metagen(TE.random.w, seTE.random.w))$Q
     res$tau.w         <- tau.w
+    res$C.w           <- C.w 
     res$H.w           <- list(TE=H.w, lower=H.w.low, upper=H.w.upp)
     res$I2.w          <- list(TE=I2.w, lower=I2.w.low, upper=I2.w.upp)
     res$bylab         <- bylab
+    res$tau.common    <- object$tau.common
     res$by.levs       <- by.levs
     res$within        <- "Returned list 'within' replaced by lists 'within.fixed' and 'within.random'."
   }

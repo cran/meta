@@ -1,42 +1,54 @@
-\name{metaprop}
-\alias{metaprop}
+\name{metainc}
 
-\title{Meta-analysis of single proportions}
+\alias{metainc}
+
+\title{Meta-analysis of incidence rates}
 
 \description{
-  Calculation of an overall proportion from studies reporting a single
-  proportion.
+  Calculation of fixed and random effects estimates (incidence rate
+  ratio or incidence rate difference) for meta-analyses with event
+  counts. Mantel-Haenszel, Cochran, and inverse variance method are
+  available for pooling.
 }
 
 \usage{
-metaprop(event, n, studlab,
-         data = NULL, subset = NULL,
-         sm="PLOGIT",
-         incr=0.5, allincr=FALSE, addincr=FALSE,
-         level = 0.95, level.comb = level,
-         comb.fixed=TRUE, comb.random=TRUE,
-         hakn=FALSE,
-         method.tau="DL", tau.preset=NULL, TE.tau=NULL,
-         tau.common=FALSE,
-         prediction=FALSE, level.predict=level,
-         method.bias="linreg",
-         title="", complab="", outclab="",
-         byvar, bylab, print.byvar=TRUE,
-         keepdata=TRUE, warn=TRUE)
+metainc(event.e, time.e, event.c, time.c, studlab,
+        data=NULL, subset=NULL, method="MH",
+        sm="IRR",
+        incr=0.5, allincr=FALSE, addincr=FALSE,
+        level=0.95, level.comb=level,
+        comb.fixed=TRUE, comb.random=TRUE,
+        hakn=FALSE,
+        method.tau="DL", tau.preset=NULL, TE.tau=NULL,
+        tau.common=FALSE,
+        prediction=FALSE, level.predict=level,
+        method.bias="linreg",
+        n.e=NULL, n.c=NULL,
+        title="", complab="", outclab="",
+        label.e="Experimental", label.c="Control",
+        label.left="", label.right="",
+        byvar, bylab, print.byvar=TRUE,
+        keepdata=TRUE,
+        warn=TRUE)
 }
 
 \arguments{
-  \item{event}{Number of events.}
-  \item{n}{Number of observations.}
+  \item{event.e}{Number of events in experimental group.}
+  \item{time.e}{Person time at risk in experimental group.}
+  \item{event.c}{Number of events in control group.}
+  \item{time.c}{Person time at risk in control group.}
   \item{studlab}{An optional vector with study labels.}
   \item{data}{An optional data frame containing the study information,
-    i.e., event and n.}
+    i.e., event.e, time.e, event.c, and time.c.}
   \item{subset}{An optional vector specifying a subset of studies to be used.}
+  \item{method}{A character string indicating which method is to be used
+    for pooling of studies. One of \code{"MH"}, \code{"Inverse"}, or
+    \code{"Cochran"}, can be abbreviated.}
   \item{sm}{A character string indicating which summary measure
-    (\code{"PFT"}, \code{"PAS"}, \code{"PRAW"}, \code{"PLN"}, or
-    \code{"PLOGIT"}) is to be used for pooling of studies, see Details.}
-  \item{incr}{A numeric which is added to each cell frequency for
-    studies with a zero cell count.}
+    (\code{"IRR"} or \code{"IRD"}) is to be used for pooling of
+    studies, see Details.}
+  \item{incr}{A numerical value which is added to each cell frequency
+    for studies with a zero cell count, see Details.}
   \item{allincr}{A logical indicating if \code{incr} is added to each
     cell frequency of all studies if at least one study has a zero cell
     count. If FALSE (default), \code{incr} is added only to each cell frequency of
@@ -59,20 +71,26 @@ metaprop(event, n, studlab,
           Knapp should be used to adjust test statistics and
           confidence intervals.}
   \item{method.tau}{A character string indicating which method is used
-    to estimate the between-study variance tau-squared. Either
+    to estimate the between-study variance \eqn{\tau^2}. Either
     \code{"DL"}, \code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
     \code{"HE"}, or \code{"EB"}, can be abbreviated.}
-  \item{tau.preset}{Prespecified value for between-study variance tau-squared.}
+  \item{tau.preset}{Prespecified value for between-study variance \eqn{\tau^2}.}
   \item{TE.tau}{Overall treatment effect used to estimate the
-    between-study variance tau-squared.}
+  between-study variance \eqn{\tau^2}.}
   \item{tau.common}{A logical indicating whether tau-squared should be
     the same across subgroups.}
-  \item{method.bias}{A character string indicating which test is to be
-    used. Either \code{"rank"}, \code{"linreg"}, or \code{"mm"}, can
-    be abbreviated.}
+  \item{method.bias}{A character string indicating which test for
+    funnel plot asymmetry is to be used. Either \code{"linreg"} or
+    \code{"rank"}, can be abbreviated.}
+  \item{n.e}{Number of observations in experimental group (optional).}
+  \item{n.c}{Number of observations in control group (optional).}
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
+  \item{label.e}{Label for experimental group.}
+  \item{label.c}{Label for control group.}
+  \item{label.left}{Graph label on left side of forest plot.}
+  \item{label.right}{Graph label on right side of forest plot.}
   \item{byvar}{An optional vector containing grouping information (must
     be of same length as \code{event.e}).}
   \item{bylab}{A character string with a label for the grouping variable.}
@@ -80,43 +98,21 @@ metaprop(event, n, studlab,
     variable should be printed in front of the group labels.}
   \item{keepdata}{A logical indicating whether original data (set)
     should be kept in meta object.}
-  \item{warn}{A logical indicating whether the addition of \code{incr}
-    to studies with zero cell frequencies should result in a warning.}
+  \item{warn}{A logical indicating whether warnings should be printed
+    (e.g., if \code{incr} is added to studies with zero cell
+    frequencies).}
 }
 
 \details{
-  Fixed effect and random effects meta-analysis of single proportions to
-  calculate an overall proportion.
-  
-  The following transformations of proportions are implemented to
-  calculate an overall proportion:
-
+  Treatment estimates and standard errors are calculated for each
+  study. The following measures of treatment effect are available:
   \itemize{
-  \item \code{sm="PFT"}:  Freeman-Tukey Double arcsine transformation
-  
-  \item \code{sm="PAS"}:  Arcsine transformation
-  
-  \item \code{sm="PRAW"}:  Raw, i.e. untransformed, proportions
-  
-  \item \code{sm="PLN"}:  Log transformation
-  
-  \item \code{sm="PLOGIT"}:  Logit transformation}
+   \item Incidence Rate Ratio (\code{sm="IRR"})
+   \item Incidence Rate Difference (\code{sm="IRD"})
+  }
 
-  In older versions of the R package meta (< 1.5.0), only the
-  Freeman-Tukey Double arcsine transformation and the arcsine
-  transformation were implemented and an argument \code{freeman.tukey}
-  could be used to distinguish between these two methods. Argument
-  \code{freeman.tukey} has been removed from R package meta with
-  version 2.4-0.
-  
-  If the summary measure is equal to "PRAW", "PLN", or "PLOGIT", a
-  continuity correction is applied if any studies has a zero cell
-  count. By default, 0.5 is added to all cell frequencies of studies
-  with a zero cell count (argument \code{incr}).
-
-  Note, exact binomial confidence intervals will be calculated for
-  individual study results, e.g. in R function
-  \code{\link{summary.meta}}.
+  For studies with a zero cell count, by default, 0.5 is added to
+  all cell frequencies of these studies (argument \code{incr}).
   
   Internally, both fixed effect and random effects models are calculated
   regardless of values choosen for arguments \code{comb.fixed} and
@@ -128,22 +124,38 @@ metaprop(event, n, studlab,
   \code{\link{print.meta}} will not print results for the random effects
   model if \code{comb.random=FALSE}.
 
+  By default, both fixed effect and random effects models are
+  considered (arguments \code{comb.fixed=TRUE} and
+  \code{comb.random=TRUE}). If \code{method} is \code{"MH"} (default),
+  the Mantel-Haenszel method is used to calculate the fixed effect
+  estimate (Greenland & Robbins, 1985); if \code{method} is
+  \code{"Inverse"}, inverse variance weighting is used for pooling;
+  finally, if \code{method} is \code{"Cochran"}, the Cochran method is
+  used for pooling (Bayne-Jones, 1964, Chapter 8). By default, the
+  DerSimonian-Laird estimate is used in the random effects model (see
+  paragraph on argument \code{method.tau}).
+  
+  For Mantel-Haenszel and Cochran method, nothing is added to zero
+  cell counts. Accordingly, Mantel-Haenszel and Cochran estimate are
+  not defined if the number of events is zero in all studies either in
+  the experimental or control group.
+
   A prediction interval for treatment effect of a new study is
   calculated (Higgins et al., 2009) if arguments \code{prediction} and
   \code{comb.random} are \code{TRUE}.
 
   R function \code{\link{update.meta}} can be used to redo the
-  meta-analysis of an existing metaprop object by only specifying
+  meta-analysis of an existing metainc object by only specifying
   arguments which should be changed.
 
   If R package metafor (Viechtbauer 2010) is installed, the following
   statistical methods are also available.
 
   For the random effects model (argument \code{comb.random=TRUE}), the
-  method by Hartung and Knapp (Knapp, Hartung 2003) is used to adjust
-  test statistics and confidence intervals if argument
-  \code{hakn=TRUE} (internally R function \code{rma.uni} of R package
-  metafor is called).
+  method by Hartung and Knapp (Hartung, Knapp 2001; Knapp, Hartung
+  2003) is used to adjust test statistics and confidence intervals if
+  argument \code{hakn=TRUE} (internally R function \code{rma.uni} of R
+  package metafor is called).
 
   Several methods are available to estimate the between-study variance
   \eqn{\tau^2} (argument \code{method.tau}):
@@ -163,48 +175,47 @@ metaprop(event, n, studlab,
 }
 
 \value{
-  An object of class \code{c("metaprop", "meta")} with corresponding
+  An object of class \code{c("metainc", "meta")} with corresponding
   \code{print}, \code{summary}, \code{plot} function. The object is a
   list containing the following components:
-  \item{event, n, studlab,}{}
-  \item{sm, incr, allincr, addincr, }{}
-  \item{level, level.comb,}{As defined above.}
-  \item{comb.fixed, comb.random,}{}
+  \item{event.e, time.e, event.c, time.c, studlab,}{}
+  \item{sm, method, incr, allincr, addincr, warn,}{}
+  \item{level, level.comb, comb.fixed, comb.random,}{}
   \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{}
   \item{tau.common, title, complab, outclab,}{}
-  \item{byvar, bylab, print.byvar, warn}{}
-  \item{TE, seTE}{Estimated (un)transformed proportion and its standard
-    error for individual studies.}
+  \item{label.e, label.c, label.left, label.right,}{}
+  \item{byvar, bylab, print.byvar}{As defined above.}
+  \item{TE, seTE}{Estimated treatment effect and standard error of individual studies.}
   \item{w.fixed, w.random}{Weight of individual studies (in fixed and
     random effects model).}
-  \item{TE.fixed, seTE.fixed}{Estimated overall (un)transformed
-    proportion and standard error (fixed effect model).}
+  \item{TE.fixed, seTE.fixed}{Estimated overall treatment effect and
+    standard error (fixed effect model).}
   \item{lower.fixed, upper.fixed}{Lower and upper confidence interval limits
   (fixed effect model).}
   \item{zval.fixed, pval.fixed}{z-value and p-value for test of
-    overall effect (fixed effect model).}
-  \item{TE.random, seTE.random}{Estimated overall (un)transformed
-    proportion and standard error (random effects model).}
+    overall treatment effect (fixed effect model).}
+  \item{TE.random, seTE.random}{Estimated overall treatment effect and
+    standard error (random effects model).}
   \item{lower.random, upper.random}{Lower and upper confidence interval limits
-  (random effects model).}
+    (random effects model).}
   \item{zval.random, pval.random}{z-value or t-value and corresponding
-    p-value for test of overall effect (random effects
+    p-value for test of overall treatment effect (random effects
     model).}
   \item{prediction, level.predict}{As defined above.}
   \item{seTE.predict}{Standard error utilised for prediction interval.}
   \item{lower.predict, upper.predict}{Lower and upper limits of prediction interval.}
   \item{k}{Number of studies combined in meta-analysis.}
   \item{Q}{Heterogeneity statistic Q.}
+  \item{df.Q}{Degrees of freedom for heterogeneity statistic.}
   \item{tau}{Square-root of between-study variance.}
   \item{se.tau}{Standard error of square-root of between-study variance.}
   \item{C}{Scaling factor utilised internally to calculate common
     tau-squared across subgroups.}
-  \item{sm}{A character string: \code{"proportion"}}
-  \item{method}{A character string indicating method used
-    for pooling: \code{"Inverse"}}
-  \item{df.hakn}{Degrees of freedom for test of treatment effect for
-  Hartung-Knapp method (only if \code{hakn=TRUE}).}
+  \item{sparse}{Logical flag indicating if any study included in
+    meta-analysis has any zero cell frequencies.}
   \item{incr.event}{Increment added to number of events.}
+  \item{df.hakn}{Degrees of freedom for test of treatment effect for
+    Hartung-Knapp method (only if \code{hakn=TRUE}).}
   \item{keepdata}{As defined above.}
   \item{data}{Original data (set) used in function call (if
     \code{keepdata=TRUE}).}
@@ -215,15 +226,18 @@ metaprop(event, n, studlab,
 }
 
 \references{
-  Edward JM et al. (2006),
-  Adherence to antiretroviral therapy in sub-saharan Africa and North
-  America - a meta-analysis. \emph{Journal of the American Medical
-  Association}, \bold{296}, 679--690.
+  DerSimonian R & Laird N (1986),
+  Meta-analysis in clinical trials. \emph{Controlled Clinical Trials},
+  \bold{7}, 177--188.
 
-  Freeman MF & Tukey JW (1950),
-  Transformations related to the angular and the square
-  root. \emph{Annals of Mathematical Statistics},
-  \bold{21}, 607--611.
+  Greenland S & Robins JM (1985),
+  Estimation of a common effect parameter from sparse follow-up data.
+  \emph{Biometrics}, \bold{41}, 55--68.
+
+  Hartung J & Knapp G (2001),
+  A Refined Method for the Meta-analysis of Controlled Clinical Trials
+  with Binary Outcome.
+  \emph{Statistics in Medicine}, \bold{20}, 3875--89.
   
   Higgins JPT, Thompson SG, Spiegelhalter DJ (2009),
   A re-evaluation of random-effects meta-analysis.
@@ -236,13 +250,11 @@ metaprop(event, n, studlab,
   \emph{Statistics in Medicine}, \bold{22}, 2693-710,
   doi: 10.1002/sim.1482 .
 
-  Miller JJ (1978),
-  The inverse of the Freeman-Tukey double arcsine transformation.
-  \emph{The American Statistician}, \bold{32}, 138.
-
-  Pettigrew HM, Gart JJ, Thomas DG (1986),
-  The bias and higher cumulants of the logarithm of a binomial
-  variate. \emph{Biometrika}, \bold{73}, 425--435.
+  Bayne-Jones S et al. (1964),
+  Smoking and Health: Report of the Advisory Committee to the Surgeon
+  General of the United States. U-23 Department of Health, Education,
+  and Welfare. Public Health Service Publication No. 1103.
+  \url{http://profiles.nlm.nih.gov/ps/retrieve/ResourceMetadata/NNBBMQ}
 
   Viechtbauer W (2010),
   Conducting Meta-Analyses in R with the Metafor Package.
@@ -251,26 +263,27 @@ metaprop(event, n, studlab,
 
 \author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
 
-\seealso{\code{\link{update.meta}}, \code{\link{metacont}}, \code{\link{metagen}}, \code{\link{print.meta}}}
+\seealso{\code{\link{metabin}}, \code{\link{update.meta}}, \code{\link{print.meta}}}
 
 \examples{
-metaprop(4:1, c(10, 20, 30, 40))
-metaprop(4:1, c(10, 20, 30, 40), sm="PAS")
-metaprop(4:1, c(10, 20, 30, 40), sm="PRAW")
-metaprop(4:1, c(10, 20, 30, 40), sm="PLN")
-metaprop(4:1, c(10, 20, 30, 40), sm="PFT")
+data(smoking)
 
-forest(metaprop(4:1, c(10, 20, 30, 40)))
+m1 <- metainc(d.smokers, py.smokers,
+              d.nonsmokers, py.nonsmokers,
+              data=smoking, studlab=study)
+print(m1, digits=2)
 
+m2 <- metainc(d.smokers, py.smokers,
+              d.nonsmokers, py.nonsmokers,
+              data=smoking, studlab=study,
+              method="Cochran")
+print(m2, digits=2)
 
-m1 <- metaprop(c(0, 0, 10, 10), rep(100, 4))
-m2 <- metaprop(c(0, 0, 10, 10), rep(100, 4), incr=0.1)
+data(lungcancer)
 
-summary(m1)
-summary(m2)
-
-forest(m1)
-forest(m2)
+m3 <- metainc(d.smokers, py.smokers,
+              d.nonsmokers, py.nonsmokers,
+              data=lungcancer, studlab=study)
+print(m3, digits=2)
 }
-
 \keyword{htest}

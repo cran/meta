@@ -1,7 +1,7 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
-8550dcf2432c5e9f7403ee7f02dc54d0 *DESCRIPTION
+529374771bb0619007402b6d18d6842f *DESCRIPTION
 dd43ecf5d19dc0acd5ba94685808637b *NAMESPACE
-5c744ecfe08600a397ab4ff7801417c1 *NEWS
+9ea09086d27fef921dbcc3e900b1f582 *NEWS
 3ec3585d5e737b12feac9f238accbd06 *R/addvar.R
 094b946cc45e94c01b309220fd51a4cb *R/as.data.frame.meta.R
 52f17deabc15ed219dceb691d56638d2 *R/asin2p.R
@@ -10,7 +10,7 @@ c2f0ca9c2bd0d7dbcfbe7d11d5224c7c *R/ci.R
 1cf1df91f77c2581b01a8e996b418234 *R/cilayout.R
 fd98d7e26d3964b612eac9fb29fe9b5e *R/crtitle.R
 c5d8e61a4475cc5b465ecc2a32a7a465 *R/forest.R
-87a52d020a256560a83f4c28d84fa9ac *R/forest.meta.R
+d8155d084d45cca1ce00edc5b8914403 *R/forest.meta.R
 4b2544be5aa240ca4d5d48d7e1e7c4dd *R/format.p.R
 e4551ca02e9371a89560c83f4dfd7717 *R/format.tau.R
 4b38b46ce435d62ce262fbf30cb9032f *R/funnel.R
@@ -94,7 +94,7 @@ b14dfca0290c5414f7bcd533f7937d2b *man/metacor.Rd
 0e2bdb2b8140931db99e8a353042306e *man/metagen.Rd
 7bc94fc04507568e8bbfcfed619ed1d6 *man/metainc.Rd
 833d796134588b088e7266b6192352d0 *man/metainf.Rd
-e146de50e1533d3a9eac739bab339df3 *man/metaprop.Rd
+ddee21c7a7bf4de941dc6a851961ff1a *man/metaprop.Rd
 e2c68e449c9fd2ae9cbd5f408aca9bc9 *man/metareg.Rd
 01e1d59cfc8acb91c3aed11ff0d29913 *man/print.meta.Rd
 f3ec2c7011d7b004f04fb3bc037ae813 *man/print.rm5.Rd

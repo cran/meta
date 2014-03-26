@@ -1,7 +1,7 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
-26771d22c488f69cb85c94ec04cf84cc *DESCRIPTION
+ff966331bd74e4316dea671aa822c9cc *DESCRIPTION
 a3586ca4b7c422dd0c0a9399d707df96 *NAMESPACE
-4ae3c6131dbaf364b9f2ee19eb018be8 *NEWS
+364af946ab803f77a8dc040dfe2f6d55 *NEWS
 3ec3585d5e737b12feac9f238accbd06 *R/addvar.R
 094b946cc45e94c01b309220fd51a4cb *R/as.data.frame.meta.R
 52f17deabc15ed219dceb691d56638d2 *R/asin2p.R
@@ -11,7 +11,7 @@ c2f0ca9c2bd0d7dbcfbe7d11d5224c7c *R/ci.R
 1cf1df91f77c2581b01a8e996b418234 *R/cilayout.R
 fd98d7e26d3964b612eac9fb29fe9b5e *R/crtitle.R
 c5d8e61a4475cc5b465ecc2a32a7a465 *R/forest.R
-38b3b24f742b708f5242a609704b1a86 *R/forest.meta.R
+9da2115a064ed3c7d07d5586fc214869 *R/forest.meta.R
 4b2544be5aa240ca4d5d48d7e1e7c4dd *R/format.p.R
 e4551ca02e9371a89560c83f4dfd7717 *R/format.tau.R
 4b38b46ce435d62ce262fbf30cb9032f *R/funnel.R
@@ -81,7 +81,7 @@ c1d222e9f27f5df6c145f103ae912dc6 *man/amlodipine.Rd
 d7f8f48daff6c9b82b6b0a753cfc09ff *man/ci.Rd
 33571871998e14434e0fee056e52b46b *man/cisapride.Rd
 10b53541ca48db39fc0b72d08a1ef8b3 *man/forest.Rd
-17aafd26cafe6a9ac45321feec26622c *man/forest.meta.Rd
+9fe091401c2c9e62ec6fba5103ba2051 *man/forest.meta.Rd
 1aa2fbc1ff8547585aca6f2d7d0751c1 *man/funnel.Rd
 de06c7ae134b126dd38764a4f9b871fb *man/funnel.meta.Rd
 22985e48e5ae08deb9eefd938a8e1265 *man/labbe.Rd
@@ -98,12 +98,12 @@ cae8ba86eede16fa07708ad45065ba20 *man/metagen.Rd
 833d796134588b088e7266b6192352d0 *man/metainf.Rd
 ddee21c7a7bf4de941dc6a851961ff1a *man/metaprop.Rd
 e2c68e449c9fd2ae9cbd5f408aca9bc9 *man/metareg.Rd
-59507b7e6bf73a52965ab1201cd507cb *man/print.meta.Rd
+5fe6e2ae492460769e02c2221699e0a4 *man/print.meta.Rd
 f3ec2c7011d7b004f04fb3bc037ae813 *man/print.rm5.Rd
 69d143422b704caa48ee6bee64d2794c *man/read.mtv.Rd
 ad0933bc32bc4aaa1b605419de38e68d *man/read.rm5.Rd
 d4aac32761a6b9672ea770a15fc67d47 *man/smoking.Rd
 f32a4282cec8ea026903d01f5069c289 *man/trimfill.Rd
 2eb7cb4af41b3748afa440ced9bd9a12 *man/trimfill.meta.Rd
-a775e4060ec5c9cf7cd45770408d8d93 *man/update.meta.Rd
+09e13e037858e9c0bbfd5285e3ad99ae *man/update.meta.Rd
 97210395bb08aa49ef55803141782c2b *src/kenscore.c

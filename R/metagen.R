@@ -1,20 +1,22 @@
 metagen <- function(TE, seTE,
                     studlab, data=NULL, subset=NULL,
                     sm="",
-                    level=0.95, level.comb=level,
-                    comb.fixed=TRUE, comb.random=TRUE,
-                    hakn=FALSE,
-                    method.tau="DL", tau.preset=NULL, TE.tau=NULL,
-                    tau.common=FALSE,
-                    prediction=FALSE, level.predict=level,
-                    method.bias="linreg",
+                    level=.settings$level, level.comb=.settings$level.comb,
+                    comb.fixed=.settings$comb.fixed, comb.random=.settings$comb.random,
+                    hakn=.settings$hakn,
+                    method.tau=.settings$method.tau, tau.preset=NULL, TE.tau=NULL,
+                    tau.common=.settings$tau.common,
+                    prediction=.settings$prediction, level.predict=.settings$level.predict,
+                    method.bias=.settings$method.bias,
+                    ##
                     n.e=NULL, n.c=NULL,
-                    title="", complab="", outclab="",
-                    label.e="Experimental", label.c="Control",
-                    label.left="", label.right="",
-                    byvar, bylab, print.byvar=TRUE,
-                    keepdata=TRUE,
-                    warn=TRUE
+                    ##
+                    title=.settings$title, complab=.settings$complab, outclab="",
+                    label.e=.settings$label.e, label.c=.settings$label.c,
+                    label.left=.settings$label.left, label.right=.settings$label.right,
+                    byvar, bylab, print.byvar=.settings$print.byvar,
+                    keepdata=.settings$keepdata,
+                    warn=.settings$warn
                     ){
   
   
@@ -180,12 +182,22 @@ metagen <- function(TE, seTE,
   
   
   imethod.tau <- charmatch(tolower(method.tau),
-                     c("dl", "reml", "ml", "hs", "sj", "he", "eb"), nomatch = NA)
+                     c("dl", "pm", "reml", "ml", "hs", "sj", "he", "eb"), nomatch = NA)
   ##
   if (is.na(imethod.tau) || imethod.tau==0)
-    stop('method.tau should be "DL", "REML", "ML", "HS", "SJ", "HE", or "EB"')
+    stop('Argument \'method.tau\' should be "DL", "PM", "REML", "ML", "HS", "SJ", "HE", or "EB".')
   ##
-  method.tau <- c("DL", "REML", "ML", "HS", "SJ", "HE", "EB")[imethod.tau]
+  method.tau <- c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB")[imethod.tau]
+  ##
+  if (tau.common & method.tau=="PM"){
+    warning("Argument 'tau.common' set to FALSE as argument method.tau=\"PM\".")
+    tau.common <- FALSE
+  }
+  ##
+  if (!is.null(tau.preset) & method.tau=="PM"){
+    warning("Argument 'tau.preset' not considered as argument method.tau=\"PM\".")
+    tau.preset <- NULL
+  }
   
   
   ##
@@ -230,7 +242,6 @@ metagen <- function(TE, seTE,
     ##
     Q <- NA
     df.Q <- NA
-    tau2 <- NA
     se.tau2 <- NA
     ##
     Cval <- NA
@@ -256,7 +267,7 @@ metagen <- function(TE, seTE,
       }
     }
     ##
-    if (method.tau=="DL" & hakn==FALSE){
+    if (method.tau=="DL"|method.tau=="PM"){
       ##
       ## Fixed effects estimate
       ## (Cooper & Hedges, 1994, p. 265-6)
@@ -302,16 +313,36 @@ metagen <- function(TE, seTE,
       ##
       se.tau2 <- NULL
       ##
-      ## Random effects estimate
-      ## (Cooper & Hedges (1994), p. 265, 274-5)
+      if (method.tau=="DL"){
+        ##
+        ## Random effects estimate
+        ## (Cooper & Hedges (1994), p. 265, 274-5)
+        ##
+        w.random <- 1/(seTE^2 + tau2)
+        w.random[is.na(w.random)] <- 0
+        ##
+        TE.random   <- weighted.mean(TE, w.random, na.rm=TRUE)
+        seTE.random <- sqrt(1/sum(w.random, na.rm=TRUE))
+        }
+      else if (method.tau=="PM"){
+        pm <- paulemandel(TE, seTE)
+        TE.random <- pm$TE.random
+        seTE.random <- pm$seTE.random
+        w.random <- pm$w.random
+        w.random[is.na(w.random)] <- 0
+        ##
+        tau2 <- pm$tau2
+      }
       ##
-      w.random <- 1/(seTE^2 + tau2)
-      w.random[is.na(w.random)] <- 0
+      if (hakn){
+        seTE.random <- sqrt(1/(k-1)*sum(w.random*(TE-TE.random)^2/
+                                        sum(w.random), na.rm=TRUE))
+        df.hakn <- k-1
+        ci.r <- ci(TE.random, seTE.random, level=level.comb, df=df.hakn)
+      }
+      else
+        ci.r <- ci(TE.random, seTE.random, level=level.comb)
       ##
-      TE.random   <- weighted.mean(TE, w.random, na.rm=TRUE)
-      seTE.random <- sqrt(1/sum(w.random, na.rm=TRUE))
-      ##
-      ci.r <- ci(TE.random, seTE.random, level=level.comb)
       zval.random <- ci.r$z
       pval.random <- ci.r$p
       lower.random <- ci.r$lower
@@ -321,7 +352,7 @@ metagen <- function(TE, seTE,
       ##
       ## Check whether R package metafor is installed
       ##
-      is.installed.metafor("'metagen' with argument 'method.tau' unequal to 'DL' or 'hakn=TRUE'")
+      is.installed.metafor("'metagen' with argument 'method.tau' unequal to 'DL' and 'PM'")
       
       ##
       ## Calculate fixed effect and random effects estimates

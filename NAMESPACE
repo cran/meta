@@ -1,4 +1,4 @@
-export(ci, forest, forest.meta,
+export(ci, settings.meta, forest, forest.meta,
        funnel, funnel.default, funnel.meta,
        addvar, as.data.frame.meta,
        metabias, metabias.default, metabias.meta,
@@ -17,7 +17,7 @@ export(ci, forest, forest.meta,
 # asin2p, format.p, meta-internal, logit2p, p.ci, rmSpace, xlab, z2cor,
 # is.installed.metafor, crtitle, catmeth,
 # kentau, hypergeometric, linregcore, setOption, warnarg, format.tau,
-# isquared, calcH
+# isquared, calcH, paulemandel
 
 S3method(as.data.frame, meta)
 S3method(forest, meta)

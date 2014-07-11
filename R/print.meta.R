@@ -34,6 +34,13 @@ print.meta <- function(x,
   }
   
   
+  ## Upgrade meta objects created with older versions of meta
+  ##
+  if (!(!is.null(x$version) &&
+        as.numeric(unlist(strsplit(x$version, "-"))[1]) >= 3.7))
+    x <- update(x, warn=FALSE)
+  
+  
   k.all <- length(x$TE)
   ##
   if (missing(sortvar)) sortvar <- 1:k.all
@@ -70,11 +77,19 @@ print.meta <- function(x,
       warning("level.predict set to 0.95")
     level.predict <- 0.95
   }
+
+
+  ## before3.7 <- !(!is.null(x$version) &&
+  ##                as.numeric(unlist(strsplit(x$version, "-"))[1]) >= 3.7)
+  ## ##
+  ## nooldmetaprop <- !(inherits(x, "metaprop") & before3.7)
   
   
   ci.lab <- paste(round(100*level, 1), "%-CI", sep="")
-
+  
+  
   sm <- x$sm
+  
   
   if (sm=="ZCOR")
     sm.lab <- "COR"
@@ -169,7 +184,7 @@ print.meta <- function(x,
     }
     ##
     if (!inherits(x, "metaprop") & !logscale & sm=="PLN"){
-      TE <- exp(TE)
+      TE    <- exp(TE)
       lowTE <- exp(lowTE)
       uppTE <- exp(uppTE)
     }
@@ -200,6 +215,9 @@ print.meta <- function(x,
         }
       }
     }
+    ##
+    if (inherits(x, "metaprop"))
+      TE <- x$event / x$n
     ##
     TE <- round(TE, digits)
     lowTE <- round(lowTE, digits)
@@ -272,22 +290,34 @@ print.meta <- function(x,
       ## Printout for a single proportion:
       ##
       if (k.all==1){
-        cat("Exact CI:\n\n")
-        dimnames(res) <-
-          list("", c(sm.lab, ci.lab,
-                     if (comb.fixed) "%W(fixed)",
-                     if (comb.random) "%W(random)"))
-        prmatrix(res, quote=FALSE, right=TRUE)
-        if (sm == "PFT")
-          cat("\n\nCI based on Freeman-Tukey double arcsine transformation:\n")
-        else if (sm == "PAS")
-          cat("\n\nCI based on arcsine transformation:\n")
-        else if (sm == "PLN")
-          cat("\n\nCI based on log transformation:\n")
-        else if (sm == "PLOGIT")
-          cat("\n\nCI based on logit transformation:\n")
-        else if (sm == "PRAW")
-          cat("\n\nCI based on normal approximation:\n")
+        ##
+        if (!is.null(x$method.ci)){
+          if  (x$method.ci=="CP")
+            method.ci.details <- "Clopper-Pearson confidence interval:\n\n"
+          else if (x$method.ci=="WS")
+            method.ci.details <- "Wilson Score confidence interval:\n\n"
+          else if (x$method.ci=="WSCC")
+            method.ci.details <- "Wilson Score confidence interval with continuity correction:\n\n"
+          else if (x$method.ci=="AC")
+            method.ci.details <- "Agresti-Coull confidence interval:\n\n"
+          else if (x$method.ci=="SA")
+            method.ci.details <- "Simple approximation confidence interval:\n\n"
+          else if (x$method.ci=="SACC")
+            method.ci.details <- "Simple approximation confidence interval with continuity correction:\n\n"
+          ##
+          tsum$method.ci <- NULL
+
+          if (x$method.ci!="NAsm"){
+            cat(method.ci.details)
+            dimnames(res) <- list("", c(sm.lab, ci.lab,
+                                        if (comb.fixed) "%W(fixed)",
+                                        if (comb.random) "%W(random)"))
+            prmatrix(res, quote=FALSE, right=TRUE)
+            cat("\n\n")
+          }
+        }
+        ##
+        cat("Normal approximation confidence interval:\n")
       }
       else{
         dimnames(res) <-
@@ -296,17 +326,18 @@ print.meta <- function(x,
                             if (comb.random) "%W(random)"))
         prmatrix(res[order(sortvar),], quote=FALSE, right=TRUE)
       }
-      cat("\n")
     }
     
     
-    if (ma&!(inherits(x, "metainf")|inherits(x, "metacum")))
+    if (ma&!(inherits(x, "metainf")|inherits(x, "metacum"))){
+      cat("\n")
       print(tsum, digits=digits,
             comb.fixed=comb.fixed, comb.random=comb.random,
             prediction=prediction,
             header=FALSE, logscale=logscale)
-    
     }
+    
+  }
   
   invisible(NULL)
 }

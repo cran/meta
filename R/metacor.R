@@ -57,15 +57,17 @@ metacor <- function(cor, n, studlab,
   }
   
   
-  if (!is.null(studlab))
-    studlab <- as.character(studlab)
-  else
+  if (is.null(studlab))
     studlab <- seq(along=cor)
+  ##
+  if (is.factor(studlab))
+    studlab <- as.character(studlab)
   
   
   if (keepdata){
     if (nulldata){
-      data <- data.frame(.cor=cor, .n=n, .studlab=studlab)
+      data <- data.frame(.cor=cor, .n=n, .studlab=studlab,
+                         stringsAsFactors=FALSE)
       if (!missing.byvar)
         data$.byvar <- byvar
       ##
@@ -206,6 +208,9 @@ metacor <- function(cor, n, studlab,
                  level.predict=level.predict)
   
   
+  ci.study <- ci(TE, seTE, level=level)
+  
+  
   if (m$k>=3){
     seTE.predict <- sqrt(m$seTE.random^2 + m$tau^2)
     ci.p <- ci(m$TE.random, seTE.predict, level.predict, m$k-2)
@@ -248,6 +253,8 @@ metacor <- function(cor, n, studlab,
   res <- list(cor=cor, n=n,
               studlab=studlab,
               TE=TE, seTE=seTE,
+              lower=ci.study$lower, upper=ci.study$upper,
+              zval=ci.study$z, pval=ci.study$p,
               w.fixed=m$w.fixed, w.random=m$w.random,
               ##
               TE.fixed=m$TE.fixed, seTE.fixed=m$seTE.fixed,

@@ -1,6 +1,7 @@
 metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                      data=NULL, subset=NULL,
                      sm=.settings$smcont,
+                     pooledvar=.settings$pooledvar,
                      level=.settings$level, level.comb=.settings$level.comb,
                      comb.fixed=.settings$comb.fixed, comb.random=.settings$comb.random,
                      hakn=.settings$hakn,
@@ -73,17 +74,19 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   }
   
   
-  if (!is.null(studlab))
-    studlab <- as.character(studlab)
-  else
+  if (is.null(studlab))
     studlab <- seq(along=n.e)
+  ##
+  if (is.factor(studlab))
+    studlab <- as.character(studlab)
   
   
   if (keepdata){
     if (nulldata){
       data <- data.frame(.n.e=n.e, .mean.e=mean.e, .sd.e=sd.e,
                          .n.c=n.c, .mean.c=mean.c, .sd.c=sd.c,
-                         .studlab=studlab)
+                         .studlab=studlab,
+                         stringsAsFactors=FALSE)
       if (!missing.byvar)
         data$.byvar <- byvar
       ##
@@ -134,6 +137,10 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   }
   
   
+  if (is.null(pooledvar))
+    pooledvar <- FALSE
+  
+  
   k.all <- length(n.e)
   ##
   if (k.all == 0)
@@ -142,9 +149,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ## No meta-analysis for a single study
   ##
   if (k.all == 1){
-    comb.fixed <- FALSE
+    comb.fixed  <- FALSE
     comb.random <- FALSE
-    prediction <- FALSE
+    prediction  <- FALSE
   }
   
   
@@ -203,8 +210,14 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   if (sm == "MD"){
     TE    <- ifelse(npn, NA,
                     mean.e - mean.c)
-    seTE <- ifelse(npn, NA,
-                   sqrt(sd.e^2/n.e + sd.c^2/n.c))
+    ##
+    if (pooledvar)
+      seTE <- ifelse(npn, NA,
+                     sqrt((1/n.e+1/n.c) * ((n.e-1)*sd.e^2 + (n.c-1)*sd.c^2) / (n.e + n.c - 2)))
+    else
+      seTE <- ifelse(npn, NA,
+                     sqrt(sd.e^2/n.e + sd.c^2/n.c))
+    ##
     seTE[is.na(TE)] <- NA
   }
   else if (sm == "SMD"){
@@ -280,6 +293,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                  level.predict=level.predict)
   
   
+  ci.study <- ci(TE, seTE, level=level)
+  
+  
   if (m$k>=3){
     seTE.predict <- sqrt(m$seTE.random^2 + m$tau^2)
     ci.p <- ci(m$TE.random, seTE.predict, level.predict, m$k-2)
@@ -323,6 +339,8 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
               n.c=n.c, mean.c=mean.c, sd.c=sd.c,
               studlab=studlab,
               TE=TE, seTE=seTE,
+              lower=ci.study$lower, upper=ci.study$upper,
+              zval=ci.study$z, pval=ci.study$p,
               w.fixed=m$w.fixed, w.random=m$w.random,
               ##
               TE.fixed=m$TE.fixed, seTE.fixed=m$seTE.fixed,
@@ -348,7 +366,7 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
               lower.I2=I2res$lower,
               upper.I2=I2res$upper,
               ##
-              sm=sm, method=m$method,
+              sm=sm, pooledvar=pooledvar, method=m$method,
               level=level,
               level.comb=level.comb,
               comb.fixed=comb.fixed,

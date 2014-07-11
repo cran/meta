@@ -77,15 +77,17 @@ metagen <- function(TE, seTE,
   }
   
   
-  if (!is.null(studlab))
-    studlab <- as.character(studlab)
-  else
+  if (is.null(studlab))
     studlab <- seq(along=TE)
+  ##
+  if (is.factor(studlab))
+    studlab <- as.character(studlab)
   
   
   if (keepdata){
     if (nulldata){
-      data <- data.frame(.TE=TE, .seTE=seTE, .studlab=studlab)
+      data <- data.frame(.TE=TE, .seTE=seTE, .studlab=studlab,
+                         stringsAsFactors=FALSE)
       if (!missing.byvar)
         data$.byvar <- byvar
       ##
@@ -415,7 +417,11 @@ metagen <- function(TE, seTE,
         se.tau2 <- NULL
     }
   }
-
+  
+  
+  ci.study <- ci(TE, seTE, level=level)
+  
+  
   if (k>=3){
     seTE.predict <- sqrt(seTE.random^2 + tau2)
     ci.p <- ci(TE.random, seTE.predict, level.predict, k-2)
@@ -451,6 +457,8 @@ metagen <- function(TE, seTE,
   
   
   res <- list(TE=TE, seTE=seTE,
+              lower=ci.study$lower, upper=ci.study$upper,
+              zval=ci.study$z, pval=ci.study$p,
               studlab=studlab,
               w.fixed=w.fixed, w.random=w.random,
               ##

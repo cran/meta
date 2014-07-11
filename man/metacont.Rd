@@ -13,7 +13,7 @@
 \usage{
 metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
          data=NULL, subset=NULL,
-         sm=.settings$smcont,
+         sm=.settings$smcont, pooledvar=.settings$pooledvar,
          level=.settings$level, level.comb=.settings$level.comb,
          comb.fixed=.settings$comb.fixed, comb.random=.settings$comb.random,
          hakn=.settings$hakn,
@@ -59,14 +59,15 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     to estimate the between-study variance \eqn{\tau^2}. Either
     \code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"}, \code{"HS"},
     \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be abbreviated.}
-  \item{tau.preset}{Prespecified value for between-study variance tau-squared.}
+  \item{tau.preset}{Prespecified value for the square-root of the
+    between-study variance \eqn{\tau^2}.}
   \item{TE.tau}{Overall treatment effect used to estimate the
     between-study variance tau-squared.}
   \item{tau.common}{A logical indicating whether tau-squared should be
     the same across subgroups.}
   \item{method.bias}{A character string indicating which test is to be
     used. Either \code{"rank"}, \code{"linreg"}, or \code{"mm"}, can
-    be abbreviated.}
+    be abbreviated. See function \code{\link{metabias}}}
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
@@ -77,6 +78,8 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{sm}{A character string indicating which summary measure
     (\code{"MD"} or \code{"SMD"}) is to be used for pooling of
     studies.}
+  \item{pooledvar}{A logical indicating if a pooled variance should be
+    used for the mean difference (\code{sm="MD"}).}
   \item{byvar}{An optional vector containing grouping information (must
     be of same length as \code{n.e}).}
   \item{bylab}{A character string with a label for the grouping variable.}
@@ -161,6 +164,10 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{label.e, label.c, label.left, label.right,}{}
   \item{byvar, bylab, print.byvar, warn}{As defined above.}
   \item{TE, seTE}{Estimated treatment effect and standard error of individual studies.}
+  \item{lower, upper}{Lower and upper confidence interval limits
+    for individual studies.}
+  \item{zval, pval}{z-value and p-value for test of treatment
+    effect for individual studies.}
   \item{w.fixed, w.random}{Weight of individual studies (in fixed and
     random effects model).}
   \item{TE.fixed, seTE.fixed}{Estimated overall treatment effect and
@@ -187,7 +194,7 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     tau-squared across subgroups.}
   \item{method}{Pooling method: \code{"Inverse"}.}
   \item{df.hakn}{Degrees of freedom for test of treatment effect for
-  Hartung-Knapp method (only if \code{hakn=TRUE}).}
+    Hartung-Knapp method (only if \code{hakn=TRUE}).}
   \item{keepdata}{As defined above.}
   \item{data}{Original data (set) used in function call (if
     \code{keepdata=TRUE}).}
@@ -249,6 +256,20 @@ meta2 <- metacont(Fleiss93cont$n.e, Fleiss93cont$mean.e,
                   Fleiss93cont$sd.c,
                   sm="SMD")
 meta2
+
+data(amlodipine)
+meta3 <- metacont(n.amlo, mean.amlo, sqrt(var.amlo),
+                  n.plac, mean.plac, sqrt(var.plac),
+                  data=amlodipine, studlab=study)
+summary(meta3)
+
+## Use pooled variance
+##
+meta4 <- metacont(n.amlo, mean.amlo, sqrt(var.amlo),
+                  n.plac, mean.plac, sqrt(var.plac),
+                  data=amlodipine, studlab=study,
+                  pooledvar=TRUE)
+summary(meta4)
 }
 
 \keyword{htest}

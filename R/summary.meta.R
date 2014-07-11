@@ -25,6 +25,13 @@ summary.meta <- function(object,
   }
   
   
+  ## Upgrade meta objects created with older versions of meta
+  ##
+  if (!(!is.null(object$version) &&
+        as.numeric(unlist(strsplit(object$version, "-"))[1]) >= 3.7))
+    object <- update(object, warn=FALSE)
+  
+  
   k <- object$k
   Q <- object$Q
   ##
@@ -106,74 +113,43 @@ summary.meta <- function(object,
     stop("parameter 'level.predict': no valid level for confidence interval")
   
   
+  ci.f <- list(TE=object$TE.fixed,
+               seTE=object$seTE.fixed,
+               lower=object$lower.fixed,
+               upper=object$upper.fixed,
+               z=object$zval.fixed,
+               p=object$pval.fixed,
+               level=object$level.comb)
   ##
-  ## Check for older version of R package meta
-  ##
-  oldmeta <- !(!is.null(object$version) &&
-               as.numeric(unlist(strsplit(object$version, "-"))[1]) >= 3.2)
-  ##
-  if (oldmeta){
-    ci.H <- calcH(Q, df.Q, level.comb)
-    ci.I2 <- isquared(Q, df.Q, level.comb)
-    }
-  else{
-    ci.H <- list(TE=object$H, lower=object$lower.H, upper=object$upper.H)
-    ci.I2 <- list(TE=object$I2, lower=object$lower.I2, upper=object$upper.I2)
-  }
+  ci.r <- list(TE=object$TE.random,
+               seTE=object$seTE.random,
+               lower=object$lower.random,
+               upper=object$upper.random,
+               z=object$zval.random,
+               p=object$pval.random,
+               level=object$level.comb,
+               df=if (!is.null(object$df.hakn)) object$df.hakn else NA)
   
   
-  ci.lab <- paste(round(100*level.comb, 1), "%-CI", sep="")
-  ##
-  ci.study <- ci(object$TE, object$seTE, level)
-  ##
-  ## Check for very old versions of R package meta
-  ##
-  ancientmeta <- !(!is.null(object$version) &&
-                   as.numeric(unlist(strsplit(object$version, "\\."))[1]) >= 2)
-  ##
-  if (ancientmeta){
-    ci.f <- ci(object$TE.fixed , object$seTE.fixed , level.comb)
-    ci.r <- ci(object$TE.random, object$seTE.random, level.comb, df=object$df.hakn)
-  }
-  else{
-    ## Use available values
-    ci.f <- list(TE=object$TE.fixed,
-                 seTE=object$seTE.fixed,
-                 lower=object$lower.fixed,
-                 upper=object$upper.fixed,
-                 z=object$zval.fixed,
-                 p=object$pval.fixed,
-                 level=object$level.comb)
-    ##
-    ci.r <- list(TE=object$TE.random,
-                 seTE=object$seTE.random,
-                 lower=object$lower.random,
-                 upper=object$upper.random,
-                 z=object$zval.random,
-                 p=object$pval.random,
-                 level=object$level.comb,
-                 df=if (!is.null(object$df.hakn)) object$df.hakn else NA)
-  }
-  ##
-  ## Calculate exact confidence intervals for individual studies
+  ci.H <- list(TE=object$H, lower=object$lower.H, upper=object$upper.H)
+  ci.I2 <- list(TE=object$I2, lower=object$lower.I2, upper=object$upper.I2)
+  
+  
+  ci.study <- list(TE=object$TE,
+                   seTE=object$seTE,
+                   lower=object$lower,
+                   upper=object$upper,
+                   z=object$zval,
+                   p=object$pval,
+                   level=object$level,
+                   df=NA)
   ##
   if (!(inherits(object, "metainf")|inherits(object, "metacum")) &
       inherits(object, "metaprop")){
-    for ( i in 1:length(ci.study$TE)){
-      cint <- binom.test(object$event[i], object$n[i], conf.level=level)
-      ci.study$TE[i]    <- cint$estimate
-      ci.study$lower[i] <- cint$conf.int[[1]]
-      ci.study$upper[i] <- cint$conf.int[[2]]
-      ci.study$seTE[i]  <- NA
-      ci.study$z[i]     <- NA
-      ci.study$p[i]     <- NA
-    }
-    ci.f$z    <- NA
-    ci.f$p    <- NA
-    ci.f$harmonic.mean <- mean(1/object$n)
     ##
-    ci.r$z    <- NA
-    ci.r$p    <- NA
+    ci.study$event <- object$event
+    ci.study$n <- object$n
+    ci.f$harmonic.mean <- mean(1/object$n)
     ci.r$harmonic.mean <- mean(1/object$n)
   }
   
@@ -233,7 +209,7 @@ summary.meta <- function(object,
                           object$sd.e[sel],
                           object$n.c[sel], object$mean.c[sel],
                           object$sd.c[sel],
-                          sm=object$sm,
+                          sm=object$sm, pooledvar=object$pooledvar,
                           studlab=object$studlab[sel],
                           level=level, level.comb=level.comb,
                           comb.fixed=comb.fixed,
@@ -392,6 +368,9 @@ summary.meta <- function(object,
                  lower=NA, upper=NA, z=NA, p=NA)
   
   
+  ci.lab <- paste(round(100*level.comb, 1), "%-CI", sep="")
+  
+  
   res <- list(study=ci.study,
               fixed=ci.f, random=ci.r,
               predict=ci.p,
@@ -443,25 +422,32 @@ summary.meta <- function(object,
     res$incr <- object$incr
     res$allincr <- object$allincr
     res$addincr <- object$addincr
-    ##res$freeman.tukey <- object$freeman.tukey
+    res$method.ci <- object$method.ci
     ##
     class(res) <- c(class(res), "metaprop")
   }
   ##
+  if (inherits(object, "metacont")){
+    res$pooledvar <- object$pooledvar
+    ##
+    class(res) <- c(class(res), "metacont")
+  }
+  ##
   if (inherits(object, "metacor")){
-    res$cor       <- object$cor
-    res$n         <- object$n
+    res$cor <- object$cor
+    res$n   <- object$n
     ##
     class(res) <- c(class(res), "metacor")
   }
   ##
   if (inherits(object, "metabin")){
-    class(res) <- c(class(res), "metabin")
-    res$sparse <- object$sparse
-    res$incr <- object$incr
-    res$allincr <- object$allincr
-    res$addincr <- object$addincr
+    res$sparse   <- object$sparse
+    res$incr     <- object$incr
+    res$allincr  <- object$allincr
+    res$addincr  <- object$addincr
     res$MH.exact <- object$MH.exact
+    ##
+    class(res) <- c(class(res), "metabin")
   }
   ##
   if (inherits(object, "metainc")){

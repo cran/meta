@@ -132,6 +132,14 @@ forest.meta <- function(x,
   if (new)
     grid.newpage()
   
+  
+  ## Upgrade meta objects created with older versions of meta
+  ##
+  if (!(!is.null(x$version) &&
+        as.numeric(unlist(strsplit(x$version, "-"))[1]) >= 3.7))
+    x <- update(x, warn=FALSE)
+  
+  
   if (inherits(x, "metainf")|inherits(x, "metacum")){
     hetstat <- FALSE
     prediction <- FALSE
@@ -716,6 +724,7 @@ forest.meta <- function(x,
   if (inherits(x, "metaprop")){
     x$event.e <- x$event
     x$n.e <- x$n
+    x$TE <- x$event / x$n
   }
   ##
   if (inherits(x, "metacor")){
@@ -1287,108 +1296,57 @@ forest.meta <- function(x,
     tau2 <- NA
   }
   else{
-    ##
-    ## Check for very old versions of R package meta
-    ##
-    ancientmeta <- !(!is.null(x$version) &&
-                     as.numeric(unlist(strsplit(x$version, "\\."))[1]) >= 2)
-    
     sm1 <- summary(m1, warn=FALSE)
     
-    TE    <- sm1$study$TE
-    seTE  <- sm1$study$seTE
-    lowTE <- sm1$study$lower
-    uppTE <- sm1$study$upper
+    TE <- x$TE
+    seTE <- x$seTE
+    lowTE <- x$lower
+    uppTE <- x$upper
     ##
-    if (ancientmeta){
-      ## Only use (re)calculated pooled estimate for
-      ## very old versions of R package meta
-      TE.fixed    <- sm1$fixed$TE
-      lowTE.fixed <- sm1$fixed$lower
-      uppTE.fixed <- sm1$fixed$upper
+    TE.fixed <- x$TE.fixed
+    if (x$level.comb == level.comb){
+      lowTE.fixed <- x$lower.fixed
+      uppTE.fixed <- x$upper.fixed
     }
     else{
-      ## Use available values for pooled estimate
-      TE.fixed <- x$TE.fixed
-      if (x$level.comb == level.comb){
-        lowTE.fixed <- x$lower.fixed
-        uppTE.fixed <- x$upper.fixed
-      }
-      else{
-        ci.f <- ci(x$TE.fixed, x$seTE.fixed, level=level.comb)
-        lowTE.fixed <- ci.f$lower
-        uppTE.fixed <- ci.f$upper
-      }
+      ci.f <- ci(x$TE.fixed, x$seTE.fixed, level=level.comb)
+      lowTE.fixed <- ci.f$lower
+      uppTE.fixed <- ci.f$upper
     }
     ##
-    if (ancientmeta){
-      ## Only use (re)calculated pooled estimate for
-      ## very old versions of R package meta
-      TE.random    <- sm1$random$TE
-      lowTE.random <- sm1$random$lower
-      uppTE.random <- sm1$random$upper
+    TE.random <- x$TE.random
+    if (x$level.comb == level.comb){
+      lowTE.random <- x$lower.random
+      uppTE.random <- x$upper.random
     }
     else{
-      ## Use available values for pooled estimate
-      TE.random <- x$TE.random
-      if (x$level.comb == level.comb){
-        lowTE.random <- x$lower.random
-        uppTE.random <- x$upper.random
-      }
-      else{
-        ci.r <- ci(x$TE.random, x$seTE.random, level=level.comb)
-        lowTE.random <- ci.r$lower
-        uppTE.random <- ci.r$upper
-      }
+      ci.r <- ci(x$TE.random, x$seTE.random, level=level.comb)
+      lowTE.random <- ci.r$lower
+      uppTE.random <- ci.r$upper
     }
     ##
-    if (ancientmeta){
-      ## Only use (re)calculated pooled estimate for
-      ## very old versions of R package meta
-      prediction <- FALSE
+    if (!prediction){
       lowTE.predict <- NA
       uppTE.predict <- NA
     }
     else{
-      if (!prediction){
-        lowTE.predict <- NA
-        uppTE.predict <- NA
+      ## Use available values for pooled estimate
+      if (!is.null(x$level.predict) && x$level.predict == level.predict){
+        lowTE.predict <- x$lower.predict
+        uppTE.predict <- x$upper.predict
       }
       else{
-        ## Use available values for pooled estimate
-        if (!is.null(x$level.predict) && x$level.predict == level.predict){
-          lowTE.predict <- x$lower.predict
-          uppTE.predict <- x$upper.predict
-        }
-        else{
-          ci.p <- ci(x$TE.random, x$seTE.predict, level=level.predict, x$k-2)
-          lowTE.predict <- ci.p$lower
-          uppTE.predict <- ci.p$upper
-        }
+        ci.p <- ci(x$TE.random, x$seTE.predict, level=level.predict, x$k-2)
+        lowTE.predict <- ci.p$lower
+        uppTE.predict <- ci.p$upper
       }
-    } 
-    ##
-    if (ancientmeta){
-      ## Only use (re)calculated heterogeneity statistics for very old
-      ## versions of R package meta
-      ##
-      Q    <- sm1$Q
-      df   <- sm1$k-1
-      tau2 <- sm1$tau^2
-      }
-    else{
-      Q    <- x$Q
-      df   <- x$df.Q
-      tau2 <- x$tau^2
     }
     ##
-    oldmeta <- !(!is.null(x$version) &&
-                 as.numeric(unlist(strsplit(x$version, "-"))[1]) >= 3.2)
+    Q    <- x$Q
+    df   <- x$df.Q
+    tau2 <- x$tau^2
     ##
-    if (oldmeta)
-      I2 <- sm1$I2$TE
-    else
-      I2 <- x$I2
+    I2 <- x$I2
   }
   
   
@@ -1750,16 +1708,16 @@ forest.meta <- function(x,
       uppTE <- pscale*uppTE
     }
     else{
-      TE <- pscale*exp(TE)
+      TE    <- pscale*exp(TE)
       lowTE <- pscale*exp(lowTE)
       uppTE <- pscale*exp(uppTE)
     }
     ##
-    TE.fixed <- pscale*exp(TE.fixed)
+    TE.fixed    <- pscale*exp(TE.fixed)
     lowTE.fixed <- pscale*exp(lowTE.fixed)
     uppTE.fixed <- pscale*exp(uppTE.fixed)
     ##
-    TE.random <- pscale*exp(TE.random)
+    TE.random    <- pscale*exp(TE.random)
     lowTE.random <- pscale*exp(lowTE.random)
     uppTE.random <- pscale*exp(uppTE.random)
     ##
@@ -1781,16 +1739,16 @@ forest.meta <- function(x,
       uppTE <- pscale*uppTE
     }
     else{
-      TE <- pscale*logit2p(TE)
+      TE    <- pscale*logit2p(TE)
       lowTE <- pscale*logit2p(lowTE)
       uppTE <- pscale*logit2p(uppTE)
     }
     ##
-    TE.fixed <- pscale*logit2p(TE.fixed)
+    TE.fixed    <- pscale*logit2p(TE.fixed)
     lowTE.fixed <- pscale*logit2p(lowTE.fixed)
     uppTE.fixed <- pscale*logit2p(uppTE.fixed)
     ##
-    TE.random <- pscale*logit2p(TE.random)
+    TE.random    <- pscale*logit2p(TE.random)
     lowTE.random <- pscale*logit2p(lowTE.random)
     uppTE.random <- pscale*logit2p(uppTE.random)
     ##
@@ -1827,13 +1785,13 @@ forest.meta <- function(x,
   }
   
   if (!comb.fixed){
-    TE.fixed <- NA
+    TE.fixed    <- NA
     lowTE.fixed <- NA
     uppTE.fixed <- NA
   }
   ##
   if (!comb.random){
-    TE.random <- NA
+    TE.random    <- NA
     lowTE.random <- NA
     uppTE.random <- NA
   }

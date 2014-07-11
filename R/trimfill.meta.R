@@ -15,6 +15,13 @@ trimfill.meta <- function(x, left=NULL, ma.fixed=TRUE,
     stop("This function is not usable for an object of class \"metainf\"")
   
   
+  ## Upgrade meta objects created with older versions of meta
+  ##
+  if (!(!is.null(x$version) &&
+        as.numeric(unlist(strsplit(x$version, "-"))[1]) >= 3.7))
+    x <- update(x, warn=FALSE)
+  
+  
   if (length(comb.fixed)==0)
     comb.fixed <- TRUE
   ##
@@ -47,41 +54,6 @@ trimfill.meta <- function(x, left=NULL, ma.fixed=TRUE,
   ##
   if (length(method.tau)==0)
     method.tau <- "DL"
-  
-  
-  estimate.missing <- function(TE, TE.sum, type){
-    ##
-    ## 1. Centre around mean
-    ##
-    TE.c <- TE - TE.sum
-    n <- length(TE.c)
-    ##
-    ## 2. Rank absolute values of centred values
-    ##
-    r.star <- rank(abs(TE.c))*sign(TE.c)
-    ##
-    if (type=="L"){
-      ##
-      ## 3. Sum the positive ranks only
-      ##
-      S.rank <- sum(r.star[r.star>0])
-      ##
-      ## 4. Estimate for L0
-      ##
-      res0 <- (4*S.rank - n*(n+1))/(2*n-1)
-      res0.plus <- max(0, res0 + 0.5) %/% 1
-    }
-    if (type=="R"){
-      ##
-      ## 5. Estimate for R0
-      ##
-      res0 <- n - abs(min(r.star)) - 1.5
-      res0.plus <- max(0, res0 + 0.5) %/% 1
-    }
-    ##
-    res <- list(res0=res0, res0.plus=res0.plus)
-    res
-  }
   
   
   TE <- x$TE
@@ -336,6 +308,8 @@ trimfill.meta <- function(x, left=NULL, ma.fixed=TRUE,
   
   res <- list(studlab=m$studlab,
               TE=m$TE, seTE=m$seTE,
+              lower=m$lower, upper=m$upper,
+              zval=m$zval, pval=m$pval,
               w.fixed=m$w.fixed, w.random=m$w.random,
               TE.fixed=m$TE.fixed, seTE.fixed=m$seTE.fixed,
               lower.fixed=m$lower.fixed, upper.fixed=m$upper.fixed,

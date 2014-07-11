@@ -74,17 +74,19 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   }
   
   
-  if (!is.null(studlab))
-    studlab <- as.character(studlab)
-  else
+  if (is.null(studlab))
     studlab <- seq(along=event.e)
+  ##
+  if (is.factor(studlab))
+    studlab <- as.character(studlab)
   
   
   if (keepdata){
     if (nulldata){
       data <- data.frame(.event.e=event.e, .time.e=time.e,
                          .event.c=event.c, .time.c=time.c,
-                         .studlab=studlab)
+                         .studlab=studlab,
+                         stringsAsFactors=FALSE)
       if (!missing.byvar)
         data$.byvar <- byvar
       ##
@@ -470,6 +472,9 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   }
   
   
+  ci.study <- ci(TE, seTE, level=level)
+  
+  
   if (m$k>=3){
     seTE.predict <- sqrt(m$seTE.random^2 + m$tau^2)
     ci.p <- ci(m$TE.random, seTE.predict, level.predict, m$k-2)
@@ -513,6 +518,8 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
               event.c=event.c, time.c=time.c,
               studlab=studlab,
               TE=TE, seTE=seTE,
+              lower=ci.study$lower, upper=ci.study$upper,
+              zval=ci.study$z, pval=ci.study$p,
               w.fixed=w.fixed, w.random=w.random,
               ##
               TE.fixed=TE.fixed, seTE.fixed=seTE.fixed,

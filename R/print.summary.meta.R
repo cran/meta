@@ -290,7 +290,10 @@ print.summary.meta <- function(x,
             sparse=ifelse(bip, x$sparse, FALSE),
             incr=ifelse(bip, x$incr, FALSE),
             allincr=ifelse(bip, x$allincr, FALSE),
-            addincr=ifelse(bip, x$addincr, FALSE))
+            addincr=ifelse(bip, x$addincr, FALSE),
+            method.ci=x$method.ci,
+            metacont=inherits(x, "metacont"),
+            pooledvar=x$pooledvar)
   }
   else{
 
@@ -619,7 +622,10 @@ print.summary.meta <- function(x,
             incr=ifelse(bip, x$incr, FALSE),
             allincr=ifelse(bip, x$allincr, FALSE),
             addincr=ifelse(bip, x$addincr, FALSE),
-            MH.exact=ifelse(inherits(x, "metabin"), x$MH.exact, FALSE))
+            MH.exact=ifelse(inherits(x, "metabin"), x$MH.exact, FALSE),
+            method.ci=x$method.ci,
+            metacont=inherits(x, "metacont"),
+            pooledvar=x$pooledvar)
   }
   
   invisible(NULL)

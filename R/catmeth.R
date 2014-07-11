@@ -10,7 +10,10 @@ catmeth <- function(method, method.tau=NULL,
                     incr=NULL,
                     allincr=FALSE,
                     addincr=FALSE,
-                    MH.exact=FALSE){
+                    MH.exact=FALSE,
+                    method.ci=NULL,
+                    metacont=FALSE,
+                    pooledvar=FALSE){
   
   if  (sm=="PFT")
     sm.details <- "\n- Freeman-Tukey double arcsine transformation"
@@ -29,10 +32,24 @@ catmeth <- function(method, method.tau=NULL,
   else
     sm.details <- ""
   ##
-  if (metaprop)
-    sm.details <- paste(sm.details,
-                        "\n- Exact binomial confidence intervals for individual studies",
-                        sep="")
+  if (metaprop && !is.null(method.ci)){
+    if  (method.ci=="CP")
+      method.ci.details <- "\n- Clopper-Pearson confidence interval for individual studies"
+    else if (method.ci=="WS")
+      method.ci.details <- "\n- Wilson Score confidence interval for individual studies"
+    else if (method.ci=="WSCC")
+      method.ci.details <- "\n- Wilson Score confidence interval with continuity correction for individual studies"
+    else if (method.ci=="AC")
+      method.ci.details <- "\n- Agresti-Coull confidence interval for individual studies"
+    else if (method.ci=="SA")
+      method.ci.details <- "\n- Simple approximation confidence interval for individual studies"
+    else if (method.ci=="SACC")
+      method.ci.details <- "\n- Simple approximation confidence interval with continuity correction for individual studies"
+    else if (method.ci=="NAsm")
+      method.ci.details <- "\n- Normal approximation confidence interval for individual studies"
+    ##
+    sm.details <- paste(sm.details, method.ci.details, sep="")
+  }
   ##
   if (metabin | metainc | metaprop){
     if (!(sm=="AS" | method=="Peto")){
@@ -131,6 +148,10 @@ catmeth <- function(method, method.tau=NULL,
     if (MH.exact | metainc)
       lab.method.details <- paste(" (without continuity correction)",
                                   lab.method.details, sep="")
+  ##
+  if (metacont && !is.null(pooledvar) && pooledvar)
+    lab.method.details <- paste(" (with pooled variance for individual studies)",
+                                lab.method.details, sep="")
   ##
   method <- c("\n- Mantel-Haenszel method",
               "\n- Peto method",

@@ -5,7 +5,7 @@
 \title{Update a meta-analysis object}
 
 \description{
-  Update an existing meta-analysis object created with R function metabin, metacont, metagen, metacor, or metaprop.
+  Update an existing meta-analysis object.
 }
 
 \usage{
@@ -27,8 +27,11 @@
        label.e=object$label.e, label.c=object$label.c,
        label.left=object$label.left, label.right=object$label.right,
        n.e=object$n.e, n.c=object$n.c,
+       pooledvar=object$pooledvar, method.ci=object$method.ci,
        byvar=object$byvar, bylab=object$bylab, print.byvar=object$print.byvar,
        print.CMH=object$print.CMH, keepdata=TRUE,
+       left=object$left, ma.fixed=object$ma.fixed,
+       type=object$type, n.iter.max=object$n.iter.max,
        warn=object$warn, ...)
 }
 
@@ -76,8 +79,10 @@
   \item{method.tau}{A character string indicating which method is used
     to estimate the between-study variance \eqn{\tau^2}. Either
     \code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"}, \code{"HS"},
-    \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be abbreviated.}
-  \item{tau.preset}{Prespecified value for between-study variance \eqn{\tau^2}.}
+    \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be abbreviated. See
+    function \code{\link{metagen}}.}
+  \item{tau.preset}{Prespecified value for the square-root of the
+    between-study variance \eqn{\tau^2}.}
   \item{TE.tau}{Overall treatment effect used to estimate the
   between-study variance \eqn{\tau^2}.}
   \item{tau.common}{A logical indicating whether tau-squared should be
@@ -89,7 +94,7 @@
   \item{method.bias}{A character string indicating which test for
     funnel plot asymmetry is to be used. Either \code{"rank"},
     \code{"linreg"}, \code{"mm"}, \code{"count"}, \code{"score"}, or
-    \code{"peters"}, can be abbreviated.}
+    \code{"peters"}, can be abbreviated. See function \code{\link{metabias}}}
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
@@ -99,7 +104,15 @@
   \item{label.right}{Graph label on right side of forest plot.}
   \item{n.e}{Number of observations in experimental group. (only for metagen object)}
   \item{n.c}{Number of observations in control group. (only for metagen object)}
-   \item{byvar}{An optional vector containing grouping information (must
+  \item{pooledvar}{A logical indicating if a pooled variance should be
+    used for the mean difference (only for metacont object with
+    \code{sm="MD"}).}
+  \item{method.ci}{A character string indicating which method is used
+    to calculate confidence intervals for individual studies. Either
+    \code{"CP"}, \code{"WS"}, \code{"WSCC"}, \code{"AC"},
+    \code{"SA"},, \code{"SACC"}, or \code{"NAsm"}, can be
+    abbreviated. See function \code{\link{metaprop}}.}
+  \item{byvar}{An optional vector containing grouping information (must
     be of same length as \code{event.e}).}
   \item{bylab}{A character string with a label for the grouping variable.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
@@ -108,6 +121,17 @@
     Cochran-Mantel-Haenszel test for overall effect should be printed.}
   \item{keepdata}{A logical indicating whether original data (set)
     should be kept in meta object.}
+  \item{left}{A logical indicating whether studies are supposed to be
+    missing on the left or right side of the funnel plot. If NULL, the
+    linear regression test for funnel plot symmetry (i.e., function
+    \code{metabias(..., method="linreg")}) is used to determine whether
+    studies are missing on the left or right side.}
+  \item{ma.fixed}{A logical indicating whether a fixed effect or random
+  effects model is used to estimate the number of missing studies.}
+  \item{type}{A character indicating which method is used to estimate
+    the number of missing studies. Either \code{"L"} or \code{"R"}.}
+  \item{n.iter.max}{Maximum number of iterations to estimate number of
+    missing studies.}
   \item{warn}{A logical indicating whether warnings should be printed
     (e.g., if \code{incr} is added to studies with zero cell
     frequencies).}
@@ -116,12 +140,14 @@
 
 \details{
   Wrapper function to update an existing meta-analysis object which
-  was created with R function metabin, metacont, metagen, metacor, or
-  metaprop.
+  was created with R function metabin, metacont, metagen, metacor,
+  metainc, or metaprop.
+
+  This function can also be used for objects of class 'trimfill',
+  'metacum', and 'metainf'.
   
-  More details on function arguments are available in help files of R
-  function metabin, metacont, metagen, metacor, or metaprop,
-  respectively.
+  More details on function arguments are available in help files of
+  respective R functions, i.e. metabin, metacont, ...
 }
 
 \value{

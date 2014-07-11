@@ -81,6 +81,12 @@ settings.meta <- function(...){
     catarg("RR.cochrane")
     catarg("print.CMH")
     ##
+    cat("\nAdditional setting for R function metacont:\n")
+    catarg("pooledvar")
+    ##
+    cat("\nAdditional setting for R function metaprop:\n")
+    catarg("method.ci")
+    ##
     cat("\nSettings for R functions comparing two treatments:\n")
     catarg("label.e")
     catarg("label.c")
@@ -121,6 +127,10 @@ settings.meta <- function(...){
       setOption("smcor", "ZCOR")
       setOption("sminc", "IRR")
       setOption("smprop", "PLOGIT")
+      ##
+      setOption("pooledvar", FALSE)
+      ##
+      setOption("method.ci", "CP")
       ##
       setOption("label.e", "Experimental")
       setOption("label.c", "Control")
@@ -172,10 +182,14 @@ settings.meta <- function(...){
     idsminc <- argid(names, "sminc")
     idsmprop <- argid(names, "smprop")
     ##
+    idpooledvar <- argid(names, "pooledvar")
+    ##
+    idmethod.ci <- argid(names, "method.ci")
+    ##
     idlabel.e <- argid(names, "label.e")
     idlabel.c <- argid(names, "label.c")
     idlabel.left <- argid(names, "label.left")
-    idlabel.right <- argid(names, "label.rigth")
+    idlabel.right <- argid(names, "label.right")
     ##
     ## General settings
     ##
@@ -433,6 +447,16 @@ settings.meta <- function(...){
       setOption("sminc", sminc)
     }
     ##
+    ## R function metacont
+    ##
+    if (!is.na(idpooledvar)){
+      pooledvar <- args[[idpooledvar]]
+      if (length(pooledvar)!= 1 || !is.logical(pooledvar))
+        stop("Argument 'pooledvar' must be a logical.")
+      ##
+      setOption("pooledvar", pooledvar)
+    }
+    ##
     ## R function metaprop
     ##
     if (!is.na(idsmprop)){
@@ -442,11 +466,25 @@ settings.meta <- function(...){
                          c("pft", "pas", "praw", "pln", "plogit"), nomatch = NA)
       ##
       if(is.na(imeth) || imeth==0)
-        stop("Argument 'smprop' should be \"PFT\", \"PAS\", \"PRAW\", \"PLN\", or \"PLOGIT\".")
+        stop("Argument 'smprop' should be \"PLOGIT\", \"PLN\", \"PFT\", \"PAS\", or \"PRAW\".")
       ##
       smprop <- c("PFT", "PAS", "PRAW", "PLN", "PLOGIT")[imeth]
       ##
       setOption("smprop", smprop)
+    }
+    ##
+    if (!is.na(idmethod.ci)){
+      method.ci <- args[[idmethod.ci]]
+      ##
+      imci <- charmatch(tolower(method.ci),
+                        c("cp", "ws", "wscc", "ac", "sa", "sacc", "nasm"), nomatch = NA)
+      ##
+      if(is.na(imci) || imci==0)
+        stop("Argument 'method.ci' should be \"CP\", \"WS\", \"WSCC\", \"AC\", \"SA\", \"SACC\", or \"NAsm\".")
+      ##
+      method.ci <- c("CP", "WS", "WSCC", "AC", "SA", "SACC", "NAsm")[imci]
+      ##
+      setOption("method.ci", method.ci)
     }
     ##
     ## R functions comparing two treatments

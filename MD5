@@ -1,7 +1,7 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
-4c14369dcd7f07e78d8d0a1703437d6f *DESCRIPTION
+097de765ad76f09c9845e11073b18a81 *DESCRIPTION
 6e5995bac91e3a85dfad56b80dfe9e80 *NAMESPACE
-81ceb5d9e51094420e1cf0ee96c8f79c *NEWS
+957e6748d37ce611b40849009d111a36 *NEWS
 3ec3585d5e737b12feac9f238accbd06 *R/addvar.R
 51186b8457d8e930f7e20eeebef4fab0 *R/as.data.frame.meta.R
 52f17deabc15ed219dceb691d56638d2 *R/asin2p.R
@@ -19,7 +19,7 @@ c40f7a0f1248a9a2fa8c5daeff4697dc *R/ciWilsonScore.R
 fd98d7e26d3964b612eac9fb29fe9b5e *R/crtitle.R
 dc7a8ca53035edd8c4ca91b4ba7b8a95 *R/estimate.missing.R
 c5d8e61a4475cc5b465ecc2a32a7a465 *R/forest.R
-c43387d63d6a7e77ae6819ff0b4d7c13 *R/forest.meta.R
+a6babb7c814a78e1ab30bf1e2f98b28a *R/forest.meta.R
 4b2544be5aa240ca4d5d48d7e1e7c4dd *R/format.p.R
 e4551ca02e9371a89560c83f4dfd7717 *R/format.tau.R
 4b38b46ce435d62ce262fbf30cb9032f *R/funnel.R
@@ -92,7 +92,7 @@ ce268f7353957caa06cae412ddc53010 *man/addvar.Rd
 601d45125d19039b3ec4b68eed35513b *man/bubble.Rd
 d7f8f48daff6c9b82b6b0a753cfc09ff *man/ci.Rd
 e76d23b6acd7b7200ffc3a69090f6c18 *man/cisapride.Rd
-4c83a7d7da082f8501cb3df51da5ca07 *man/forest.Rd
+cadeaf384fef810f174494e58d680f0d *man/forest.Rd
 c866b652ad41f3703926baec491841cf *man/funnel.Rd
 c81a483908c8d36728722e6e3859c1b7 *man/labbe.Rd
 a0d31555650cf708886ac87749e2bc07 *man/metabias.Rd

@@ -1,7 +1,7 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
-02e08598037ed9a294e3ce88a1d06afc *DESCRIPTION
+bfa73940a33550f9f80e846a65ffe7fe *DESCRIPTION
 31d7ae7b30852dabed3783d5b8cd6d7c *NAMESPACE
-fa907585da8b8319bf09a6d8667b40ae *NEWS
+2509e6acd7b8a2a8c680fe384993399c *NEWS
 d7cdc77b6e31298ca28d6b37f4367b63 *R/as.data.frame.meta.R
 52f17deabc15ed219dceb691d56638d2 *R/asin2p.R
 116659fb81410bc9107acbb0bb499e50 *R/backtransf.R
@@ -53,7 +53,7 @@ ec1bb7a66b9a750ed6ccd0faefdc9cc0 *R/metabias.R
 d237123f0fd4f63a75360caa395bef34 *R/metabias.default.R
 0c39781d9590bc42909fc396311661cb *R/metabias.meta.R
 665cbef4e821e60b7b78d502375c834c *R/metabias.rm5.R
-574d30cc510b111aa079b7e7131eb15e *R/metabin.R
+7b991a196377a4b4433e6a33e1d1213c *R/metabin.R
 f7ce542c59b7681bee21552aa982d496 *R/metacont.R
 de82a6272ef587b00586aee124282be7 *R/metacor.R
 f8f979714454eaec8515458e9d57fa94 *R/metacr.R

@@ -83,7 +83,7 @@ print.meta <- function(x,
   ##
   metainf.metacum <- inherits(x, "metainf") | inherits(x, "metacum")
   ##  
-  prediction <- prediction & comb.random & x$k>=3
+  prediction <- prediction & x$k>=3
   ##  
   ci.lab <- paste(round(100*level, 1), "%-CI", sep="")
   ##  
@@ -255,7 +255,8 @@ print.meta <- function(x,
               trimfill=inherits(x, "trimfill"),
               tau.preset=x$tau.preset,
               method.smd=x$method.smd,
-              sd.glass=x$sd.glass)
+              sd.glass=x$sd.glass,
+              exact.smd=x$exact.smd)
     }
     else{
       res <- cbind(format.TE(TE, na=TRUE),

@@ -69,6 +69,7 @@ forest.meta <- function(x,
                         col.by="darkgray",
                         ##
                         print.I2=comb.fixed|comb.random,
+                        print.I2.ci=FALSE,
                         print.tau2=comb.fixed|comb.random,
                         print.Q=FALSE,
                         print.pval.Q=comb.fixed|comb.random,
@@ -203,6 +204,7 @@ forest.meta <- function(x,
   chkchar(col.predict)
   chkchar(col.predict.lines)
   chklogical(print.I2)
+  chklogical(print.I2.ci)
   chklogical(print.tau2)
   chklogical(print.Q)
   chklogical(print.pval.Q)
@@ -284,7 +286,7 @@ forest.meta <- function(x,
     prediction <- FALSE
   }
   ##
-  prediction <- prediction & comb.random & x$k >= 3
+  prediction <- prediction & x$k >= 3
   ##  
   x.name <- deparse(substitute(x))
   ##
@@ -410,20 +412,21 @@ forest.meta <- function(x,
   newcols <- length(colnames.new)>0
   ##
   if (newcols){
+    dataset2 <- as.data.frame(x)
+    ##
     if (is.null(x$data))
-      dataset <- as.data.frame(x)
-    else{
-      if (!is.null(x$subset))
-        dataset <- x$data[x$subset,]
-      else
-        dataset <- x$data
-    }
+      dataset1 <- dataset2
+    else
+      dataset1 <- x$data
+    ##
+    if (!is.null(x$subset))
+      dataset1 <- dataset1[x$subset,]
     ##
     ## Check whether additional variables are
     ## part of meta-object
     ##
     for (i in colnames.new)
-      if (length(x[[i]]) == 0 & length(dataset[[i]]) == 0)
+      if (length(dataset1[[i]]) == 0 & length(dataset2[[i]]) == 0)
         stop("Variable '", i, "' not available in '", x.name, "'.")
     ##
     rightcols.new <- rightcols[! rightcols %in% colnames]
@@ -684,8 +687,10 @@ forest.meta <- function(x,
     ##
     col.i.inside.square <- col.i.inside.square[o]
     ##
-    if (newcols)
-      dataset <- dataset[o,]
+    if (newcols){
+      dataset1 <- dataset1[o,]
+      dataset2 <- dataset2[o,]
+    }
   }
   ##
   if (by)
@@ -714,6 +719,8 @@ forest.meta <- function(x,
     df   <- NA
     I2   <- NA
     tau2 <- NA
+    lowI2 <- NA
+    uppI2 <- NA
   }
   else{
     TE <- x$TE
@@ -743,6 +750,8 @@ forest.meta <- function(x,
     tau2 <- x$tau^2
     ##
     I2 <- x$I2
+    lowI2 <- x$lower.I2
+    uppI2 <- x$upper.I2
   }
   ##
   if (overall.hetstat){
@@ -755,6 +764,12 @@ forest.meta <- function(x,
                                text.I2, "=",
                                round(100*I2, 1), "%",
                                sep="")
+      if (print.I2.ci & x$k>2)
+        hetstat.overall <- paste(hetstat.overall,
+                                 " ",
+                                 p.ci(paste(round(100*lowI2, 1), "%", sep=""),
+                                      paste(round(100*uppI2, 1), "%", sep="")),
+                                 sep="")
       dummy <- TRUE
     }
     ##
@@ -805,6 +820,8 @@ forest.meta <- function(x,
     upper.random.w <- x$upper.random.w[o]
     Q.w        <- x$Q.w[o]
     I2.w       <- x$I2.w[o]
+    lowI2.w    <- x$lower.I2.w[o]
+    uppI2.w    <- x$upper.I2.w[o]
     tau.w      <- x$tau.w[o]
     w.fixed.w  <- x$w.fixed.w[o]
     w.random.w <- x$w.random.w[o]
@@ -828,6 +845,8 @@ forest.meta <- function(x,
     upper.random.w <- upper.random.w[sel]
     Q.w        <- Q.w[sel]
     I2.w       <- I2.w[sel]
+    lowI2.w    <- lowI2.w[sel]
+    uppI2.w    <- uppI2.w[sel]
     tau.w      <- tau.w[sel]
     w.fixed.w  <- w.fixed.w[sel]
     w.random.w <- w.random.w[sel]
@@ -876,6 +895,15 @@ forest.meta <- function(x,
                            text.I2, "=",
                            round(100*I2.w, 1), "%",
                            sep="")
+        if (print.I2.ci)
+          hetstat.w <- paste(hetstat.w,
+                             ifelse(k.w>2,
+                                    paste(" ",
+                                          p.ci(paste(round(100*lowI2.w, 1), "%", sep=""),
+                                               paste(round(100*uppI2.w, 1), "%", sep="")),
+                                          sep=""),
+                                    ""),
+                             sep="")
         dummy <- TRUE
       }
       ##
@@ -1518,8 +1546,14 @@ forest.meta <- function(x,
         text.fixed <- "Overall"
   }
   ##
-  if (!is.na(yTE.random) & prediction)
-    yTE.predict <- yTE.random+1
+  if (prediction){
+    if (!is.na(yTE.random))
+      yTE.predict <- yTE.random+1
+    else if (!is.na(yTE.fixed))
+      yTE.predict <- yTE.fixed+1
+    else
+      yTE.predict <- max.yTE+2
+  }
   ##
   if (overall.hetstat)
     if (is.na(yTE.fixed) & is.na(yTE.random))
@@ -1847,10 +1881,10 @@ forest.meta <- function(x,
     if (by){
       for (i in seq(along=rightcols.new)){
         tname <- paste("col.", rightcols.new[i], sep="")
-        if (length(dataset[[rightcols.new[i]]])!=0)
-          tmp.r <- dataset[[rightcols.new[i]]]
-        else if (length(x[[rightcols.new[i]]])!=0)
-          tmp.r <- x[[rightcols.new[i]]]
+        if (length(dataset1[[rightcols.new[i]]])!=0)
+          tmp.r <- dataset1[[rightcols.new[i]]]
+        else if (length(dataset2[[rightcols.new[i]]])!=0)
+          tmp.r <- dataset2[[rightcols.new[i]]]
         if (is.factor(tmp.r))
           tmp.r <- as.character(tmp.r)
         tmp.r <- ifelse(is.na(tmp.r), "", tmp.r)
@@ -1863,10 +1897,10 @@ forest.meta <- function(x,
       }
       for (i in seq(along=leftcols.new)){
         tname <- paste("col.", leftcols.new[i], sep="")
-        if (length(dataset[[leftcols.new[i]]])!=0)
-          tmp.l <- dataset[[leftcols.new[i]]]        
-        else if (length(x[[leftcols.new[i]]])!=0)
-          tmp.l <- x[[leftcols.new[i]]]
+        if (length(dataset1[[leftcols.new[i]]])!=0)
+          tmp.l <- dataset1[[leftcols.new[i]]]        
+        else if (length(dataset2[[leftcols.new[i]]])!=0)
+          tmp.l <- dataset2[[leftcols.new[i]]]
         if (is.factor(tmp.l))
           tmp.l <- as.character(tmp.l)
         tmp.l <- ifelse(is.na(tmp.l), "", tmp.l)
@@ -1881,10 +1915,10 @@ forest.meta <- function(x,
     else{
       for (i in seq(along=rightcols.new)){
         tname <- paste("col.", rightcols.new[i], sep="")
-        if (length(dataset[[rightcols.new[i]]])!=0)
-          tmp.r <- dataset[[rightcols.new[i]]]
-        else if (length(x[[rightcols.new[i]]])!=0)
-          tmp.r <- x[[rightcols.new[i]]]
+        if (length(dataset1[[rightcols.new[i]]])!=0)
+          tmp.r <- dataset1[[rightcols.new[i]]]
+        else if (length(dataset2[[rightcols.new[i]]])!=0)
+          tmp.r <- dataset2[[rightcols.new[i]]]
         if (is.factor(tmp.r))
           tmp.r <- as.character(tmp.r)
         tmp.r <- ifelse(is.na(tmp.r), "", tmp.r)
@@ -1895,10 +1929,10 @@ forest.meta <- function(x,
       }
       for (i in seq(along=leftcols.new)){
         tname <- paste("col.", leftcols.new[i], sep="")
-        if (length(dataset[[leftcols.new[i]]])!=0)
-          tmp.l <- dataset[[leftcols.new[i]]]        
-        else if (length(x[[leftcols.new[i]]])!=0)
-          tmp.l <- x[[leftcols.new[i]]]
+        if (length(dataset1[[leftcols.new[i]]])!=0)
+          tmp.l <- dataset1[[leftcols.new[i]]]        
+        else if (length(dataset2[[leftcols.new[i]]])!=0)
+          tmp.l <- dataset2[[leftcols.new[i]]]
         if (is.factor(tmp.l))
           tmp.l <- as.character(tmp.l)
         tmp.l <- ifelse(is.na(tmp.l), "", tmp.l)

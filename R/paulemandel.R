@@ -27,8 +27,9 @@ paulemandel <- function(TE, seTE,
   n.iter <- 0
   converged <- 0L
   ##
-  while(n.iter < maxiter && abs(dv) > tol*variance.TE){
+  while (n.iter < maxiter && abs(dv) > tol*variance.TE){
     n.iter <- n.iter + 1
+    converged <- 0L
     ##
     w.random <- 1 / (seTE^2 + tau2)
     w.random[is.na(w.random)] <- 0
@@ -39,8 +40,7 @@ paulemandel <- function(TE, seTE,
     tau2 <- tau2 + dv
     ##
     if (tau2 < 0){
-      tau2  <- 0.0
-      dv <- 0.0
+      tau2 <- 0.0
       w.random <- 1 / (seTE^2 + tau2)
       w.random[is.na(w.random)] <- 0
       TE.random <- weighted.mean(TE, w.random)
@@ -59,8 +59,11 @@ paulemandel <- function(TE, seTE,
       converged <- 1L
   }
   
+  w.random.all <- rep(0, length(sel))
+  w.random.all[sel] <- w.random
+  
   res <- list(TE.random=TE.random, seTE.random=seTE.random,
-              w.random=w.random, tau=sqrt(tau2),
+              w.random=w.random.all, tau=sqrt(tau2),
               n.iter=n.iter, converged=converged, tol=tol*variance.TE)
   
   res

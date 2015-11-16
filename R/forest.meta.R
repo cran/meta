@@ -81,15 +81,17 @@ forest.meta <- function(x,
                         text.I2="I-squared",
                         text.tau2="tau-squared",
                         ##
-                        test.overall.fixed=comb.fixed&overall&.settings$test.overall,
-                        test.overall.random=comb.random&overall&.settings$test.overall,
+                        test.overall=.settings$test.overall,
+                        test.overall.fixed=comb.fixed&overall&test.overall,
+                        test.overall.random=comb.random&overall&test.overall,
                         label.test.overall.fixed=paste("Test for overall effect",
                           if (comb.fixed & comb.random) " (fixed effect)", ": ", sep=""),
                         label.test.overall.random=paste("Test for overall effect",
                           if (comb.fixed & comb.random) " (random effects)", ": ", sep=""),
                         ##
-                        test.subgroup.fixed=FALSE,
-                        test.subgroup.random=!is.null(x$byvar)&comb.random&.settings$test.subgroup,
+                        test.subgroup=.settings$test.subgroup,
+                        test.subgroup.fixed=if (missing(test.subgroup)) FALSE else test.subgroup,
+                        test.subgroup.random=if (missing(test.subgroup)) !is.null(x$byvar)&comb.random&test.subgroup else test.subgroup,
                         print.Q.subgroup=print.Q,
                         label.test.subgroup.fixed="Test for subgroup differences (fixed effect): ",
                         label.test.subgroup.random=paste("Test for subgroup differences",
@@ -149,7 +151,14 @@ forest.meta <- function(x,
                         new=TRUE,
                         ##
                         backtransf=x$backtransf,
-                        digits=2, ...){
+                        digits=2,
+                        digits.se=4,
+                        digits.tau2=4,
+                        digits.pval=4,
+                        digits.pval.Q=digits.pval,
+                        digits.Q=1,
+                        digits.I2=1,
+                        ...){
   
   
   ##
@@ -261,6 +270,13 @@ forest.meta <- function(x,
   if (missing(weight))
     weight <- ifelse(comb.random & !comb.fixed, "random", "fixed")
   weight <- setchar(weight, c("same", "fixed", "random"))
+  chknumeric(digits, single=TRUE)
+  chknumeric(digits.se, single=TRUE)
+  chknumeric(digits.tau2, single=TRUE)
+  chknumeric(digits.pval, single=TRUE)
+  chknumeric(digits.pval.Q, single=TRUE)
+  chknumeric(digits.Q, single=TRUE)
+  chknumeric(digits.I2, single=TRUE)
   ##
   cl <- class(x)[1]
   addargs <- names(list(...))
@@ -862,13 +878,13 @@ forest.meta <- function(x,
     if (print.I2){
       hetstat.overall <- paste(hetstat.overall,
                                text.I2, "=",
-                               round(100*I2, 1), "%",
+                               round(100*I2, digits.I2), "%",
                                sep="")
       if (print.I2.ci & x$k>2)
         hetstat.overall <- paste(hetstat.overall,
                                  " ",
-                                 p.ci(paste(round(100*lowI2, 1), "%", sep=""),
-                                      paste(round(100*uppI2, 1), "%", sep="")),
+                                 p.ci(paste(round(100*lowI2, digits.I2), "%", sep=""),
+                                      paste(round(100*uppI2, digits.I2), "%", sep="")),
                                  sep="")
       dummy <- TRUE
     }
@@ -878,7 +894,8 @@ forest.meta <- function(x,
                                if (dummy) ", ",
                                if (tau2==0) paste(text.tau2, "=0", sep="")
                                else format.tau(tau2, noblanks=TRUE,
-                                               lab=TRUE, labval=text.tau2),
+                                               lab=TRUE, labval=text.tau2,
+                                               digits=digits.tau2),
                                sep="")
       dummy <- TRUE
     }
@@ -886,7 +903,7 @@ forest.meta <- function(x,
     if (print.Q){
       hetstat.overall <- paste(hetstat.overall,
                                if (dummy) ", ",
-                               "Q=", round(Q, 1),
+                               "Q=", round(Q, digits.Q),
                                ", df=", df,
                                sep="")
       dummy <- TRUE
@@ -896,7 +913,8 @@ forest.meta <- function(x,
       hetstat.overall <- paste(hetstat.overall,
                                if (dummy) ", ",
                                format.p(1-pchisq(Q, df),
-                                        lab=TRUE, noblanks=TRUE),
+                                        lab=TRUE, noblanks=TRUE,
+                                        digits=digits.pval.Q),
                                sep="")
     }
   }
@@ -916,7 +934,8 @@ forest.meta <- function(x,
   ## Label of test for overall effect
   ##
   pvals.overall <- format.p(c(x$pval.fixed, x$pval.random),
-                            lab=TRUE, noblanks=TRUE)
+                            lab=TRUE, noblanks=TRUE,
+                            digits=digits.pval)
   ##
   if (test.overall.fixed)
     text.overall.fixed  <- paste(label.test.overall.fixed, pvals.overall[1])
@@ -939,8 +958,9 @@ forest.meta <- function(x,
   dummy.het <- FALSE
   ##
   Q.bs <- c(Q.b.fixed, Q.b.random)
-  Q.bs.format <- format(round(Q.bs, 1))
-  pval.Qbs <- format.p(1-pchisq(Q.bs, df.Q.b), lab=TRUE, noblanks=TRUE)
+  Q.bs.format <- gsub(" ", "", format(round(Q.bs, digits.Q)))
+  pval.Qbs <- format.p(1-pchisq(Q.bs, df.Q.b), lab=TRUE, noblanks=TRUE,
+                       digits=digits.pval.Q)
   ##
   if (print.Q.subgroup){
     label.test.subgroup.fixed  <- paste(label.test.subgroup.fixed,
@@ -1052,14 +1072,14 @@ forest.meta <- function(x,
       if (print.I2){
         hetstat.w <- paste(hetstat.w,
                            text.I2, "=",
-                           round(100*I2.w, 1), "%",
+                           round(100*I2.w, digits.I2), "%",
                            sep="")
         if (print.I2.ci)
           hetstat.w <- paste(hetstat.w,
                              ifelse(k.w>2,
                                     paste(" ",
-                                          p.ci(paste(round(100*lowI2.w, 1), "%", sep=""),
-                                               paste(round(100*uppI2.w, 1), "%", sep="")),
+                                          p.ci(paste(round(100*lowI2.w, digits.I2), "%", sep=""),
+                                               paste(round(100*uppI2.w, digits.I2), "%", sep="")),
                                           sep=""),
                                     ""),
                              sep="")
@@ -1071,7 +1091,8 @@ forest.meta <- function(x,
                            if (dummy) ", ",
                            ifelse(tau.w==0, paste(text.tau2, "=0", sep=""),
                                   format.tau(tau.w^2, noblanks=TRUE,
-                                             lab=TRUE, labval=text.tau2)),
+                                             lab=TRUE, labval=text.tau2,
+                                             digits=digits.tau2)),
                            sep="")
         dummy <- TRUE
       }
@@ -1079,7 +1100,7 @@ forest.meta <- function(x,
       if (print.Q){
         hetstat.w <- paste(hetstat.w,
                            if (dummy) ", ",
-                           "Q=", round(Q.w, 1),
+                           "Q=", round(Q.w, digits.Q),
                            ", df=", k.w-1,
                            sep="")
         dummy <- TRUE
@@ -1089,7 +1110,8 @@ forest.meta <- function(x,
         hetstat.w <- paste(hetstat.w,
                            if (dummy) ", ",
                            format.p(1-pchisq(Q.w, k.w-1),
-                                    lab=TRUE, noblanks=TRUE),
+                                    lab=TRUE, noblanks=TRUE,
+                                    digits=digits.pval.Q),
                            sep="")
       }
       ##
@@ -1326,7 +1348,7 @@ forest.meta <- function(x,
                    )
     seTEs.study <- c("", "", "", rep("", 3*n.by),
                      ifelse(is.na(seTE), lab.NA,
-                            format(round(seTE, 4),
+                            format(round(seTE, digits.se),
                                    scientific=FALSE))
                      )
     ##
@@ -1367,7 +1389,7 @@ forest.meta <- function(x,
                    )
     seTEs.study <- c("", "", "",
                      ifelse(is.na(seTE), lab.NA,
-                            format(round(seTE, 4),
+                            format(round(seTE, digits.se),
                                    scientific=FALSE))
                      )
     ##

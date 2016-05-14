@@ -1,3 +1,119 @@
+*** meta, version 4.4-0, 2016-05-13 ***
+
+ ** Major changes **
+
+  * Generalised linear mixed models (GLMMs) implemented by internal
+    call of rma.glmm() from R package metafor by Wolfgang Viechtbauer
+
+  * R packages lme4, numDeriv, and BiasedUrn added to suggested
+    packages which are required by rma.glmm()
+
+  * Print layout (especially number of printed digits) slightly
+    modified which impacts output from print.meta(),
+    print.summary.meta(), and forest.meta()
+
+  * New arguments to change number of digits in printouts and forest
+    plots
+
+ ** User-visible changes **
+
+  * metabin(), metainc(), metaprop():
+    - extension for meta-analysis based on GLMM; see method argument
+      and model.glmm argument (not used in metaprop function)
+    - new argument ... to provide additional arguments to rma.glmm()
+    - some arguments can be used for other meta-analysis methods than
+      inverse variance method:
+      method.tau, hakn, tau.common(*), TE.tau(*), tau.preset(*)
+      (*) not considered for GLMMs
+
+  * metabin():
+    - do not print warning that inverse variance instead of
+      Mantel-Haenszel method is used for analysis of a single study
+    - print warning if continuity correction (arguments incr, allincr,
+      addincr, allstudies) is used with arcsine difference, Peto
+      method, or GLMM
+    - check whether R package BiasedUrn is installed for conditional
+      hypergeometric-normal GLMM (method = "GLMM", model.glmm =
+      "CM.EL")
+
+  * forest.meta():
+    - extension to plot meta-analysis based on GLMM
+    - labels argument can be used instead of label argument to change
+      labels on x-axis (axis() uses labels argument)
+
+  * funnel.meta():
+    - print default labels on y-axis with capital first letter
+
+  * metareg() and update.meta():
+    - extension for meta-analysis based on GLMM
+
+  * print.meta():
+    - new arguments to control printing:
+      digits.se, digits.zval, digits.Q, digits.tau2, digits.H,
+      digits.I2, digits.prop, digits.weight
+    - argument ... passed on to internal call of print.summary.meta()
+
+  * print.summary.meta():
+    - new arguments to control printing:
+      digits.zval, digits.Q, digits.tau2, digits.H, digits.I2
+    - print "--" for missing z-value instead of "NA"
+    - only print confidence interval for H and I2 if lower and upper
+      limits are not NA
+    - print Wald-type and Likelihood-Ratio heterogeneity test for GLMMs
+
+  * settings.meta():
+    - new arguments:
+      model.glmm, digits, digits.se, digits.zval, digits.Q,
+      digits.tau2, digits.H, digits.I2, digits.prop, digits.weight,
+      digits.pval, digits.pval.Q
+    - check whether R package metafor is installed for specific values
+      of argument method.tau
+    - check whether R packages required for GLMMs are available (if
+      method = "GLMM"): metafor, lme4, numDeriv
+
+  * Help pages updated:
+    metabin(), metainc(), metaprop(), metareg(), forest(),
+    print.meta(), print.summary.meta(), settings.meta(), update.meta()
+
+ ** Internal changes **
+
+  * New function:
+    - format.NA() to print other text than "NA" for missing values
+  
+  * metagen():
+    - only call paulemandel() if heterogeneity statistic Q is larger
+      equal than number of studies minus 1
+      (otherwise between-study heterogeneity tau-squared is set equal to 0)
+
+  * New list elements:
+    - model.glmm, .glmm.fixed, .glmm.random, version.metafor in
+      metabin(), metainc(), metaprop()
+    - doublezeros in metabin() - only for odds ratio and risk ratio
+    - allstudies, doublezeros, model.glmm, .glmm.fixed, .glmm.random,
+      version.metafor in summary.meta()
+
+  * meta-internal():
+    - set defaults for new arguments: model.glmm, digits, digits.se,
+      digits.zval, digits.Q, digits.tau2, digits.H, digits.I2,
+      digits.prop, digits.weight, digits.pval, and digits.pval.Q
+       
+  * paulemandel():  
+    - more sensible warning if maximum number of iterations is reached
+    - maximum number of iterations increased from 25 to 100
+
+  * format.p():
+    - print trailing zeros
+
+  * catmeth():
+    - print information for GLMMs
+    - print information whether studies with double zeros are included
+      in meta-analysis
+
+  * is.installed.package():
+    - new arguments for more flexible error and warning messages:
+      func, argument, value, chksettings
+
+
 2015-12-02, version 4.3-2
 
 Function metacont:
@@ -69,7 +185,7 @@ Function metareg:
 
 Function metabin:
 - use Inverse Variance instead of Mantel-Haenszel method if only a
-  single study has a non-missing treatment estimate orstandard error
+  single study has a non-missing treatment estimate or standard error
 
 Functions settings.meta and meta-internal:
 - code added for new arguments in forest.meta function to print
@@ -674,7 +790,7 @@ Function print.summary.meta:
   between-study heterogeneity tau-squared is equal to 0
 
 New function format.tau (used internally):
-- print "0" instead of "< 0.0001" tau-squared is zero
+- print "0" instead of "< 0.0001" if tau-squared is zero
 
 Function p.ci (used internally):
 - new arguments bracket.left, separator, bracket.right for more

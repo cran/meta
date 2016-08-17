@@ -1,15 +1,15 @@
-.onLoad <- function(libname, pkgname){
-   library.dynam("meta", pkgname, libname)
+.onLoad <- function(libname, pkgname) {
+  library.dynam("meta", pkgname, libname)
 }
 
-.onUnload <- function(libpath){
+.onUnload <- function(libpath) {
   library.dynam.unload("meta", libpath)
 }
 
-.onAttach <- function (libname, pkgname){
+.onAttach <- function (libname, pkgname) {
   msg <- paste("Loading 'meta' package (version ",
                utils::packageDescription("meta")$Version,
-               ").", sep="")
+               ").", sep = "")
   packageStartupMessage(msg)
 }
 
@@ -33,11 +33,11 @@
 ## key - character: object name
 ## val - object (everything is allowed, even NULL)
 ##
-setOption <- function(key=NULL, val=NULL){
-  if(!is.null(key) && is.character(key)){
-    option <- getVar(".settings")   ## Get from NS
+setOption <- function(key = NULL, val = NULL) {
+  if(!is.null(key) && is.character(key)) {
+    option <- getVar(".settings") # Get from NS
     option[[key]] <- val
-    setVar(".settings", option)     ## Write to NS
+    setVar(".settings", option) # Write to NS
     ##
     return(invisible(TRUE))
   }
@@ -50,8 +50,8 @@ setOption <- function(key=NULL, val=NULL){
 ## Get a specific variable from the meta namespace.
 ## var - character: object name
 ##
-getVar <- function(var=NULL) {
-  if(!is.null(var) && is.character(var)){
+getVar <- function(var = NULL) {
+  if(!is.null(var) && is.character(var)) {
     tmp <- try(getFromNamespace(var, "meta"))
     ##
     if(inherits(tmp, "try-error"))
@@ -69,14 +69,14 @@ getVar <- function(var=NULL) {
 ## var - character: object name
 ## arg - object (NULL allowed)
 ##
-setVar <- function( var=NULL, arg=NULL ) {
-  if( !is.null( var ) && is.character( var ) ) {
-    assignInNamespace( var, arg, "meta" )
+setVar <- function(var = NULL, arg = NULL) {
+  if(!is.null(var) && is.character(var)) {
+    assignInNamespace(var, arg, "meta")
 
-    return( invisible( TRUE ) )
+    return(invisible(TRUE))
   }
 
-  stop( "var is NULL or no character" );
+  stop("var is NULL or no character");
 }
 
 
@@ -91,7 +91,7 @@ argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
               "hakn", "method.tau", "tau.common",
               "prediction", "level.predict",
               "method.bias", "title", "complab",
-              "print.byvar", "keepdata", "warn",
+              "print.byvar", "byseparator", "keepdata", "warn",
               "backtransf",
               "smbin", "smcont", "smcor", "sminc", "smprop",
               "incr", "allincr", "addincr",
@@ -99,7 +99,7 @@ argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
               "RR.cochrane", "model.glmm", "print.CMH",
               "pooledvar", "method.smd", "sd.glass", "exact.smd", "method.ci",
               "label.e", "label.c", "label.left", "label.right",
-              "test.overall", "test.subgroup",
+              "test.overall", "test.subgroup", "test.effect.subgroup",
               "digits", "digits.se", "digits.zval",
               "digits.Q", "digits.tau2", "digits.H", "digits.I2",
               "digits.prop", "digits.weight",
@@ -122,6 +122,7 @@ setOption("method.bias", "linreg")
 setOption("title", "")
 setOption("complab", "")
 setOption("print.byvar", TRUE)
+setOption("byseparator", " = ")
 setOption("keepdata", TRUE)
 setOption("warn", TRUE)
 setOption("backtransf", TRUE)
@@ -182,4 +183,5 @@ setOption("label.right", "")
 ##
 setOption("test.overall", FALSE)
 setOption("test.subgroup", FALSE)
+setOption("test.effect.subgroup", FALSE)
 setOption("digits.forest", 2)

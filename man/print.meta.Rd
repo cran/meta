@@ -18,6 +18,7 @@
         comb.random=x$comb.random,
         prediction=x$prediction,
         details=FALSE, ma=TRUE, backtransf=x$backtransf,
+	pscale=x$pscale,
         digits = .settings$digits, digits.se = .settings$digits.se,
         digits.zval = .settings$digits.zval,
         digits.Q = .settings$digits.Q, digits.tau2 = .settings$digits.tau2,
@@ -31,15 +32,18 @@
         comb.fixed=object$comb.fixed, comb.random=object$comb.random,
         prediction=object$prediction,
         backtransf=object$backtransf,
+	pscale=object$pscale,
         bylab=object$bylab, print.byvar=object$print.byvar,
-        bystud=FALSE, print.CMH=object$print.CMH,
-        warn=object$warn, ...)
+	byseparator=object$byseparator, bystud=FALSE,
+	print.CMH=object$print.CMH, warn=object$warn, ...)
 
 \method{print}{summary.meta}(x, digits = .settings$digits,
         comb.fixed=x$comb.fixed, comb.random=x$comb.random,
         prediction=x$prediction,
-        print.byvar=x$print.byvar, print.CMH=x$print.CMH,
+        print.byvar=x$print.byvar, byseparator=x$byseparator,
+	print.CMH=x$print.CMH,
         header=TRUE, backtransf=x$backtransf,
+	pscale=x$pscale,
         bylab.nchar=35,
         digits.zval = .settings$digits.zval,
         digits.Q = .settings$digits.Q, digits.tau2 = .settings$digits.tau2,
@@ -64,6 +68,8 @@ cilayout(bracket="[", separator="; ")
   \item{bylab}{A character string with a label for the grouping variable.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
     variable should be printed in front of the group labels.}
+  \item{byseparator}{A character string defining the separator between
+    label and levels of grouping variable.}
   \item{header}{A logical indicating whether information on title of
     meta-analysis, comparison and outcome should be printed at the
     beginning of the printout.}
@@ -77,6 +83,10 @@ cilayout(bracket="[", separator="; ")
     ratios and results for \code{sm="ZCOR"} are printed as
     correlations rather than Fisher's z transformed correlations, for
     example.}
+  \item{pscale}{A numeric giving scaling factor for printing of single
+    event probabilities, i.e. if argument \code{sm} is equal to
+    \code{"PLOGIT"}, \code{"PLN"}, \code{"PRAW"}, \code{"PAS"}, or
+    \code{"PFT"}.}
   \item{bylab.nchar}{A numeric specifying the number of characters to
     print from label for the grouping variable.}
   \item{bystud}{A logical indicating whether results of individual
@@ -149,6 +159,11 @@ cilayout(bracket="[", separator="; ")
   layout is "[lower; upper]". Another popular layout is "(lower -
   upper)" which is used throughout an R session by using R command
   \code{cilayout("(", " - ")}.
+  
+  Argument \code{pscale} can be used to rescale proportions,
+  e.g. \code{pscale=1000} means that proportions are expressed as
+  events per 1000 observations. This is useful in situations with
+  (very) low event probabilities.
 }
 
 \value{

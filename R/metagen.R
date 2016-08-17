@@ -21,6 +21,7 @@ metagen <- function(TE, seTE, studlab,
                     n.e = NULL, n.c = NULL,
                     ##
                     backtransf = .settings$backtransf,
+                    pscale = 1,
                     title = .settings$title, complab = .settings$complab,
                     outclab = "",
                     label.e = .settings$label.e, label.c = .settings$label.c,
@@ -28,6 +29,7 @@ metagen <- function(TE, seTE, studlab,
                     label.right = .settings$label.right,
                     ##
                     byvar, bylab, print.byvar = .settings$print.byvar,
+                    byseparator = .settings$byseparator,
                     ##
                     keepdata = .settings$keepdata,
                     warn = .settings$warn
@@ -56,6 +58,14 @@ metagen <- function(TE, seTE, studlab,
                          c("rank", "linreg", "mm", "count", "score", "peters"))
   ##
   chklogical(backtransf)
+  if (!(sm %in% c("PLOGIT", "PLN", "PRAW", "PAS", "PFT")))
+    pscale <- 1
+  chknumeric(pscale, single = TRUE)
+  if (!backtransf & pscale != 1) {
+    warning("Argument 'pscale' set to 1 as argument 'backtransf' is FALSE.")
+    pscale <- 1
+  }
+  ##
   chklogical(keepdata)
   ##
   ## Additional arguments / checks for metacont objects
@@ -144,8 +154,10 @@ metagen <- function(TE, seTE, studlab,
     chklength(n.e, k.All, fun)
   if (!is.null(n.c))
     chklength(n.c, k.All, fun)
-  if (!missing.byvar)
+  if (!missing.byvar) {
     chklogical(print.byvar)
+    chkchar(byseparator)
+  }
   
   
   ##
@@ -186,7 +198,7 @@ metagen <- function(TE, seTE, studlab,
     if (!missing.subset) {
       if (length(subset) == dim(data)[1])
         data$.subset <- subset
-      else{
+      else {
         data$.subset <- FALSE
         data$.subset[subset] <- TRUE
       }
@@ -283,7 +295,7 @@ metagen <- function(TE, seTE, studlab,
     ##
     Cval <- NA
   }
-  else{
+  else {
     ## Estimate tau-squared
     hc <- hetcalc(TE, seTE, method.tau, TE.tau)
     ##
@@ -296,7 +308,7 @@ metagen <- function(TE, seTE, studlab,
       tau2 <- hc$tau^2
       se.tau2 <- hc$se.tau2
     }
-    else{
+    else {
       tau2 <- tau.preset^2
       se.tau2 <- NULL
     }
@@ -338,7 +350,7 @@ metagen <- function(TE, seTE, studlab,
         tau2 <- pm$tau^2
       }
     }
-    else{
+    else {
       ##
       ## Cooper & Hedges (1994), p. 265, 274-5
       ##
@@ -378,7 +390,7 @@ metagen <- function(TE, seTE, studlab,
     p.lower <- ci.p$lower
     p.upper <- ci.p$upper
   }
-  else{
+  else {
     seTE.predict <- NA
     p.lower <- NA
     p.upper <- NA
@@ -449,9 +461,11 @@ metagen <- function(TE, seTE, studlab,
               data = if (keepdata) data else NULL,
               subset = if (keepdata) subset else NULL,
               print.byvar = print.byvar,
+              byseparator = byseparator,
               warn = warn,
               call = match.call(),
               backtransf = backtransf,
+              pscale = pscale,
               version = packageDescription("meta")$Version)
   ##
   class(res) <- c(fun, "meta")
@@ -466,7 +480,7 @@ metagen <- function(TE, seTE, studlab,
       res <- c(res, subgroup(res))
     else if (!is.null(tau.preset))
       res <- c(res, subgroup(res, tau.preset))
-    else{
+    else {
       res <- c(res, subgroup(res, hcc$tau))
       res$Q.w.random <- hcc$Q
       res$df.Q.w.random <- hcc$df.Q
@@ -476,6 +490,8 @@ metagen <- function(TE, seTE, studlab,
     res$event.c.w <- NULL
     res$event.w <- NULL
     res$n.w <- NULL
+    res$time.e.w <- NULL
+    res$time.c.w <- NULL
   }
   ##
   class(res) <- c(fun, "meta")

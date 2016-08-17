@@ -1,45 +1,46 @@
 metainc <- function(event.e, time.e, event.c, time.c, studlab,
                     ##
-                    data=NULL, subset=NULL, method="MH",
+                    data = NULL, subset = NULL, method = "MH",
                     ##
-                    sm=.settings$sminc,
+                    sm = .settings$sminc,
                     ##
-                    incr=.settings$incr, allincr=.settings$allincr,
-                    addincr=.settings$addincr,
+                    incr = .settings$incr, allincr = .settings$allincr,
+                    addincr = .settings$addincr,
                     model.glmm = "UM.FS",
                     ##
-                    level=.settings$level, level.comb=.settings$level.comb,
-                    comb.fixed=.settings$comb.fixed,
-                    comb.random=.settings$comb.random,
+                    level = .settings$level, level.comb = .settings$level.comb,
+                    comb.fixed = .settings$comb.fixed,
+                    comb.random = .settings$comb.random,
                     ##
-                    hakn=.settings$hakn,
+                    hakn = .settings$hakn,
                     method.tau =
                       ifelse(!is.na(charmatch(tolower(method), "glmm",
                                               nomatch = NA)),
                              "ML", .settings$method.tau),
-                    tau.preset=NULL, TE.tau=NULL,
-                    tau.common=.settings$tau.common,
+                    tau.preset = NULL, TE.tau = NULL,
+                    tau.common = .settings$tau.common,
                     ##
-                    prediction=.settings$prediction,
-                    level.predict=.settings$level.predict,
+                    prediction = .settings$prediction,
+                    level.predict = .settings$level.predict,
                     ##
-                    method.bias=.settings$method.bias,
+                    method.bias = .settings$method.bias,
                     ##
-                    n.e=NULL, n.c=NULL,
+                    n.e = NULL, n.c = NULL,
                     ##
-                    backtransf=.settings$backtransf,
-                    title=.settings$title, complab=.settings$complab,
-                    outclab="",
-                    label.e=.settings$label.e, label.c=.settings$label.c,
-                    label.left=.settings$label.left,
-                    label.right=.settings$label.right,
+                    backtransf = .settings$backtransf,
+                    title = .settings$title, complab = .settings$complab,
+                    outclab = "",
+                    label.e = .settings$label.e, label.c = .settings$label.c,
+                    label.left = .settings$label.left,
+                    label.right = .settings$label.right,
                     ##
-                    byvar, bylab, print.byvar=.settings$print.byvar,
+                    byvar, bylab, print.byvar = .settings$print.byvar,
+                    byseparator = .settings$byseparator,
                     ##
-                    keepdata=.settings$keepdata,
-                    warn=.settings$warn,
+                    keepdata = .settings$keepdata,
+                    warn = .settings$warn,
                     ...
-                    ){
+                    ) {
   
   
   ##
@@ -174,7 +175,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
         warning("Argument 'tau.common' not considered for GLMM.")
       tau.common <- FALSE
     }
-   if (!is.null(TE.tau)) {
+    if (!is.null(TE.tau)) {
       if (warn)
         warning("Argument 'TE.tau' not considered for GLMM.")
       TE.tau <- NULL
@@ -186,7 +187,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
       tau.preset <- NULL
     }
   }
-  if (missing.byvar & tau.common){
+  if (missing.byvar & tau.common) {
     warning("Value for argument 'tau.common' set to FALSE as argument 'byvar' is missing.")
     tau.common <- FALSE
   }
@@ -206,7 +207,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
         (length(subset) > k.All))
       stop("Length of subset is larger than number of studies.")
   ##  
-  if (!missing.byvar){
+  if (!missing.byvar) {
     chkmiss(byvar)
     byvar.name <- byvarname(mf[[match("byvar", names(mf))]])
     bylab <- if (!missing(bylab) && !is.null(bylab)) bylab else byvar.name
@@ -219,9 +220,9 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##     (if argument keepdata is TRUE)
   ##
   ##
-  if (keepdata){
+  if (keepdata) {
     if (nulldata)
-      data <- data.frame(.event.e=event.e)
+      data <- data.frame(.event.e = event.e)
     else
       data$.event.e <- event.e
     ##
@@ -233,10 +234,10 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     if (!missing.byvar)
       data$.byvar <- byvar
     ##
-    if (!missing.subset){
+    if (!missing.subset) {
       if (length(subset) == dim(data)[1])
         data$.subset <- subset
-      else{
+      else {
         data$.subset <- FALSE
         data$.subset[subset] <- TRUE
       }
@@ -254,7 +255,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ## (6) Use subset for analysis
   ##
   ##
-  if (!missing.subset){
+  if (!missing.subset) {
     event.e <- event.e[subset]
     time.e <- time.e[subset]
     event.c <- event.c[subset]
@@ -279,7 +280,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   ## No meta-analysis for a single study
   ##
-  if (k.all == 1){
+  if (k.all == 1) {
     comb.fixed  <- FALSE
     comb.random <- FALSE
     prediction  <- FALSE
@@ -288,9 +289,9 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ## Check variable values
   ##
   chknumeric(event.e, 0)
-  chknumeric(time.e, 0, zero=TRUE)
+  chknumeric(time.e, 0, zero = TRUE)
   chknumeric(event.c, 0)
-  chknumeric(time.c, zero=TRUE)
+  chknumeric(time.c, zero = TRUE)
   ##
   ## Recode integer as numeric:
   ##
@@ -306,12 +307,19 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   ##
   sel <- switch(sm,
-                IRD=rep(FALSE, length(event.e)),
-                IRR=event.e == 0 | event.c == 0)
+                IRD = rep(FALSE, length(event.e)),
+                IRR = event.e == 0 | event.c == 0)
   ##
   ## Sparse computation
   ##
-  sparse <- any(sel, na.rm=TRUE)
+  sparse <- any(sel, na.rm = TRUE)
+  ##
+  if (method == "GLMM" & sparse)
+    if ((!missing(incr) & incr != 0) |
+        (!missing(allincr) & allincr ) |
+        (!missing(addincr) & addincr)
+        )
+      warning("Note, for method = \"GLMM\", continuity correction only used to calculate individual study results.")
   ##
   if (addincr)
     incr.event <- rep(incr, k.all)
@@ -320,17 +328,17 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
       if (allincr)
         incr.event <- rep(incr, k.all)
       else
-        incr.event <- incr*sel
+        incr.event <- incr * sel
     else
       incr.event <- rep(0, k.all)
   ##  
-  if (sm=="IRR"){
-    TE <- log(((event.e+incr.event)/time.e) / ((event.c+incr.event)/time.c))
-    seTE <- sqrt(1/(event.e+incr.event) + 1/(event.c+incr.event))
+  if (sm == "IRR") {
+    TE <- log(((event.e + incr.event) / time.e) / ((event.c + incr.event) / time.c))
+    seTE <- sqrt(1 / (event.e + incr.event) + 1 / (event.c + incr.event))
   }
-  else if (sm=="IRD"){
-    TE <- event.e/time.e - event.c/time.c
-    seTE <- sqrt((event.e+incr.event)/time.e^2 + (event.c+incr.event)/time.c^2)
+  else if (sm == "IRD") {
+    TE <- event.e / time.e - event.c / time.c
+    seTE <- sqrt((event.e + incr.event) / time.e^2 + (event.c + incr.event) / time.c^2)
   }
   
   
@@ -339,7 +347,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ## (8) Do meta-analysis
   ##
   ##
-  if (method == "MH"){
+  if (method == "MH") {
     ##
     ## Greenland, Robins (1985)
     ## 
@@ -351,40 +359,40 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     N.k <- n.k + m.k
     t.k <- x.k + y.k
     ##
-    if (sm == "IRR"){
-      D <- n.k*m.k*t.k/N.k^2
-      R <- x.k*m.k/N.k
-      S <- y.k*n.k/N.k
+    if (sm == "IRR") {
+      D <- n.k * m.k * t.k / N.k^2
+      R <- x.k * m.k / N.k
+      S <- y.k * n.k / N.k
       ##
       w.fixed <- S
-      TE.fixed <- log(sum(R, na.rm=TRUE)/sum(S, na.rm=TRUE))
-      seTE.fixed <- sqrt(sum(D, na.rm=TRUE)/(sum(R, na.rm=TRUE)*
-                                  sum(S, na.rm=TRUE)))
+      TE.fixed <- log(sum(R, na.rm = TRUE) / sum(S, na.rm = TRUE))
+      seTE.fixed <- sqrt(sum(D, na.rm = TRUE) / (sum(R, na.rm = TRUE) *
+                                                   sum(S, na.rm = TRUE)))
     }
-    else if (sm == "IRD"){
-      L <- (x.k*m.k^2 + y.k*n.k^2)/N.k^2
+    else if (sm == "IRD") {
+      L <- (x.k * m.k^2 + y.k * n.k^2) / N.k^2
       ##
-      S <- n.k*m.k/N.k
+      S <- n.k * m.k / N.k
       ##
       w.fixed <- S
-      TE.fixed <- weighted.mean(TE, w.fixed, na.rm=TRUE)
-      seTE.fixed <- sqrt(sum(L, na.rm=TRUE)/sum(S, na.rm=TRUE)^2)
+      TE.fixed <- weighted.mean(TE, w.fixed, na.rm = TRUE)
+      seTE.fixed <- sqrt(sum(L, na.rm = TRUE) / sum(S, na.rm = TRUE)^2)
     }
   }
   ##
-  else if (method == "Cochran"){
+  else if (method == "Cochran") {
     ##
     ## Smoking and Health - Report of the Advisory Committee to the
     ## Surgeon General of the Public Health Service,
     ## Chapter 8
     ## 
-    if (sm == "IRR"){
-      w.fixed <- event.c*time.e/time.c
+    if (sm == "IRR") {
+      w.fixed <- event.c * time.e / time.c
       TE.fixed <- weighted.mean(TE, w.fixed)
-      seTE.fixed <- sqrt(1/sum(event.e) + 1/sum(event.c))
+      seTE.fixed <- sqrt(1 / sum(event.e) + 1 / sum(event.c))
     }
-    else if (sm == "IRD"){
-      warning("Cochran method only available for Incidence Rate Ratio (sm=\"IRR\")")
+    else if (sm == "IRD") {
+      warning("Cochran method only available for Incidence Rate Ratio (sm = \"IRR\")")
       return(NULL)
     }
   }
@@ -404,35 +412,35 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   m <- metagen(TE, seTE, studlab,
                ##
-               sm=sm,
-               level=level,
-               level.comb=level.comb,
-               comb.fixed=comb.fixed,
-               comb.random=comb.random,
+               sm = sm,
+               level = level,
+               level.comb = level.comb,
+               comb.fixed = comb.fixed,
+               comb.random = comb.random,
                ##
-               hakn=hakn,
-               method.tau=method.tau,
-               tau.preset=tau.preset,
-               TE.tau=if (method=="Inverse") TE.tau else TE.fixed,
-               tau.common=FALSE,
+               hakn = hakn,
+               method.tau = method.tau,
+               tau.preset = tau.preset,
+               TE.tau = if (method == "Inverse") TE.tau else TE.fixed,
+               tau.common = FALSE,
                ##
-               prediction=prediction,
-               level.predict=level.predict,
+               prediction = prediction,
+               level.predict = level.predict,
                ##
-               method.bias=method.bias,
+               method.bias = method.bias,
                ##
-               backtransf=backtransf,
-               title=title, complab=complab, outclab=outclab,
-               label.e=label.e, label.c=label.c,
-               label.left=label.left, label.right=label.right,
+               backtransf = backtransf,
+               title = title, complab = complab, outclab = outclab,
+               label.e = label.e, label.c = label.c,
+               label.left = label.left, label.right = label.right,
                ##
-               keepdata=FALSE,
-               warn=warn)
+               keepdata = FALSE,
+               warn = warn)
   ##
-  if (!missing.byvar & tau.common){
+  if (!missing.byvar & tau.common) {
     ## Estimate common tau-squared across subgroups
     hcc <- hetcalc(TE, seTE, method.tau,
-                   if (method=="Inverse") TE.tau else TE.fixed,
+                   if (method == "Inverse") TE.tau else TE.fixed,
                    byvar)
   }
   
@@ -442,12 +450,12 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ## (9) Generate R object
   ##
   ##
-  res <- list(event.e=event.e, time.e=time.e,
-              event.c=event.c, time.c=time.c,
-              method=method,
-              incr=incr, sparse=sparse,
-              allincr=allincr, addincr=addincr,
-              incr.event=incr.event)
+  res <- list(event.e = event.e, time.e = time.e,
+              event.c = event.c, time.c = time.c,
+              method = method,
+              incr = incr, sparse = sparse,
+              allincr = allincr, addincr = addincr,
+              incr.event = incr.event)
   ##
   ## Add meta-analysis results
   ## (after removing unneeded list elements)
@@ -467,7 +475,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   if (method %in% c("MH", "Cochran", "GLMM")) {
     ##
-    ci.f <- ci(TE.fixed, seTE.fixed, level=level.comb)
+    ci.f <- ci(TE.fixed, seTE.fixed, level = level.comb)
     ##
     res$TE.fixed <- TE.fixed
     res$seTE.fixed <- seTE.fixed
@@ -501,6 +509,12 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$zval.random <- ci.r$z
     res$pval.random <- ci.r$p
     ##
+    res$se.tau2 <- NA
+    ci.p <- metafor::predict.rma(glmm.random, level = 100 * level.predict)
+    res$seTE.predict <- NA
+    res$lower.predict <- ci.p$cr.lb
+    res$upper.predict <- ci.p$cr.ub
+    ##
     res$model.glmm <- model.glmm
     ##
     res$Q <- glmm.random$QE.Wld
@@ -522,7 +536,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$version.metafor <- packageDescription("metafor")$Version
   }
   ##
-  if (keepdata){
+  if (keepdata) {
     res$data <- data
     if (!missing.subset)
       res$subset <- subset
@@ -532,17 +546,18 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   ## Add results from subgroup analysis
   ##
-  if (!missing.byvar){
+  if (!missing.byvar) {
     res$byvar <- byvar
     res$bylab <- bylab
     res$print.byvar <- print.byvar
+    res$byseparator <- byseparator
     res$tau.common <- tau.common
     ##
     if (!tau.common)
       res <- c(res, subgroup(res))
     else if (!is.null(tau.preset))
       res <- c(res, subgroup(res, tau.preset))
-    else{
+    else {
       res <- c(res, subgroup(res, hcc$tau))
       res$Q.w.random <- hcc$Q
       res$df.Q.w.random <- hcc$df.Q

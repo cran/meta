@@ -21,10 +21,12 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
         method.bias=.settings$method.bias,
         n.e=NULL, n.c=NULL,
         backtransf=.settings$backtransf,
+	pscale=1,
         title=.settings$title, complab=.settings$complab, outclab="",
         label.e=.settings$label.e, label.c=.settings$label.c,
         label.left=.settings$label.left, label.right=.settings$label.right,
         byvar, bylab, print.byvar=.settings$print.byvar,
+	byseparator = .settings$byseparator,
         keepdata=.settings$keepdata,
         warn=.settings$warn)
 }
@@ -74,6 +76,10 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
     rather than log odds ratios and results for \code{sm="ZCOR"} are
     printed as correlations rather than Fisher's z transformed
     correlations, for example.}
+  \item{pscale}{A numeric defining a scaling factor for printing of
+    single event probabilities, i.e. if argument \code{sm} is equal to
+    \code{"PLOGIT"}, \code{"PLN"}, \code{"PRAW"}, \code{"PAS"}, or
+    \code{"PFT"}. See also \code{\link{metaprop}}}
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
@@ -86,6 +92,8 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   \item{bylab}{A character string with a label for the grouping variable.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
     variable should be printed in front of the group labels.}
+  \item{byseparator}{A character string defining the separator between
+    label and levels of grouping variable.}
   \item{keepdata}{A logical indicating whether original data (set)
     should be kept in meta object.}
   \item{warn}{A logical indicating whether warnings should be printed
@@ -148,6 +156,11 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   For these methods the R function \code{rma.uni} of R package metafor
   is called internally. See help page of R function \code{rma.uni} for
   more details on these methods to estimate between-study variance.
+  
+  Argument \code{pscale} can be used to rescale proportions,
+  e.g. \code{pscale=1000} means that proportions are expressed as
+  events per 1000 observations. This is useful in situations with
+  (very) low event probabilities.
 }
 
 \value{
@@ -160,7 +173,7 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{}
   \item{tau.common, title, complab, outclab,}{}
   \item{label.e, label.c, label.left, label.right,}{}
-  \item{byvar, bylab, print.byvar, warn}{As defined above.}
+  \item{byvar, bylab, print.byvar, byseparator, warn}{As defined above.}
   \item{lower, upper}{Lower and upper confidence interval limits
     for individual studies.}
   \item{zval, pval}{z-value and p-value for test of treatment

@@ -36,6 +36,7 @@ metainc(event.e, time.e, event.c, time.c, studlab,
         label.e=.settings$label.e, label.c=.settings$label.c,
         label.left=.settings$label.left, label.right=.settings$label.right,
         byvar, bylab, print.byvar=.settings$print.byvar,
+	byseparator = .settings$byseparator,
         keepdata=.settings$keepdata,
         warn=.settings$warn,
 	...)
@@ -114,6 +115,8 @@ metainc(event.e, time.e, event.c, time.c, studlab,
   \item{bylab}{A character string with a label for the grouping variable.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
     variable should be printed in front of the group labels.}
+  \item{byseparator}{A character string defining the separator between
+    label and levels of grouping variable.}
   \item{keepdata}{A logical indicating whether original data (set)
     should be kept in meta object.}
   \item{warn}{A logical indicating whether warnings should be printed
@@ -248,7 +251,7 @@ metainc(event.e, time.e, event.c, time.c, studlab,
   \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{}
   \item{tau.common, title, complab, outclab,}{}
   \item{label.e, label.c, label.left, label.right,}{}
-  \item{byvar, bylab, print.byvar}{As defined above.}
+  \item{byvar, bylab, print.byvar, byseparator}{As defined above.}
   \item{TE, seTE}{Estimated treatment effect and standard error of individual studies.}
   \item{lower, upper}{Lower and upper confidence interval limits
     for individual studies.}
@@ -314,9 +317,13 @@ metainc(event.e, time.e, event.c, time.c, studlab,
     transformation) - if \code{byvar} is not missing.}
   \item{event.e.w}{Number of events in experimental group in subgroups
     - if \code{byvar} is not missing.}
+  \item{time.e.w}{Total person time in subgroups (experimental group)
+    - if \code{byvar} is not missing.}
   \item{n.e.w}{Number of observations in experimental group in
     subgroups - if \code{byvar} is not missing.}
   \item{event.c.w}{Number of events in control group in subgroups - if
+    \code{byvar} is not missing.}
+  \item{time.c.w}{Total person time in subgroups (control group) - if
     \code{byvar} is not missing.}
   \item{n.c.w}{Number of observations in control group in subgroups -
     if \code{byvar} is not missing.}

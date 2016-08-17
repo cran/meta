@@ -29,15 +29,16 @@ forest(x, ...)
                      paste("Prediction interval (",
                            round(x$level.predict*100), "\%)",
                      sep="") else "Prediction interval",
-       bylab=x$bylab, print.byvar=x$print.byvar,
+       bylab=x$bylab, print.byvar=x$print.byvar, byseparator=.settings$byseparator,
        text.fixed.w=text.fixed, text.random.w=text.random,
        bysort=FALSE,
        pooled.totals=comb.fixed|comb.random, pooled.events=FALSE,
+       pooled.times = FALSE,
        xlab="", xlab.pos=ref,
        smlab=NULL, smlab.pos=ref, xlim="symmetric",
        allstudies=TRUE,
        weight,
-       pscale=1,
+       pscale=x$pscale,
        ref=ifelse(backtransf & is.relative.effect(x$sm), 1, 0),
        layout="meta",
        leftcols=NULL, rightcols=NULL,
@@ -49,13 +50,19 @@ forest(x, ...)
        lab.NA.effect="",
        lwd=1,
        at=NULL, label=TRUE,
-       col.i="black", col.i.inside.square="white",
+       type.study = "square",
+       type.fixed = "diamond",
+       type.random = type.fixed,
+       col.study="black",
        col.square="gray", col.square.lines=col.square,
+       col.inside="white",
        col.diamond="gray",
        col.diamond.fixed=col.diamond, col.diamond.random=col.diamond,
        col.diamond.lines="black",
-       col.diamond.fixed.lines=col.diamond.lines,
-       col.diamond.random.lines=col.diamond.lines,
+       col.diamond.lines.fixed=col.diamond.lines,
+       col.diamond.lines.random=col.diamond.lines,
+       col.inside.fixed = col.inside,
+       col.inside.random = col.inside,
        col.predict="red", col.predict.lines="black",
        col.by="darkgray",
        print.I2=comb.fixed|comb.random, print.I2.ci=FALSE,
@@ -66,6 +73,7 @@ forest(x, ...)
        hetlab="Heterogeneity: ",
        text.I2 = "I-squared",
        text.tau2 = "tau-squared",
+       ##
        test.overall=.settings$test.overall,
        test.overall.fixed=comb.fixed&overall&test.overall,
        test.overall.random=comb.random&overall&test.overall,
@@ -73,6 +81,7 @@ forest(x, ...)
          if (comb.fixed & comb.random) " (fixed effect)", ": ", sep=""),
        label.test.overall.random=paste("Test for overall effect",
          if (comb.fixed & comb.random) " (random effects)", ": ", sep=""),
+       ##
        test.subgroup=.settings$test.subgroup,
        test.subgroup.fixed=if (missing(test.subgroup)) FALSE else test.subgroup,
        test.subgroup.random=if (missing(test.subgroup)) !is.null(x$byvar)&
@@ -81,18 +90,29 @@ forest(x, ...)
        label.test.subgroup.fixed="Test for subgroup differences (fixed effect): ",
        label.test.subgroup.random=paste("Test for subgroup differences",
         if (test.subgroup.fixed | comb.fixed) " (random effects)", ": ", sep=""),
+       ##
+       test.effect.subgroup = .settings$test.effect.subgroup,
+       test.effect.subgroup.fixed = comb.fixed & test.effect.subgroup,
+       test.effect.subgroup.random = comb.random & test.effect.subgroup,
+       label.test.effect.subgroup.fixed = paste("Test for effect in subgroup",
+        if (comb.fixed & comb.random) " (fixed effect)", ": ", sep = ""),
+       label.test.effect.subgroup.random = paste("Test for effect in subgroup",
+        if (comb.fixed & comb.random) " (random effects)", ": ", sep = ""),
+       ##
        fontsize=12,
        fs.heading=fontsize,
        fs.fixed=fontsize, fs.random=fs.fixed, fs.predict=fs.fixed, fs.study=fontsize,
        fs.fixed.labels=fs.fixed, fs.random.labels=fs.random, fs.predict.labels=fs.predict,
        fs.study.labels=fs.study, fs.hetstat=fontsize-2,
-       fs.test.overall=fs.hetstat, fs.test.subgroup=fs.hetstat, fs.axis=fontsize,
+       fs.test.overall=fs.hetstat, fs.test.subgroup=fs.hetstat,
+       fs.test.effect.subgroup = fs.hetstat, fs.axis=fontsize,
        fs.smlab=fontsize, fs.xlab=fontsize, fs.lr=fontsize,
        ff.heading="bold",
        ff.fixed="bold", ff.random=ff.fixed, ff.predict=ff.fixed, ff.study="plain",
        ff.fixed.labels=ff.fixed, ff.random.labels=ff.random, ff.predict.labels=ff.predict,
        ff.study.labels=ff.study, ff.hetstat="bold.italic",
-       ff.test.overall=ff.hetstat, ff.test.subgroup=ff.hetstat, ff.axis="plain",
+       ff.test.overall=ff.hetstat, ff.test.subgroup=ff.hetstat,
+       ff.test.effect.subgroup = ff.hetstat, ff.axis="plain",
        ff.smlab="bold", ff.xlab="plain", ff.lr="plain",
        #
        squaresize=0.8,
@@ -102,6 +122,8 @@ forest(x, ...)
        colgap.left=colgap, colgap.right=colgap,
        colgap.forest=colgap,
        colgap.forest.left=colgap.forest, colgap.forest.right=colgap.forest,
+       #
+       calcwidth.pooled = TRUE,
        #
        just="right", just.studlab="left", just.addcols="center",
        #
@@ -114,6 +136,7 @@ forest(x, ...)
        digits.pval = .settings$digits.pval, digits.pval.Q = .settings$digits.pval.Q,
        digits.Q = .settings$digits.Q, digits.tau2 = .settings$digits.tau2,
        digits.I2 = .settings$digits.I2, digits.weight = .settings$digits.weight,
+       col.i = col.study,
 
        ...)
 }
@@ -134,9 +157,8 @@ forest(x, ...)
   \item{comb.random}{A logical indicating whether random effects estimate
   should be plotted.}
   \item{overall}{A logical indicating whether overall summaries should
-    be plotted. This argument is useful in combination with the
-    argument \code{byvar} if summaries should only be plotted on group
-    level.}
+    be plotted. This argument is useful in a meta-analysis with
+    subgroups if summaries should only be plotted on group level.}
   \item{text.fixed}{A character string used in the plot to label the
     pooled fixed effect estimate.}
   \item{text.random}{A character string used in the plot to label the
@@ -152,6 +174,8 @@ forest(x, ...)
   \item{bylab}{A character string with a label for the grouping variable.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
     variable should be printed in front of the group labels.}
+  \item{byseparator}{A character string defining the separator between
+    label and levels of grouping variable.}
   \item{text.fixed.w}{A character string to label the pooled fixed
     effect estimate within subgroups, or a character vector of same
     length as number of subgroups with corresponging labels.}
@@ -163,7 +187,9 @@ forest(x, ...)
   \item{pooled.totals}{A logical indicating whether total number of
     observations should be given in the figure.}
   \item{pooled.events}{A logical indicating whether total number of
-    events should be given in the figure.}
+    events should be given in the figure.}  
+  \item{pooled.times}{A logical indicating whether total person time
+    at risk should be given in the figure.}
   \item{xlab}{A label for the x-axis.}
   \item{xlab.pos}{A numeric specifying the center of the label
     on the x-axis.}
@@ -180,8 +206,10 @@ forest(x, ...)
     \code{"random"}, can be abbreviated. Plot symbols have the same size
     for all studies or represent study weights from fixed effect or
     random effects model.}
-  \item{pscale}{A numeric giving scaling factor for probabilities for
-    objects of class \code{metaprop}.}
+  \item{pscale}{A numeric giving scaling factor for printing of single
+    event probabilities, i.e. if argument \code{sm} is equal to
+    \code{"PLOGIT"}, \code{"PLN"}, \code{"PRAW"}, \code{"PAS"}, or
+    \code{"PFT"}.}
   \item{ref}{A numerical giving the reference value to be plotted as a
     line in the forest plot. No reference line is plotted if argument
     \code{ref} is equal to \code{NA}.}
@@ -216,9 +244,20 @@ forest(x, ...)
   \item{label}{A logical value indicating whether to draw the
     labels on the tick marks, or an expression or character vector which
     specify the labels to use. See \code{\link{grid.xaxis}}.}
-  \item{col.i}{The colour for individual study results and confidence limits.}
-  \item{col.i.inside.square}{The colour for individual study results and
-    confidence limits if confidence limits are completely within squares.}
+  \item{type.study}{A character string or vector specifying how to
+    plot treatment effects and confidence intervals for individual
+    studies.}
+  \item{type.fixed}{A character string specifying how to plot
+    treatment effect and confidence interval for fixed effect
+    meta-analysis.}
+  \item{type.random}{A character string specifying how to plot
+    treatment effect and confidence interval for random effects
+    meta-analysis.}
+  \item{col.study}{The colour for individual study results and
+    confidence limits.}
+  \item{col.inside}{The colour for individual study results and
+    confidence limits if confidence limits are completely within
+    squares.}
   \item{col.square}{The colour for squares reflecting study's weight in
     the meta-analysis.}
   \item{col.square.lines}{The colour for the outer lines of squares
@@ -229,10 +268,14 @@ forest(x, ...)
   \item{col.diamond.random}{The colour of diamonds for random effects estimates.}
   \item{col.diamond.lines}{The colour of the outer lines of diamonds
     representing the results for fixed effect and random effects models.}
-  \item{col.diamond.fixed.lines}{The colour of the outer lines of diamond
-    for fixed effect estimate.}
-  \item{col.diamond.random.lines}{The colour of the outer lines of diamond
-    for random effects estimate.}
+  \item{col.diamond.lines.fixed}{The colour of the outer lines of
+    diamond for fixed effect estimate.}
+  \item{col.diamond.lines.random}{The colour of the outer lines of
+    diamond for random effects estimate.}
+  \item{col.inside.fixed}{The colour for result of fixed effect
+    meta-analysis if confidence limit lies completely within square.}
+  \item{col.inside.random}{The colour for result of random effects
+    meta-analysis if confidence limit lies completely within square.}  
   \item{col.predict}{Background colour of prediction interval.}
   \item{col.predict.lines}{Colour of outer lines of prediction interval.}
   \item{col.by}{The colour to print information on subgroups.}
@@ -250,9 +293,9 @@ forest(x, ...)
     heterogeneity measures at all.}
   \item{overall.hetstat}{A logical value indicating whether to print
     results for heterogeneity measures for overall treatment
-    comparisons. This argument is useful in combination with subgroup
-    analyses (list object \code{byvar}) if heterogeneity statistics
-    should only be printed on group level.}
+    comparisons. This argument is useful in a meta-analysis with
+    subgroups if heterogeneity statistics should only be printed on
+    subgroup level.}
   \item{hetlab}{Label printed in front of results for heterogeneity
     measures.}
   \item{text.I2}{Label for I-squared statistic.}
@@ -284,6 +327,20 @@ forest(x, ...)
   \item{print.Q.subgroup}{A logical value indicating whether to print
     the value of the heterogeneity statistic Q (test for subgroup
     differences).}
+  \item{test.effect.subgroup}{A logical value indicating whether to
+    print results of test for effect in subgroups.}
+  \item{test.effect.subgroup.fixed}{A logical value indicating whether
+    to print results of test for effect in subgroups (based on fixed
+    effect model).}
+  \item{test.effect.subgroup.random}{A logical value indicating
+    whether to print results of test for effect in subgroups (based on
+    random effects model).}
+  \item{label.test.effect.subgroup.fixed}{Label printed in front of
+    results of test for effect in subgroups (based on fixed effect
+    model).}
+  \item{label.test.effect.subgroup.random}{Label printed in front of
+    results of test for effect in subgroups (based on random effects
+    model).}
   \item{fontsize}{The size of text (in points), see \code{\link{gpar}}.}
   \item{fs.heading}{The size of text for column headings, see \code{\link{gpar}}.}
   \item{fs.fixed}{The size of text for results of fixed effect model, see \code{\link{gpar}}.}
@@ -297,6 +354,7 @@ forest(x, ...)
   \item{fs.hetstat}{The size of text for heterogeneity measures, see \code{\link{gpar}}.}
   \item{fs.test.overall}{The size of text of test for overall effect, see \code{\link{gpar}}.}
   \item{fs.test.subgroup}{The size of text of test of subgroup differences, see \code{\link{gpar}}.}
+  \item{fs.test.effect.subgroup}{The size of text of test of effect in subgroups, see \code{\link{gpar}}.}
   \item{fs.axis}{The size of text on x-axis, see \code{\link{gpar}}.}
   \item{fs.smlab}{The size of text of label for summary measure, see \code{\link{gpar}}.}
   \item{fs.xlab}{The size of text of label on x-axis, see \code{\link{gpar}}.}
@@ -313,6 +371,7 @@ forest(x, ...)
   \item{ff.hetstat}{The fontface of text for heterogeneity measures, see \code{\link{gpar}}.}
   \item{ff.test.overall}{The fontface of text of test for overall effect, see \code{\link{gpar}}.}
   \item{ff.test.subgroup}{The fontface of text for test of subgroup differences, see \code{\link{gpar}}.}
+  \item{ff.test.effect.subgroup}{The fontface of text for test of effect in subgroups, see \code{\link{gpar}}.}
   \item{ff.axis}{The fontface of text on x-axis, see \code{\link{gpar}}.}
   \item{ff.smlab}{The fontface of text of label for summary measure, see \code{\link{gpar}}.}
   \item{ff.xlab}{The fontface of text of label on x-axis, see \code{\link{gpar}}.}
@@ -331,7 +390,10 @@ forest(x, ...)
   \item{colgap.forest.left}{A unit object specifying gap between column
     on the left side of forest plot and the forest plot.}
   \item{colgap.forest.right}{A unit object specifying gap between column
-    on the right side of forest plot and the forest plot.}
+    on the right side of forest plot and the forest plot.} 
+  \item{calcwidth.pooled}{A logical indicating whether text given in
+    arguments \code{text.fixed} and \code{text.random} should be
+    considered to calculate width of column with study labels.}
   \item{just}{Justification of text in all columns but columns
     with study labels and additional variables (possible values:
     "left", "right", "center").}
@@ -366,20 +428,52 @@ forest(x, ...)
     statistic, see \code{print.default}.}
   \item{digits.weight}{Minimal number of significant digits for
     weights, see \code{print.default}.}
- \item{\dots}{Additional graphical arguments (ignored at the moment).}
+  \item{col.i}{Deprecated argument (replaced by \code{col.study}).}
+  \item{\dots}{Additional graphical arguments (ignored at the moment).}
 }
 
 \details{
   A forest plot, also called confidence interval plot, is drawn in the
-  active graphics window. Subgroup analyses are conducted and
-  displayed in the plot if \code{byvar} is not missing.
-  
-  The \code{forest} function is based on the grid graphics
-  system. In order to print the forest plot, (i) resize the graphics
-  window, (ii) either use \code{\link{dev.copy2eps}} or
+  active graphics window. The \code{forest} function is based on the
+  grid graphics system. In order to print the forest plot, (i) resize
+  the graphics window, (ii) either use \code{\link{dev.copy2eps}} or
   \code{\link{dev.copy2pdf}}.
-
-  Result of a test for overall effect or subgroup differences are
+  
+  By default, treatment estimates and confidence intervals are plotted
+  in the following way:
+  \itemize{
+   \item for an individual study, a square with treatment estimate in
+     the center and confidence interval as line extending either side
+     of the square (\code{type.study="square"});
+   \item for meta-analysis results, a diamond with treatment estimate
+     in the center and right and left side corresponding to lower and
+     upper confidence limits (\code{type.fixed="diamond"},
+     \code{type.random="diamond"}).
+  }
+  
+  In a forest plot, size of the squares typically reflects the
+  precision of individual treatment estimates based either on the
+  fixed effect (\code{weight="fixed"}) or random effects meta-analysis
+  (\code{weight="random"}). Information from meta-analysis object
+  \code{x} is utilised if argument \code{weight} is missing. Weights
+  from the fixed effect model are used (\code{weight="fixed"}) if
+  argument \code{x$comb.fixed} is \code{TRUE}; weights from the random
+  effects model are used (\code{weight="random"}) if argument
+  \code{x$comb.random} is \code{TRUE} and \code{x$comb.fixed} is
+  \code{FALSE}.
+  
+  Result of a test for an overall effect, effect in subgroups, or
+  subgroup differences are printed if argument
+  \code{test.overall.fixed}, \code{test.overall.random},
+  \code{test.effect.subgroup.fixed},
+  \code{test.effect.subgroup.random}, \code{test.subgroup.fixed}, or
+  \code{test.subgroup.random} is \code{TRUE}; by default, these
+  arguments are \code{FALSE}. R function \code{\link{settings.meta}}
+  can be used to change this default for the entire R session by
+  setting argument \code{test.overall=TRUE},
+  \code{test.effect.subgroup=TRUE} or \code{test.subgroup=TRUE}.
+  
+  Results of tests for treatment effect in subgroups are
   printed if argument \code{test.overall.fixed},
   \code{test.overall.random}, \code{test.subgroup.fixed}, or
   \code{test.subgroup.random} is \code{TRUE}; by default, these
@@ -388,13 +482,6 @@ forest(x, ...)
   setting argument \code{test.overall=TRUE} or
   \code{test.subgroup=TRUE}.
   
-  Information from object \code{x} is utilised if argument \code{weight}
-  is missing. Weights from the fixed effect model are used
-  (\code{weight="fixed"}) if argument \code{x$comb.fixed} is
-  \code{TRUE}; weights from the random effects model are used
-  (\code{weight="random"}) if argument \code{x$comb.random}
-  is \code{TRUE} and \code{x$comb.fixed} is \code{FALSE}.
-
   The arguments \code{leftcols} and \code{rightcols} can be used to
   specify columns which are plotted on the left and right side of the
   forest plot, respectively. If argument \code{rightcols} is
@@ -462,13 +549,11 @@ forest(x, ...)
   "Experimental" and "Control" are used as labels for experimental and
   control group, respectively.
   
-  The arguments \code{pscale} can be used to rescale proportions
-  for objects of class \code{metaprop}, e.g. \code{pscale=100} means
-  that proportions are expressed per 100 observations. This is useful in
-  situations with (very) low proportions. For \code{pscale=100}, column
-  heading and x-axis label are changed to "Prop (in \%)" and
-  "Proportion (in \%)", respectively.
-
+  Argument \code{pscale} can be used to rescale proportions,
+  e.g. \code{pscale=1000} means that proportions are expressed as
+  events per 1000 observations. This is useful in situations with
+  (very) low event probabilities.
+      
   A prediction interval for treatment effect of a new study (Higgins
   et al., 2009) is given in the forest plot if arguments
   \code{prediction} and \code{comb.random} are \code{TRUE}. For
@@ -628,7 +713,7 @@ forest(meta1,
 #
 forest(meta1,
        col.diamond="green", col.diamond.lines="red",
-       col.i=c("green", "blue", "red", "orange"),
+       col.study=c("green", "blue", "red", "orange"),
        col.square="pink", col.square.lines="black")
 
 

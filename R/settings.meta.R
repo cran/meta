@@ -52,7 +52,7 @@ settings.meta <- function(...) {
   args  <- list(...)
   ## Check whether first argument is a list. In this case only use
   ## this list as input.
-  if (length(args)>0 && is.list(args[[1]]))
+  if (length(args) > 0 && is.list(args[[1]]))
     args <- args[[1]]
   ##
   names <- names(args)
@@ -66,18 +66,18 @@ settings.meta <- function(...) {
   ##
   if (sum(unknown) == 1)
     warning(paste("Argument '", names[unknown], "' unknown.", sep = ""))
-  else if (sum(unknown)>1)
+  else if (sum(unknown) > 1)
     warning(paste("Unknown arguments: ", 
                   paste(paste("'", names[unknown], "'", sep = ""),
                         collapse = " - "), sep = ""))
   
   
-  if (length(args)>1 && any(names == "reset")) {
+  if (length(args) > 1 && any(names == "reset")) {
     cat("To reset all settings use a single argument 'reset = TRUE' (R package meta)\n")
     return(invisible(res))
   }
   ##
-  if (length(args)>1 && any(names == "setting")) {
+  if (length(args) > 1 && any(names == "setting")) {
     cat("Argument 'setting' can only be used without other arguments (R package meta)\n")
     return(invisible(res))
   }
@@ -98,7 +98,7 @@ settings.meta <- function(...) {
         chklogical(args[[1]], "reset")
         if (args[[1]])
           reset.settings <- TRUE
-        else{
+        else {
           cat("To reset all settings use argument 'reset = TRUE' (R package meta)\n")
           return(invisible(res))
         }
@@ -134,6 +134,7 @@ settings.meta <- function(...) {
     catarg("title")
     catarg("complab")
     catarg("print.byvar")
+    catarg("byseparator")
     catarg("keepdata")
     catarg("warn")
     catarg("backtransf")
@@ -192,6 +193,7 @@ settings.meta <- function(...) {
     cat("\nSettings for R function forest.meta:\n")
     catarg("test.overall")
     catarg("test.subgroup")
+    catarg("test.effect.subgroup")
     cat("- argument 'digits': ")
     catarg("digits.forest", newline = FALSE)
   }
@@ -211,6 +213,7 @@ settings.meta <- function(...) {
     setOption("title", "")
     setOption("complab", "")
     setOption("print.byvar", TRUE)
+    setOption("byseparator", " = ")
     setOption("keepdata", TRUE)
     setOption("warn", TRUE)
     setOption("backtransf", TRUE)
@@ -256,6 +259,7 @@ settings.meta <- function(...) {
     ##
     setOption("test.overall", FALSE)
     setOption("test.subgroup", FALSE)
+    setOption("test.effect.subgroup", FALSE)
     setOption("digits.forest", 2)
   }
   else if (specific.settings) {
@@ -277,7 +281,7 @@ settings.meta <- function(...) {
                       ischar = c(FALSE, TRUE, FALSE),
                       title = "Use settings from R package meta (version 4.3-1 and older)")
   }
-  else{
+  else {
     argid <- function(x, value) {
       if (any(names == value))
         res <- seq(along = x)[names == value]
@@ -299,6 +303,7 @@ settings.meta <- function(...) {
     idtitle <- argid(names, "title")
     idcomplab <- argid(names, "complab")
     idprint.byvar <- argid(names, "print.byvar")
+    idbyseparator <- argid(names, "byseparator")
     idkeepdata <- argid(names, "keepdata")
     idwarn <- argid(names, "warn")
     idbacktransf <- argid(names, "backtransf")
@@ -344,6 +349,7 @@ settings.meta <- function(...) {
     ##
     idtest.overall <- argid(names, "test.overall")
     idtest.subgroup <- argid(names, "test.subgroup")
+    idtest.effect.subgroup <- argid(names, "test.effect.subgroup")
     iddigits.forest <- argid(names, "digits.forest")
     ##
     ## General settings
@@ -377,10 +383,10 @@ settings.meta <- function(...) {
       method.tau <- args[[idmethod.tau]]
       method.tau <- setchar(method.tau,
                             c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"))
-      if (method.tau %in% c("REML", "ML", "HS", "SJ", "HE", "EB") &
-          is.installed.package("metafor", chksettings = TRUE,
-                               argument = "method.tau", value = method.tau))
-        setOption("method.tau", method.tau)
+      if (method.tau %in% c("REML", "ML", "HS", "SJ", "HE", "EB"))
+        is.installed.package("metafor", chksettings = TRUE,
+                             argument = "method.tau", value = method.tau)
+      setOption("method.tau", method.tau)
     }
     if (!is.na(idtau.common)) {
       tau.common <- args[[idtau.common]]
@@ -421,6 +427,13 @@ settings.meta <- function(...) {
       print.byvar <- args[[idprint.byvar]]
       chklogical(print.byvar)
       setOption("print.byvar", print.byvar)
+    }
+    if (!is.na(idbyseparator)) {
+      byseparator <- args[[idbyseparator]]
+      if (length(byseparator) != 1)
+        stop("Argument 'byseparator' must be a character string.")
+      ##
+      setOption("byseparator", byseparator)
     }
     if (!is.na(idkeepdata)) {
       keepdata <- args[[idkeepdata]]
@@ -661,6 +674,11 @@ settings.meta <- function(...) {
       test.subgroup <- args[[idtest.subgroup]]
       chklogical(test.subgroup)
       setOption("test.subgroup", test.subgroup)
+    }
+    if (!is.na(idtest.effect.subgroup)) {
+      test.effect.subgroup <- args[[idtest.effect.subgroup]]
+      chklogical(test.effect.subgroup)
+      setOption("test.effect.subgroup", test.effect.subgroup)
     }
     if (!is.na(iddigits.forest)) {
       digits.forest <- args[[iddigits.forest]]

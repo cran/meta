@@ -1,3 +1,127 @@
+*** meta, version 4.5-0, 2016-08-17 ***
+
+ ** Major changes **
+
+  * New features in forest plots:
+    - printing of columns on left side of forest plot can be omitted
+    - total person time can be printed
+    - text for fixed effect and random effects model can be omitted
+      from calculation of width for study labels
+    - plot type for confidence intervals (square or diamond) can be
+      specified for each study as well as fixed effect and random
+      effects estimate
+    - printing of test for treatment effect in subgroups possible
+
+  * New function weights.meta() to calculate absolute and percentage
+    weights in meta-analysis
+
+  * New argument byseparator to define the separator between label and
+    subgroup levels which is printed in meta-analysis summaries and
+    forest plots - considered in all R functions dealing with
+    meta-analysis and subgroups
+
+  * Argument pscale - a scaling factor for printing of single event
+    probabilities - considered in all R functions for single
+    proportions; before this update, the pscale argument was only
+    available in forest.meta()
+
+ ** User-visible changes **
+
+  * forest.meta():
+    - argument ref considered for metaprop objects
+    - argument leftcols = FALSE omits printing of columns on left side
+      of forest plot
+    - new argument pooled.times to print total person time
+    - new argument calcwidth.pooled to include or exclude text from
+      pooled estimates to determine width of study labels
+    - the following arguments have been renamed (old arguments can
+      still be used at the moment, however, will result in an
+      informative warning message):      
+      . col.i                    -> col.study
+      . col.i.inside.square      -> col.inside
+      . col.diamond.fixed.lines  -> col.diamond.lines.fixed
+      . col.diamond.random.lines -> col.diamond.lines.random
+    - new arguments:
+      . type.study, type.fixed, type.random
+        (use squares or diamonds to plot treatment effects and
+         confidence intervals)
+      . col.inside.fixed, col.inside.random
+        (colour to print confidence interval inside square)
+      . test.effect.subgroup, test.effect.subgroup.fixed,
+        test.effect.subgroup.random, label.test.effect.subgroup.fixed,
+        label.test.effect.subgroup.random, fs.test.effect.subgroup,
+        ff.test.effect.subgroup
+	(print results for test of treatment effect in subgroups)
+    - bug fix: reference line and lines for fixed effect and random
+      effects estimate were too short if test.overall is TRUE
+    - bug fix: arguments lab.e.attach.to.col and lab.c.attach.to.col
+      were ignored for R objects created with metagen()
+
+  * metabin(), metacont(), metacor(), metagen(), metainc(),
+    metaprop(), forest.meta(), print.summary.meta(), summary.meta(),
+    update.meta(), settings.meta():
+    - new argument byseparator
+
+  * metagen(), metaprop(), print.meta(), print.summary.meta(),
+    summary.meta(), trimfill.meta(), trimfill.default(),
+    update.meta():
+     - new argument pscale
+
+  * labbe.metabin(), labbe.default():
+    - transformed event probabilites can be plotted, e.g., log odds
+      event probabilities for odds ratio as summary measure (see
+      argument backtransf)
+    - line for null effect added by default (see arguments nulleffect,
+      lwd.nulleffect, col.nulleffect)
+
+  * metabin(), metainc(), metaprop():
+    - use predict.rma() from metafor package to calculate prediction
+      interval for GLMM method
+    - print note for GLMM method that continuity correction is only
+      used to calculate individual study results
+    
+  * Help pages updated:
+    labbe.metabin(), labbe.default(), forest.meta(), metabin(),
+    metacont(), metacor(), metagen(), metainc(), metaprop(),
+    print.meta(), print.summary.meta(), summary.meta(),
+    trimfill.meta(), trimfill.default(), update.meta()
+
+ ** Internal changes **
+
+  * New function bylabel() to print subgroup labels
+
+  * update.meta():
+     - do not consider columns 'n.e' and 'n.c' as sample sizes for
+       metagen or metainc object if not used in original call of
+       metagen() or metainc()
+
+  * catmeth(), xlab():
+     - new argument pscale
+
+  * catmeth():
+     - for GLMM, print information that continuity correction is only
+       used to calculate individual study results
+
+  * metacum(), metainf():
+    - list object pscale added
+
+  * metabin():
+    - list objects incr.e and incr.c contains zeros for Peto method
+    - print warning that no continuity correction is used for Peto
+      method if any of the following arguments is used: incr, allincr,
+      addincr, allstudies
+
+  * metacr():
+    - keep dataset used to conduct meta-analysis in list object data
+
+  * paulemandel():
+    - bug fix such that function does not result in an error if used
+      with a single study
+
+  * settings.meta():
+    - bug fix such that use of argument method.tau works as expected
+
+
 *** meta, version 4.4-1, 2016-06-20 ***
 
  ** User-visible changes **

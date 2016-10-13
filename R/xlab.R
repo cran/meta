@@ -1,4 +1,4 @@
-xlab <- function(sm, backtransf, pscale = 1) {
+xlab <- function(sm, backtransf, pscale = 1, irscale = 1, irunit = "person-years") {
 
   res <- NULL
   
@@ -20,11 +20,21 @@ xlab <- function(sm, backtransf, pscale = 1) {
   else if (sm == "IRD")
     res <- "Incidence Rate Difference"
   ##
+  else if (sm == "IR")
+    res <- "Incidence Rate"
+  ##
   else if (backtransf) {
     if (sm == "OR")
       res <- "Odds Ratio"
+    ##
     else if (sm == "RR")
       res <- "Risk Ratio"
+    ##
+    else if (sm == "ROM")
+      res <- "Ratio of Means"
+    ##
+    else if (sm == "ZCOR")
+      res <- "Correlation"
     ##
     else if (sm == "HR")
       res <- "Hazard Ratio"
@@ -32,16 +42,23 @@ xlab <- function(sm, backtransf, pscale = 1) {
     else if (sm == "IRR")
       res <- "Incidence Rate Ratio"
     ##
-    else if (sm == "ZCOR")
-      res <- "Correlation"
-    ##
-    else if (sm %in% c("PFT", "PAS", "PLN", "PLOGIT", "PRAW"))
+    else if (sm %in% c("PFT", "PAS", "PLN", "PLOGIT", "PRAW")) {
       if (pscale == 1)
         res <- ""
       else
         res <- paste("Events per",
                      format(pscale, scientific = FALSE),
                      "observations")
+    }
+    ##
+    else if (sm %in% c("IR", "IRLN", "IRS", "IRFT")) {
+      if (irscale == 1)
+        res <- "Incidence Rate"
+      else
+        res <- paste("Events per",
+                     format(irscale, scientific = FALSE),
+                     irunit)
+    }
   }
   else {
     if (sm == "OR")
@@ -49,6 +66,9 @@ xlab <- function(sm, backtransf, pscale = 1) {
     ##
     else if (sm == "RR")
       res <- "Log Risk Ratio"
+    ##
+    else if (sm == "ROM")
+      res <- "Log Ratio of Means"
     ##
     else if (sm == "HR")
       res <- "Log Hazard Ratio"
@@ -73,6 +93,18 @@ xlab <- function(sm, backtransf, pscale = 1) {
     ##
     else if (sm == "PRAW")
       res <- "Untransformed Proportion"
+    ##
+    else if (sm == "IR")
+      res <- "Incidence Rate"
+    ##
+    else if (sm == "IRLN")
+      res <- "Log Incidence Rate"
+    ##
+    else if (sm == "IRS")
+      res <- "Square Root of Incidence Rate"
+    ##
+    else if (sm == "IRFT")
+      res <- "Freeman-Tukey Double Arcsine Transformed Rate"
   }
   
   

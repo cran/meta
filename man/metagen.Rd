@@ -21,7 +21,7 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
         method.bias=.settings$method.bias,
         n.e=NULL, n.c=NULL,
         backtransf=.settings$backtransf,
-	pscale=1,
+	pscale=1, irscale = 1, irunit = "person-years",
         title=.settings$title, complab=.settings$complab, outclab="",
         label.e=.settings$label.e, label.c=.settings$label.c,
         label.left=.settings$label.left, label.right=.settings$label.right,
@@ -39,7 +39,7 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   \item{subset}{An optional vector specifying a subset of studies to be used.}
   \item{sm}{A character string indicating underlying summary measure,
     e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"ASD"},
-    \code{"MD"}, \code{"SMD"}.}
+    \code{"HR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"}.}
   \item{level}{The level used to calculate confidence intervals for
     individual studies.}
   \item{level.comb}{The level used to calculate confidence intervals for
@@ -80,6 +80,11 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
     single event probabilities, i.e. if argument \code{sm} is equal to
     \code{"PLOGIT"}, \code{"PLN"}, \code{"PRAW"}, \code{"PAS"}, or
     \code{"PFT"}. See also \code{\link{metaprop}}}
+  \item{irscale}{A numeric defining a scaling factor for printing of
+    rates, i.e. if argument \code{sm} is equal to \code{"IR"},
+    \code{"IRLN"}, \code{"IRS"}, or \code{"IRFT"}.}
+  \item{irunit}{A character specifying the time unit used to calculate
+    rates, e.g. person-years.}
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
@@ -105,9 +110,7 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   Generic method for meta-analysis, only treatment estimates and their
   standard error are needed. The method is useful, e.g., for pooling
   of survival data (using log hazard ratio and standard errors as
-  input). The inverse variance method is used for pooling. By default,
-  the DerSimonian-Laird estimate (1986) is used in the random effects
-  model (\code{method.tau="DL"}).
+  input). The inverse variance method is used for pooling.
 
   For several arguments defaults settings are utilised (assignments
   with \code{.settings$}). These defaults can be changed using the
@@ -136,8 +139,9 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   used to adjust test statistics and confidence intervals if argument
   \code{hakn=TRUE}.
   
-  The iterative Paule-Mandel method (1982) to estimate the
-  between-study variance is used if argument
+  The DerSimonian-Laird estimate (1986) is used in the random effects
+  model if \code{method.tau="DL"}. The iterative Paule-Mandel method
+  (1982) to estimate the between-study variance is used if argument
   \code{method.tau="PM"}. Internally, R function \code{paulemandel} is
   called which is based on R function mpaule.default from R package
   metRology from S.L.R. Ellison <s.ellison at lgc.co.uk>.
@@ -161,6 +165,14 @@ metagen(TE, seTE, studlab, data=NULL, subset=NULL, sm="",
   e.g. \code{pscale=1000} means that proportions are expressed as
   events per 1000 observations. This is useful in situations with
   (very) low event probabilities.
+
+  Argument \code{irscale} can be used to rescale rates,
+  e.g. \code{irscale=1000} means that rates are expressed as events
+  per 1000 time units, e.g. person-years. This is useful in situations
+  with (very) low rates. Argument \code{irunit} can be used to specify
+  the time unit used in individual studies (default:
+  "person-years"). This information is printed in summaries and forest
+  plots if argument \code{irscale} is not equal to 1.
 }
 
 \value{

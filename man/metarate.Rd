@@ -1,42 +1,64 @@
-\name{metacor}
-\alias{metacor}
+\name{metarate}
 
-\title{Meta-analysis of correlations}
+\alias{metarate}
+
+\title{Meta-analysis of single incidence rates}
 
 \description{
-  Calculation of fixed and random effects estimates for meta-analyses
-  with correlations; inverse variance weighting is used for pooling.
+  Calculation of an overall incidence rate from studies reporting a
+  single incidence rate. Inverse variance method and generalised
+  linear mixed model (GLMM) are available for pooling. For GLMMs, the
+  \code{\link[metafor]{rma.glmm}} function from R package
+  \bold{metafor} (Viechtbauer 2010) is called internally.
 }
 
 \usage{
-metacor(cor, n, studlab,
-        data=NULL, subset=NULL,
-        sm=.settings$smcor,
-        level=.settings$level, level.comb=.settings$level.comb,
-        comb.fixed=.settings$comb.fixed, comb.random=.settings$comb.random,
-        hakn=.settings$hakn,
-        method.tau=.settings$method.tau, tau.preset=NULL, TE.tau=NULL,
-        tau.common=.settings$tau.common,
-        prediction=.settings$prediction, level.predict=.settings$level.predict,
-        method.bias=.settings$method.bias,
-        backtransf=.settings$backtransf,
-        title=.settings$title, complab=.settings$complab, outclab="",
-        byvar, bylab, print.byvar=.settings$print.byvar,
-	byseparator = .settings$byseparator,
-        keepdata=.settings$keepdata
-        )
+metarate(event, time, studlab,
+         data=NULL, subset=NULL, method = "Inverse",
+         sm=.settings$smrate,
+         incr=.settings$incr, allincr=.settings$allincr,
+         addincr=.settings$addincr,
+         level=.settings$level, level.comb=.settings$level.comb,
+         comb.fixed=.settings$comb.fixed, comb.random=.settings$comb.random,
+         hakn=.settings$hakn,
+         method.tau=
+         ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch = NA)),
+                "ML", .settings$method.tau),
+         tau.preset=NULL, TE.tau=NULL,
+         tau.common=.settings$tau.common,
+         prediction=.settings$prediction, level.predict=.settings$level.predict,
+         method.bias=.settings$method.bias,
+         backtransf=.settings$backtransf,
+	 irscale=1, irunit="person-years",
+         title=.settings$title, complab=.settings$complab, outclab="",
+         byvar, bylab, print.byvar=.settings$print.byvar,
+	 byseparator = .settings$byseparator,
+         keepdata=.settings$keepdata,
+         warn=.settings$warn,
+	 ...)
 }
 
 \arguments{
-  \item{cor}{Correlation.}
-  \item{n}{Number of observations.}
+  \item{event}{Number of events.}
+  \item{time}{Person time at risk.}
   \item{studlab}{An optional vector with study labels.}
   \item{data}{An optional data frame containing the study information,
-    i.e., cor and n.}
+    i.e., event and time.}
   \item{subset}{An optional vector specifying a subset of studies to be used.}
+  \item{method}{A character string indicating which method is to be
+    used for pooling of studies. One of \code{"Inverse"} and
+    \code{"GLMM"}, can be abbreviated.}
   \item{sm}{A character string indicating which summary measure
-    (\code{"ZCOR"} or \code{"COR"}) is to be used for pooling of
-    studies.}
+    (\code{"IR"}, \code{"IRLN"}, \code{"IRS"}, or \code{"IRFT"}) is to
+    be used for pooling of studies, see Details.}
+  \item{incr}{A numeric which is added to the event number of studies
+    with zero events, i.e., studies with an incidence rate of 0.}
+  \item{allincr}{A logical indicating if \code{incr} is considered for
+    all studies if at least one study has zero events. If FALSE
+    (default), \code{incr} is considered only in studies with zero
+    events.}
+  \item{addincr}{A logical indicating if \code{incr} is used for all
+    studies irrespective of number of events.}
   \item{level}{The level used to calculate confidence intervals for
     individual studies.}
   \item{level.comb}{The level used to calculate confidence intervals for
@@ -50,12 +72,10 @@ metacor(cor, n, studlab,
   \item{level.predict}{The level used to calculate prediction interval
     for a new study.}
   \item{hakn}{A logical indicating whether the method by Hartung and
-          Knapp should be used to adjust test statistics and
-          confidence intervals.}
+    Knapp should be used to adjust test statistics and confidence
+    intervals.}
   \item{method.tau}{A character string indicating which method is used
-    to estimate the between-study variance \eqn{\tau^2}. Either
-    \code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"}, \code{"HS"},
-    \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be abbreviated.}
+    to estimate the between-study variance \eqn{\tau^2}, see Details.}
   \item{tau.preset}{Prespecified value for the square-root of the
     between-study variance \eqn{\tau^2}.}
   \item{TE.tau}{Overall treatment effect used to estimate the
@@ -64,17 +84,21 @@ metacor(cor, n, studlab,
     the same across subgroups.}
   \item{method.bias}{A character string indicating which test is to be
     used. Either \code{"rank"}, \code{"linreg"}, or \code{"mm"}, can
-    be abbreviated. See function \code{\link{metabias}}}
-  \item{backtransf}{A logical indicating whether results for Fisher's
-    z transformed correlations (\code{sm="ZCOR"}) should be back
+    be abbreviated. See function \code{\link{metabias}}.}
+  \item{backtransf}{A logical indicating whether results for
+    transformed rates (argument \code{sm!="IR"}) should be back
     transformed in printouts and plots. If TRUE (default), results
-    will be presented as correlations; otherwise Fisher's z
-    transformed correlations will be shown.}
+    will be presented as incidence rates; otherwise transformed
+    rates will be shown.}
+  \item{irscale}{A numeric defining a scaling factor for printing of
+    rates.}
+  \item{irunit}{A character specifying the time unit used to calculate
+    rates, e.g. person-years.}
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
   \item{byvar}{An optional vector containing grouping information (must
-    be of same length as \code{event.e}).}
+    be of same length as \code{event}).}
   \item{bylab}{A character string with a label for the grouping variable.}
   \item{print.byvar}{A logical indicating whether the name of the grouping
     variable should be printed in front of the group labels.}
@@ -82,19 +106,35 @@ metacor(cor, n, studlab,
     label and levels of grouping variable.}
   \item{keepdata}{A logical indicating whether original data (set)
     should be kept in meta object.}
+  \item{warn}{A logical indicating whether the addition of \code{incr}
+    to studies with zero events should result in a warning.}
+  \item{\dots}{Additional arguments passed on to
+    \code{\link[metafor]{rma.glmm}} function.}
 }
 
 \details{
-  Fixed effect and random effects meta-analysis of correlations based
-  either on Fisher's z transformation of correlations
-  (\code{sm="ZCOR"}) or direct combination of correlations
-  (\code{sm="COR"}) (see Cooper et al., p264-5 and p273-4).
-
-  Only few statisticians would advocate the use of untransformed
-  correlations unless sample sizes are very large (see Cooper et al.,
-  p265). The artificial example given below shows that the smallest
-  study gets the largest weight if correlations are combined directly
-  because the correlation is closest to 1.
+  Fixed effect and random effects meta-analysis of single incidence
+  rates to calculate an overall rate. The following transformations of
+  incidence rates are implemented to calculate an overall rate:
+  \itemize{
+  \item Log transformation (\code{sm="IRLN"}, default)
+  \item Square root transformation (\code{sm="IRS"})
+  \item Freeman-Tukey Double arcsine transformation (\code{sm="IRFT"})  
+  \item No transformation (\code{sm="IR"})
+  }
+  
+  Note, you should use R function \code{\link{metainc}} to compare
+  incidence rates of pairwise comparisons instead of using
+  \code{metarate} for each treatment arm separately which will break
+  randomisation in randomised controlled trials.
+  
+  Argument \code{irscale} can be used to rescale rates,
+  e.g. \code{irscale=1000} means that rates are expressed as events
+  per 1000 time units, e.g. person-years. This is useful in situations
+  with (very) low rates. Argument \code{irunit} can be used to specify
+  the time unit used in individual studies (default:
+  "person-years"). This information is printed in summaries and forest
+  plots if argument \code{irscale} is not equal to 1.
   
   For several arguments defaults settings are utilised (assignments
   with \code{.settings$}). These defaults can be changed using the
@@ -106,17 +146,36 @@ metacor(cor, n, studlab,
   for the random effects model can be extracted from component
   \code{TE.random} of an object of class \code{"meta"} even if
   argument \code{comb.random=FALSE}. However, all functions in R
-  package \code{meta} will adequately consider the values for
+  package \bold{meta} will adequately consider the values for
   \code{comb.fixed} and \code{comb.random}. E.g. function
   \code{\link{print.meta}} will not print results for the random
   effects model if \code{comb.random=FALSE}.
+  
+  A random intercept Poisson regression model can be utilised for the
+  meta-analysis of incidence rates (Stijnen et al., 2010). This method
+  is available (argument \code{method = "GLMM"}) by calling the
+  \code{\link[metafor]{rma.glmm}} function from R package
+  \bold{metafor} internally.
+
+  If the summary measure is equal to "IR" or "IRLN", a continuity
+  correction is applied if any study has zero events, i.e., an
+  incidence rate of 0. By default, 0.5 is used as continuity
+  correction (argument \code{incr}). This continuity correction is
+  used both to calculate individual study results with confidence
+  limits and to conduct meta-analysis based on the inverse variance
+  method. For Freeman-Tukey and square root transformation and GLMMs
+  no continuity correction is used.
+  
+  Argument \code{byvar} can be used to conduct subgroup analysis for
+  all methods but GLMMs. Instead use the \code{\link{metareg}}
+  function for GLMMs which can also be used for continuous covariates.
 
   A prediction interval for treatment effect of a new study is
   calculated (Higgins et al., 2009) if arguments \code{prediction} and
   \code{comb.random} are \code{TRUE}.
 
   R function \code{\link{update.meta}} can be used to redo the
-  meta-analysis of an existing metacor object by only specifying
+  meta-analysis of an existing metarate object by only specifying
   arguments which should be changed.
 
   For the random effects, the method by Hartung and Knapp (2003) is
@@ -130,9 +189,9 @@ metacor(cor, n, studlab,
   called which is based on R function mpaule.default from R package
   metRology from S.L.R. Ellison <s.ellison at lgc.co.uk>.
 
-  If R package metafor (Viechtbauer 2010) is installed, the following
-  methods to estimate the between-study variance \eqn{\tau^2}
-  (argument \code{method.tau}) are also available:
+  If R package \bold{metafor} (Viechtbauer 2010) is installed, the
+  following methods to estimate the between-study variance
+  \eqn{\tau^2} (argument \code{method.tau}) are also available:
   \itemize{
    \item Restricted maximum-likelihood estimator (\code{method.tau="REML"})
    \item Maximum-likelihood estimator (\code{method.tau="ML"})
@@ -141,44 +200,44 @@ metacor(cor, n, studlab,
    \item Hedges estimator (\code{method.tau="HE"})
    \item Empirical Bayes estimator (\code{method.tau="EB"}).
   }
-  For these methods the R function \code{rma.uni} of R package metafor
-  is called internally. See help page of R function \code{rma.uni} for
-  more details on these methods to estimate between-study variance.
+  For these methods the R function \code{rma.uni} of R package
+  \bold{metafor} is called internally. See help page of R function
+  \code{rma.uni} for more details on these methods to estimate
+  between-study variance.
 }
 
 \value{
-  An object of class \code{c("metacor", "meta")} with corresponding
+  An object of class \code{c("metarate", "meta")} with corresponding
   \code{print}, \code{summary}, \code{plot} function. The object is a
   list containing the following components:
-  \item{cor, n, studlab,}{}
-  \item{sm, level, level.comb,}{}
+  \item{event, n, studlab,}{}
+  \item{sm, incr, allincr, addincr, method.ci,}{}
+  \item{level, level.comb,}{As defined above.}
   \item{comb.fixed, comb.random,}{}
   \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{}
   \item{tau.common, title, complab, outclab,}{}
-  \item{byvar, bylab, print.byvar, byseparator}{As defined above.}
-  \item{TE, seTE}{Either Fisher's z transformation of correlations
-    (\code{sm="ZCOR"}) or correlations (\code{sm="COR"}) for individual
-    studies.}
+  \item{byvar, bylab, print.byvar, byseparator, warn}{}
+  \item{TE, seTE}{Estimated (un)transformed incidence rate and its
+    standard error for individual studies.}
   \item{lower, upper}{Lower and upper confidence interval limits
     for individual studies.}
   \item{zval, pval}{z-value and p-value for test of treatment
     effect for individual studies.}
   \item{w.fixed, w.random}{Weight of individual studies (in fixed and
     random effects model).}
-  \item{TE.fixed, seTE.fixed}{Estimated overall effect (Fisher's z
-    transformation of correlation or correlation) and its standard error
-    (fixed effect model).}
+  \item{TE.fixed, seTE.fixed}{Estimated overall (un)transformed
+    incidence rate and standard error (fixed effect model).}
   \item{lower.fixed, upper.fixed}{Lower and upper confidence interval limits
   (fixed effect model).}
   \item{zval.fixed, pval.fixed}{z-value and p-value for test of
-  overall effect (fixed effect model).}
-  \item{TE.random, seTE.random}{Estimated overall effect (Fisher's z
-    transformation of correlation or correlation) and its standard error
-    (random effects model).}
+    overall effect (fixed effect model).}
+  \item{TE.random, seTE.random}{Estimated overall (un)transformed
+    incidence rate and standard error (random effects model).}
   \item{lower.random, upper.random}{Lower and upper confidence interval limits
   (random effects model).}
   \item{zval.random, pval.random}{z-value or t-value and corresponding
-    p-value for test of overall effect (random effects model).}
+    p-value for test of overall effect (random effects
+    model).}
   \item{prediction, level.predict}{As defined above.}
   \item{seTE.predict}{Standard error utilised for prediction interval.}
   \item{lower.predict, upper.predict}{Lower and upper limits of prediction interval.}
@@ -220,6 +279,8 @@ metacor(cor, n, studlab,
   \item{n.harmonic.mean.w}{Harmonic mean of number of observations in
     subgroups (for back transformation of Freeman-Tukey Double arcsine
     transformation) - if \code{byvar} is not missing.}
+  \item{event.w}{Number of events in subgroups - if \code{byvar} is
+    not missing.}
   \item{n.w}{Number of observations in subgroups - if \code{byvar} is
     not missing.}
   \item{k.w}{Number of studies combined within subgroups - if
@@ -256,40 +317,54 @@ metacor(cor, n, studlab,
   \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limti for
     heterogeneity statistic I2 within subgroups - if \code{byvar} is
     not missing.}
+  \item{incr.event}{Increment added to number of events.}
   \item{keepdata}{As defined above.}
   \item{data}{Original data (set) used in function call (if
     \code{keepdata=TRUE}).}
   \item{subset}{Information on subset of original data used in
     meta-analysis (if \code{keepdata=TRUE}).}
+  \item{.glmm.fixed}{GLMM object generated by call of
+    \code{\link[metafor]{rma.glmm}} function (fixed effect model).}
+  \item{.glmm.random}{GLMM object generated by call of
+    \code{\link[metafor]{rma.glmm}} function (random effects model).}
   \item{call}{Function call.}
   \item{version}{Version of R package meta used to create object.}
+  \item{version.metafor}{Version of R package metafor used for GLMMs.}
 }
 
 \references{
-  Cooper H, Hedges LV, Valentine JC (2009),
-  \emph{The Handbook of Research Synthesis and Meta-Analysis}, 2nd Edition.
-  New York: Russell Sage Foundation.
- 
   DerSimonian R & Laird N (1986),
-  Meta-analysis in clinical trials. \emph{Controlled Clinical Trials},
+  Meta-analysis in clinical trials.
+  \emph{Controlled Clinical Trials},
   \bold{7}, 177--188.
- 
+
+  Freeman MF & Tukey JW (1950),
+  Transformations related to the angular and the square
+  root. \emph{Annals of Mathematical Statistics},
+  \bold{21}, 607--611.
+  
   Higgins JPT, Thompson SG, Spiegelhalter DJ (2009),
   A re-evaluation of random-effects meta-analysis.
   \emph{Journal of the Royal Statistical Society: Series A},
   \bold{172}, 137--159.
-  
+
   Knapp G & Hartung J (2003),
   Improved Tests for a Random Effects Meta-regression with a Single
   Covariate.
-  \emph{Statistics in Medicine}, \bold{22}, 2693--710,
+  \emph{Statistics in Medicine}, \bold{22}, 2693--2710,
   doi: 10.1002/sim.1482 .
-
+  
   Paule RC & Mandel J (1982),
   Consensus values and weighting factors.
   \emph{Journal of Research of the National Bureau of Standards},
   \bold{87}, 377--385.
-
+  
+  Stijnen T, Hamza TH, Ozdemir P (2010),
+  Random effects meta-analysis of event outcome in the framework of
+  the generalized linear mixed model with applications in sparse
+  data.
+  \emph{Statistics in Medicine}, \bold{29}, 3046--67.
+  
   Viechtbauer W (2010),
   Conducting Meta-Analyses in R with the Metafor Package.
   \emph{Journal of Statistical Software}, \bold{36}, 1--48.
@@ -300,34 +375,29 @@ metacor(cor, n, studlab,
 \seealso{\code{\link{update.meta}}, \code{\link{metacont}}, \code{\link{metagen}}, \code{\link{print.meta}}}
 
 \examples{
-m1 <- metacor(c(0.85, 0.7, 0.95), c(20, 40, 10))
-
 #
-# Print correlations (back transformed from Fisher's z transformation)
+# Apply various meta-analysis methods to estimate incidence rates
+#
+m1 <- metarate(4:1, c(10, 20, 30, 40))
+m2 <- update(m1, sm="IR")
+m3 <- update(m1, sm="IRS")
+m4 <- update(m1, sm="IRFT")
 #
 m1
-
-#
-# Print Fisher's z transformed correlations 
-#
-print(m1, backtransf=FALSE)
-
-#
-# Forest plot with back transformed correlations
+m2
+m3
+m4
 #
 forest(m1)
-
-#
-# Forest plot with Fisher's z transformed correlations
-#
-forest(m1, backtransf=FALSE)
-
-
-m2 <- update(m1, sm="cor")
-m2
-# Identical forest plots (as back transformation is the identity transformation)
+forest(m1, irscale=100)
+forest(m1, irscale=100, irunit="person-days")
+forest(m1, backtransf = FALSE)
 # forest(m2)
-# forest(m2, backtransf=FALSE)
+# forest(m3)
+# forest(m4)
+#
+m5 <- metarate(40:37, c(100, 200, 300, 400), sm="IRFT")
+m5
 }
 
 \keyword{htest}

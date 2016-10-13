@@ -23,11 +23,12 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
          tau.common=.settings$tau.common,
          prediction=.settings$prediction, level.predict=.settings$level.predict,
          method.bias=.settings$method.bias,
+         backtransf=.settings$backtransf,
          title=.settings$title, complab=.settings$complab, outclab="",
          label.e=.settings$label.e, label.c=.settings$label.c,
          label.left=.settings$label.left, label.right=.settings$label.right,
          byvar, bylab, print.byvar=.settings$print.byvar,
-	 byseparator = .settings$byseparator,
+	 byseparator=.settings$byseparator,
          keepdata=.settings$keepdata,
          warn=.settings$warn)
 }
@@ -71,6 +72,10 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{method.bias}{A character string indicating which test is to be
     used. Either \code{"rank"}, \code{"linreg"}, or \code{"mm"}, can
     be abbreviated. See function \code{\link{metabias}}}
+  \item{backtransf}{A logical indicating whether results for ratio of
+    means (\code{sm="ROM"}) should be back transformed in printouts
+    and plots. If TRUE (default), results will be presented as ratio
+    of means; otherwise log ratio of means will be shown.}
   \item{title}{Title of meta-analysis / systematic review.}
   \item{complab}{Comparison label.}
   \item{outclab}{Outcome label.}
@@ -79,8 +84,8 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{label.left}{Graph label on left side of forest plot.}
   \item{label.right}{Graph label on right side of forest plot.}
   \item{sm}{A character string indicating which summary measure
-    (\code{"MD"} or \code{"SMD"}) is to be used for pooling of
-    studies.}
+    (\code{"MD"}, \code{"SMD"}, or \code{"ROM"}) is to be used for
+    pooling of studies.}
   \item{pooledvar}{A logical indicating if a pooled variance should be
     used for the mean difference (\code{sm="MD"}).}
   \item{method.smd}{A character string indicating which method is used
@@ -114,13 +119,20 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
 \details{
   Calculation of fixed and random effects estimates for meta-analyses
   with continuous outcome data; inverse variance weighting is used for
-  pooling. By default, the DerSimonian-Laird estimate (1986) is used
-  in the random effects model (\code{method.tau="DL"}).
+  pooling.
 
-  Two different types of summary measures are available for continuous
-  outcomes: the mean difference (argument \code{sm="MD"}) and the
-  standardised mean difference (\code{sm="SMD"}). For the standardised
-  mean difference three methods are implemented:
+  Three different types of summary measures are available for continuous
+  outcomes:
+  \itemize{
+   \item mean difference (argument \code{sm="MD"})
+   \item standardised mean difference (\code{sm="SMD"})
+   \item ratio of means (\code{sm="ROM"})
+  }
+
+  Meta-analysis of ratio of means -- also called response ratios -- is
+  described in Hedges et al. (1999) and Friedrich et al. (2008).
+  
+  For the standardised mean difference three methods are implemented:
   \itemize{
    \item Hedges' g (default, \code{method.smd="Hedges"}) - see Hedges (1981)
    \item Cohen's d (\code{method.smd="Cohen"}) - see Cohen (1988)
@@ -148,6 +160,12 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   the denominator of the standard mean difference. The standard
   deviation in the experimental group (\code{sd.e}) can be used by
   specifying \code{sd.glass="experimental"}.
+  
+  Calculations are conducted on the log scale for ratio of means
+  (\code{sm="ROM"}). Accordingly, list elements \code{TE},
+  \code{TE.fixed}, and \code{TE.random} contain the logarithm of ratio
+  of means. In printouts and plots these values are back transformed
+  if argument \code{backtransf=TRUE}.
   
   For several arguments defaults settings are utilised (assignments
   with \code{.settings$}). These defaults can be changed using the
@@ -179,8 +197,9 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   used to adjust test statistics and confidence intervals if argument
   \code{hakn=TRUE}.
 
-  The iterative Paule-Mandel method (1982) to estimate the
-  between-study variance is used if argument
+  The DerSimonian-Laird estimate (1986) is used in the random effects
+  model if \code{method.tau="DL"}. The iterative Paule-Mandel method
+  (1982) to estimate the between-study variance is used if argument
   \code{method.tau="PM"}. Internally, R function \code{paulemandel} is
   called which is based on R function \code{mpaule.default} from R
   package metRology from S.L.R. Ellison <s.ellison at lgc.co.uk>.
@@ -327,7 +346,7 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   Chichester: Wiley.
 
   Cohen J (1988),
-  Statistical Power Analysis for the Behavioral Sciences (second ed.).
+  \emph{Statistical Power Analysis for the Behavioral Sciences (second ed.)},
   Lawrence Erlbaum Associates.
 
   Cooper H & Hedges LV (1994),
@@ -336,7 +355,13 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
 
   DerSimonian R & Laird N (1986),
   Meta-analysis in clinical trials. \emph{Controlled Clinical Trials},
-  \bold{7}, 177--188.
+  \bold{7}, 177--88.
+
+  Friedrich JO, Adhikari NK, Beyene J (2008),
+  The ratio of means method as an alternative to mean differences for
+  analyzing continuous outcome variables in meta-analysis: A
+  simulation study.
+  \emph{BMC Med Res Methodol}, \bold{8}, 32.
 
   Glass G (1976),
   Primary, secondary, and meta-analysis of research.
@@ -354,10 +379,15 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \emph{Journal of Educational and Behavioral Statistics},
   \bold{6}, 107--28.
 
+  Hedges LV, Gurevitch J, Curtis PS (1999),
+  The meta-analysis of response ratios in experimental ecology.
+  \emph{Ecology},
+  \bold{80}, 1150--6.
+
   Higgins JPT, Thompson SG, Spiegelhalter DJ (2009),
   A re-evaluation of random-effects meta-analysis.
   \emph{Journal of the Royal Statistical Society: Series A},
-  \bold{172}, 137--159.
+  \bold{172}, 137--59.
 
   Knapp G & Hartung J (2003),
   Improved Tests for a Random Effects Meta-regression with a Single
@@ -368,7 +398,7 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   Paule RC & Mandel J (1982),
   Consensus values and weighting factors.
   \emph{Journal of Research of the National Bureau of Standards},
-  \bold{87}, 377--385.
+  \bold{87}, 377--85.
   
   \emph{Review Manager (RevMan)} [Computer program]. Version
   5.3. Copenhagen: The Nordic Cochrane Centre, The Cochrane
@@ -436,6 +466,16 @@ meta7
 # Calculate Hedges' g based on exact formulae
 #
 update(meta1, exact.smd=TRUE)
+
+#
+# Meta-analysis of response ratios (Hedges et al., 1999)
+#
+data(woodyplants)
+meta8 <- metacont(n.elev, mean.elev, sd.elev,
+		  n.amb, mean.amb, sd.amb,
+                  data=woodyplants, sm="ROM")
+summary(meta8)
+summary(meta8, backtransf=FALSE)
 }
 
 \keyword{htest}

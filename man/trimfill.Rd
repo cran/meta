@@ -19,7 +19,7 @@ trimfill(x, ...)
          comb.fixed=FALSE, comb.random=TRUE,
          hakn=FALSE, method.tau="DL",
          prediction=FALSE, level.predict=level,
-         backtransf=TRUE, pscale=1,
+         backtransf=TRUE, pscale=1, irscale = 1, irunit = "person-years",
          silent=TRUE, ...)
 
 \method{trimfill}{meta}(x, left=NULL, ma.fixed=TRUE, type="L", n.iter.max=50,
@@ -27,7 +27,7 @@ trimfill(x, ...)
          comb.fixed=FALSE, comb.random=TRUE,
          hakn=x$hakn, method.tau=x$method.tau,
          prediction=x$prediction, level.predict=x$level.predict,
-         backtransf=x$backtransf, pscale=x$pscale,
+         backtransf=x$backtransf, pscale=x$pscale, irscale = x$irscale, irunit = x$irunit,
          silent=TRUE, ...)
 }
 
@@ -47,9 +47,9 @@ trimfill(x, ...)
   \item{n.iter.max}{Maximum number of iterations to estimate number of
     missing studies.}
   \item{sm}{An optional character string indicating underlying summary
-    measure, e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"ASD"},
-    \code{"MD"}, \code{"SMD"}; ignored if \code{x} is of class
-    \code{meta}.}
+    measure, e.g., \code{"RD"}, \code{"RR"}, \code{"OR"},
+    \code{"ASD"}, \code{"HR"}, \code{"MD"}, \code{"SMD"}, or
+    \code{"ROM"}; ignored if \code{x} is of class \code{meta}.}
   \item{studlab}{An optional vector with study labels; ignored if
     \code{x} is of class \code{meta}.}
   \item{level}{The level used to calculate confidence intervals for
@@ -83,6 +83,11 @@ trimfill(x, ...)
     event probabilities, i.e. if argument \code{sm} is equal to
     \code{"PLOGIT"}, \code{"PLN"}, \code{"PRAW"}, \code{"PAS"}, or
     \code{"PFT"}.}
+  \item{irscale}{A numeric defining a scaling factor for printing of
+    rates, i.e. if argument \code{sm} is equal to \code{"IR"},
+    \code{"IRLN"}, \code{"IRS"}, or \code{"IRFT"}.}
+  \item{irunit}{A character specifying the time unit used to calculate
+    rates, e.g. person-years.}
   \item{silent}{A logical indicating whether basic information on
     iterations shown.}
   \item{\dots}{other arguments}

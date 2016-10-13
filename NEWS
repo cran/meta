@@ -1,3 +1,101 @@
+*** meta, version 4.6-0, 2016-10-12 ***
+
+ ** Major changes **
+
+  * New function metarate() to conduct meta-analysis of single
+    incidence rates
+
+  * Peters' test for funnel plot asymmetry implemented for
+    meta-analysis of single proportions
+
+  * Meta-analysis of ratio of means added to metacont()
+
+  * Justification of additional columns in forest plot can be
+    specified individually for each additional column
+
+  * Justification of additional columns in forest plot can be
+    specified individually for each additional column
+
+  * Calculation of Freeman-Tukey double arcsin transformation and
+    backtransformation slightly changed in meta-analysis of single
+    proportions
+
+  * By default, do not print a warning if backtransformation for
+    metaprop() and metarate() objects results in values below 0 or
+    above 1 (only for proportions); note, respective values are set
+    to 0 or 1
+
+ ** User-visible changes **
+    
+  * help page with brief overview of meta package added
+    
+  * preferred citation of meta package in publications changed;
+    see output of command 'citation("meta")'
+
+  * forest.meta(), metagen(), print.meta(), print.summary.meta(),
+    summary.meta(), trimfill.default(), trimfill.meta(),
+    update.meta():
+    - new arguments irscale and irunit for meta-analysis objects
+      created with metarate()
+
+  * settings.meta():
+    - new arguments smrate for meta-analysis objects created with
+      metarate()
+
+  * funnel.meta(), funnel.default():
+    - new argument pos.studlab to change position of study labels
+
+  * forest.meta():
+    - new arguments just.addcols.left and just.addcols.right to
+      specify justification of additional columns on left and right
+      side of forest plot
+
+  * metacont():
+    - meta-analysis for ratio of means implemented (argument sm = "ROM")
+    - new argument backtransf (if argument sm = "ROM")
+
+  * metaprop():
+    - change in Freeman-Tukey double arcsin transformation only
+      visible in printouts if argument backtransf = FALSE or if list
+      elements TE, TE.fixed, and TE.random (as well as confidence
+      intervals) are extracted from a metaprop object
+
+  * print.summary.meta():
+    - print correct results for subgroup analyses of metaprop objects
+      with sm = "PFT" (bugfix in internal subgroup() function)
+
+  * print.meta(), print.summary.meta():
+    - new argument warn.backtransf to specify whether a warning should
+      be printed if backtransformed proportions and rates are below 0
+      and backtransformed proportions are above 1
+
+  * Help pages updated:
+    forest.meta(), metabias.meta(), metabin(), metacont(), metacor(),
+    metagen(), metainc(), metainf(), metaprop(), print.meta(),
+    print.summary.meta(), summary.meta(), trimfill.default(),
+    trimfill.meta(), update.meta()
+
+ ** Internal changes **
+
+  * New function asin2ir() to backtransform arcsine transformed
+    incidence rates
+
+  * backtransf(), catmeth(), metacum(), metainf(), subgroup(), xlab():
+    - extension to handle meta-analysis objects created with
+      metarate()
+
+  * metaprop(), asin2p():  
+    - calculation of Freeman-Tukey double arcsin transformation
+      changed such that sm = "PFT" and sm = "PAS" result in similar
+      estimates (TE, TE.fixed, TE.random), i.e. values are multiplied
+      by 0.5 for sm = "PFT"
+
+  * subgroup():
+    - bux fix in calculation of harmonic mean of sample sizes (for
+      metaprop objects with sm = "PFT") and event times (for metarate
+      objects with sm = "IRFT")
+
+
 *** meta, version 4.5-0, 2016-08-17 ***
 
  ** Major changes **

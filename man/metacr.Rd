@@ -12,16 +12,16 @@
 \usage{
 metacr(x, comp.no=1, outcome.no=1,
        method, sm,
-       level=.settings$level, level.comb=.settings$level.comb,
+       level=gs("level"), level.comb=gs("level.comb"),
        comb.fixed, comb.random,
        hakn=FALSE,
        method.tau="DL",
        tau.common=FALSE,
-       prediction=.settings$prediction, level.predict=.settings$level.predict,
+       prediction=gs("prediction"), level.predict=gs("level.predict"),
        swap.events, logscale,
-       backtransf=.settings$backtransf,
+       backtransf=gs("backtransf"),
        title, complab, outclab,
-       keepdata=.settings$keepdata, warn=FALSE)
+       keepdata=gs("keepdata"), warn=FALSE)
 }
 
 \arguments{
@@ -81,15 +81,22 @@ metacr(x, comp.no=1, outcome.no=1,
   Cochrane Intervention reviews are based on the comparison of two
   interventions. Each Cochrane Intervention review can have a variable
   number of comparisons. For each comparison, a variable number of
-  outcomes can be define. For each outcome, a seperate meta-analysis is
-  conducted. Review Manager 5 (RevMan 5) is the current software used for
-  preparing and maintaining Cochrane Reviews
-  (\url{http://tech.cochrane.org/revman/}).
+  outcomes can be define. For each outcome, a seperate meta-analysis
+  is conducted. Review Manager 5 (RevMan 5) is the current software
+  used for preparing and maintaining Cochrane Reviews
+  (\url{http://community.cochrane.org/tools/review-production-tools/revman-5}).
   
   This wrapper function can be used to perform meta-analysis for a
   single outcome of a Cochrane Intervention review. Internally, R
   functions \code{metabin}, \code{metacont}, and \code{metagen} are
   called - depending on the definition of the outcome in RevMan 5.
+
+  Note, it is recommended to specify the RevMan 5 before executing \code{metacr}, i.e.,
+  %%
+  \itemize{
+   \item[] settings.meta("revman5")
+  }
+
 }
 
 \value{
@@ -106,7 +113,7 @@ metacr(x, comp.no=1, outcome.no=1,
 
 \author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
 
-\seealso{\code{\link{metabin}}, \code{\link{metacont}}, \code{\link{metagen}}, \code{\link{read.rm5}}}
+\seealso{\code{\link{metabin}}, \code{\link{metacont}}, \code{\link{metagen}}, \code{\link{read.rm5}}, \code{\link{settings.meta}}}
 
 \examples{
 # Locate export data file "Fleiss93_CR.csv"
@@ -115,6 +122,10 @@ metacr(x, comp.no=1, outcome.no=1,
 filename <- system.file("data/Fleiss93_CR.csv.gz", package = "meta")
 #
 Fleiss93_CR <- read.rm5(filename)
+
+# Choose RevMan 5 settings and store old settings
+#
+oldset <- settings.meta("revman5")
 
 # Same result as R command example(Fleiss93):
 #
@@ -131,6 +142,9 @@ forest(metacr(Fleiss93_CR, 1, 2))
 m1 <- metacr(Fleiss93_CR)
 update(m1, sm="RR")
 
+# Use old settings
+#
+settings.meta(oldset)
 }
 
 \keyword{htest}

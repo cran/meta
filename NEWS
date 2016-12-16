@@ -1,3 +1,146 @@
+*** meta, version 4.7-0, 2016-12-16 ***
+
+ ** Major changes **
+
+  * Forest plots:
+    - forest plots with RevMan 5 and JAMA layout
+    - use of mathematical symbols for I^2, tau^2, etc.
+    - individual study results can be omitted from forest plot
+      (especially useful to only print subgroup results)
+    - labels can be printed at top of forest plot
+
+  * Measure of between-study heterogeneity added:
+    - R_b (Crippa et al., 2016, <DOI:10.1002/sim.6980>)
+
+  * Default settings of meta-analysis methods specified via gs()
+    instead of extracting elements of list .settings
+    (which makes output of args() easier to read,
+     e.g., args(metabin))
+
+  * Version of suggested R package metafor must be at least 1.9-9
+    (due to change in arguments of rma.uni() and rma.glmm())
+  
+ ** User-visible changes **
+
+  * forest.meta():
+    - argument layout:
+      . new layouts:
+        "JAMA" to produce forest plots with JAMA style (see
+        http://jamanetwork.com/journals/jama/pages/instructions-for-authors)
+      . RevMan 5 layout extended
+    - arguments can be specified without using grid::unit():
+      plotwidth, colgap, colgap.left, colgap.right, colgap.studlab,
+      colgap.forest, colgap.forest.left, colgap.forest.right
+    - new argument study.results to print (default) or omit individual
+      study results from forest plot
+    - new argument bottom.lr to change position of labels on left and
+      right side of forest plot
+    - new arguments col.label.right and col.label.left to change
+      colour of labels on left and right side of forest plot
+    - argument weight renamed to weight.study and new argument
+      weight.subgroup added to specify whether plotted subgroup
+      results should be of same or different size
+    - new arguments print.Rb, print.Rb.ci, Rb.text for heterogeneity
+      measure Rb
+    - new arguments to control printing:
+      digits.cor, digits.mean, digits.sd, digits.time, digits.zval
+    - new argument print.subgroup.labels to print (default) or omit
+      rows with subgroup label from forest plot  
+    - new argument type.subgroup to change plotting of subgroup
+      results
+    - argument addspace renamed to addrow
+    - new argument addrow.subgroups to add a blank line
+      between subgroup results
+    - new argument addrow.overall to add a blank before meta-analysis
+      results
+    - new argument blanks to enhance printing of test statistics,
+      heterogeneity measurs, and p-values  
+    - new argument colgap.studlab to specify space between column with
+      study labels and subsequent column
+    - new arguments to change width of column with study labels:
+      . calcwidth.fixed (consider text for fixed effect model)
+      . calcwidth.random (consider text for random effects model)
+      . calcwidth.hetstat (consider text for heterogeneity measures)
+      . calcwidth.tests (consider text for tests of effect or
+                         subgroup differences)
+      (these arguments are especially useful if only study labels are
+       printed on left side of forest plot)
+    - new column "effect.ci" with estimated treatment effect and
+      confidence interval in one column
+    - unnecessary arguments removed:
+      text.I2, text.tau2
+    
+  * metabin(), metacont(), metacor(), metacr(), metacum(), metagen(),
+    metainc(), metainf(), metaprop(), metarate(), trimfill.default(),
+    trimfill.meta():
+    - new measure of between-study heterogeneity implemented
+      (list elements Rb, lower.Rb, upper.Rb)
+  
+  * summary.meta():
+    - new measure of between-study heterogeneity added
+      (list element Rb.w)
+  
+  * print.meta(), print.summary.meta():
+    - print heterogeneity measure Rb
+  
+  * metabias.meta(), metabias.default():
+    - checks for arguments implemented
+      
+  * New function gs() to get default settings
+
+  * forest.meta(), metabin(), metacont(), metacor(), metacr(),
+    metagen(), metainc(), metaprop(), metarate(), print.meta(),
+    print.summary.meta():
+    - use gs() to define defaults for arguments in meta-analysis
+      functions, e.g. gs("hakn") instead of .settings$hakn
+
+  * metareg():
+    - stop with an error if version of metafor package is below 1.9-9
+
+  * metabin(), metainc(), metaprop(), metarate():
+    - for GLMMs, stop with an error if version of metafor package is
+      below 1.9-9
+    
+  * metabin():
+    - bug fix, do not stop with an error if no double zero events are
+      present in a dataset with at least one study with NA event
+      counts
+
+  * metareg():
+    - bug fix, use of covariate 'x' does not result in an error
+
+  * settings.meta():
+    - general settings for RevMan 5 and JAMA implemented
+    - function can be used to change the layout of confidence
+      intervals using arguments CIbracket and CIseparator
+      (these arguments can also be set using cilayout())
+
+  * Several help pages updated, especially
+    - forest.meta(), settings.meta(), meta-package()
+
+ ** Internal changes **
+    
+  * metabin(), metainc(), metaprop(), metarate(), metareg():
+    - use argument test instead of knha and tdist for calls of
+      rma.uni() and rma.glmm(); change in R package metafor,
+      version 1.9-9
+    
+  * subgroup():
+    - new measure Rb of between-study heterogeneity implemented
+    
+  * is.installed.package():
+    - new check of version number of R package
+    - use requireNamespace() instead of installed.packages()
+
+  * format.p():
+    - for small p-values, print "p < 0.01" or "p < 0.001" instead of
+      "p < 0.0001" if digits.pval is 2 or 3, respectively
+    - new argument zero to print ".001" instead of "0.001", etc
+
+  * meta-internal():
+    - set defaults for new arguments: smrate, layout
+
+
 *** meta, version 4.6-0, 2016-10-12 ***
 
  ** Major changes **

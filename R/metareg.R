@@ -27,7 +27,44 @@ metareg <- function(x, formula,
   ##
   ## Check whether R package metafor is installed
   ##
-  is.installed.package("metafor", "'metareg'")
+  is.installed.package("metafor", "metareg",
+                       version = .settings$metafor)
+  
+  
+  ##
+  ## Assignments
+  ##
+  TE <- x$TE
+  seTE <- x$seTE
+  method <- x$method
+  ##
+  model.glmm <- x$model.glmm
+  ##
+  metabin <- inherits(x, "metabin")
+  metainc <- inherits(x, "metainc")
+  metaprop <- inherits(x, "metaprop")
+  metarate <- inherits(x, "metarate")
+  ##
+  if (metabin) {
+    event.e <- x$event.e
+    n.e <- x$n.e
+    event.c <- x$event.c
+    n.c <- x$n.c
+  }
+  else if (metainc) {
+    event.e <- x$event.e
+    time.e <- x$time.e
+    event.c <- x$event.c
+    time.c <- x$time.c
+  }
+  else if (metaprop) {
+    event <- x$event
+    n <- x$n
+  }
+  else if (metarate) {
+    event <- x$event
+    time <- x$time
+  }
   
   
   if (missing(formula))
@@ -74,49 +111,61 @@ metareg <- function(x, formula,
     dataset <- x$data[x$subset, ]
   else
     dataset <- x$data
-
   
-  if (x$method != "GLMM")
-    res <- metafor::rma.uni(yi = x$TE,
-                            sei = x$seTE,
+  
+  ##
+  ## Argument test in rma.uni() and rma.glmm()
+  ##
+  test <- ifelse(!hakn, "z",
+                 ifelse(method != "GLMM", "knha", "t"))
+  
+  ##
+  ## Covariate 'x' make problems without removing meta-analysis object x
+  ##
+  ..x <- x
+  rm(x)
+  ##
+  if (method != "GLMM")
+    res <- metafor::rma.uni(yi = TE,
+                            sei = seTE,
                             data = dataset,
                             mods = formula, method = method.tau,
-                            knha = hakn, level = 100 * level.comb,
+                            test = test, level = 100 * level.comb,
                             ...)
   else
-    if (inherits(x, "metabin"))
-      res <- metafor::rma.glmm(ai = x$event.e, n1i = x$n.e,
-                               ci = x$event.c, n2i = x$n.c,
+    if (metabin)
+      res <- metafor::rma.glmm(ai = event.e, n1i = n.e,
+                               ci = event.c, n2i = n.c,
                                data = dataset,
                                mods = formula, method = method.tau,
-                               tdist = hakn, level = 100 * level.comb,
-                               measure = "OR", model = x$model.glmm,
+                               test = test, level = 100 * level.comb,
+                               measure = "OR", model = model.glmm,
                                ...)
-    else if (inherits(x, "metainc"))
-      res <- metafor::rma.glmm(x1i = x$event.e, t1i = x$time.e,
-                               x2i = x$event.c, t2i = x$time.c,
+    else if (metainc)
+      res <- metafor::rma.glmm(x1i = event.e, t1i = time.e,
+                               x2i = event.c, t2i = time.c,
                                data = dataset,
                                mods = formula, method = method.tau,
-                               tdist = hakn, level = 100 * level.comb,
-                               measure = "IRR", model = x$model.glmm,
+                               test = test, level = 100 * level.comb,
+                               measure = "IRR", model = model.glmm,
                                ...)
-    else if (inherits(x, "metaprop"))
-      res <- metafor::rma.glmm(xi = x$event, ni = x$n,
+    else if (metaprop)
+      res <- metafor::rma.glmm(xi = event, ni = n,
                                data = dataset,
                                mods = formula, method = method.tau,
-                               tdist = hakn, level = 100 * level.comb,
+                               test = test, level = 100 * level.comb,
                                measure = "PLO",
                                ...)
-    else if (inherits(x, "metarate"))
-      res <- metafor::rma.glmm(xi = x$event, ti = x$time,
+    else if (metarate)
+      res <- metafor::rma.glmm(xi = event, ti = time,
                                data = dataset,
                                mods = formula, method = method.tau,
-                               tdist = hakn, level = 100 * level.comb,
+                               test = test, level = 100 * level.comb,
                                measure = "IRLN",
                                ...)
   
   
-  res$.meta <- list(x = x,
+  res$.meta <- list(x = ..x,
                     formula = formula,
                     method.tau = method.tau,
                     hakn = hakn,

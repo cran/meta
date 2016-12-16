@@ -38,6 +38,7 @@ metainf(x, pooled, sortvar)
   \item{p.value}{P-value for test of overall effect.}
   \item{w}{Sum of weights from fixed effect or random effects model.}
   \item{I2}{Heterogeneity statistic I2.}
+  \item{Rb}{Heterogeneity statistic Rb.}
   \item{tau}{Square-root of between-study variance.}
   \item{df.hakn}{Degrees of freedom for test of treatment effect for
   Hartung-Knapp method (only if \code{hakn=TRUE}).}
@@ -63,8 +64,10 @@ metainf(x, pooled, sortvar)
     between-study variance \eqn{\tau^2}.}
   \item{TE.tau}{Overall treatment effect used to estimate the
   between-study variance \eqn{\tau^2}.}
-  \item{n.harmonic.mean}{Harmonic mean of number of observations (for back transformation of Freeman-Tukey Double arcsine transformation).}
-  \item{version}{Version of R package meta used to create object.}
+  \item{n.harmonic.mean}{Harmonic mean of number of observations (for
+    back transformation of Freeman-Tukey Double arcsine
+    transformation).}
+  \item{version}{Version of R package \bold{meta} used to create object.}
 }
 \references{
   Cooper H & Hedges LV (1994),

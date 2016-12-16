@@ -13,24 +13,24 @@
 \usage{
 metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
          data=NULL, subset=NULL,
-         sm=.settings$smcont, pooledvar=.settings$pooledvar,
-	 method.smd=.settings$method.smd, sd.glass=.settings$sd.glass,
-	 exact.smd=.settings$exact.smd,
-         level=.settings$level, level.comb=.settings$level.comb,
-         comb.fixed=.settings$comb.fixed, comb.random=.settings$comb.random,
-         hakn=.settings$hakn,
-         method.tau=.settings$method.tau, tau.preset=NULL, TE.tau=NULL,
-         tau.common=.settings$tau.common,
-         prediction=.settings$prediction, level.predict=.settings$level.predict,
-         method.bias=.settings$method.bias,
-         backtransf=.settings$backtransf,
-         title=.settings$title, complab=.settings$complab, outclab="",
-         label.e=.settings$label.e, label.c=.settings$label.c,
-         label.left=.settings$label.left, label.right=.settings$label.right,
-         byvar, bylab, print.byvar=.settings$print.byvar,
-	 byseparator=.settings$byseparator,
-         keepdata=.settings$keepdata,
-         warn=.settings$warn)
+         sm=gs("smcont"), pooledvar=gs("pooledvar"),
+         method.smd=gs("method.smd"), sd.glass=gs("sd.glass"),
+         exact.smd=gs("exact.smd"),
+         level=gs("level"), level.comb=gs("level.comb"),
+         comb.fixed=gs("comb.fixed"), comb.random=gs("comb.random"),
+         hakn=gs("hakn"),
+         method.tau=gs("method.tau"), tau.preset=NULL, TE.tau=NULL,
+         tau.common=gs("tau.common"),
+         prediction=gs("prediction"), level.predict=gs("level.predict"),
+         method.bias=gs("method.bias"),
+         backtransf=gs("backtransf"),
+         title=gs("title"), complab=gs("complab"), outclab="",
+         label.e=gs("label.e"), label.c=gs("label.c"),
+         label.left=gs("label.left"), label.right=gs("label.right"),
+         byvar, bylab, print.byvar=gs("print.byvar"),
+         byseparator=gs("byseparator"),
+         keepdata=gs("keepdata"),
+         warn=gs("warn"))
 }
 
 \arguments{
@@ -168,16 +168,16 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   if argument \code{backtransf=TRUE}.
   
   For several arguments defaults settings are utilised (assignments
-  with \code{.settings$}). These defaults can be changed using the
-  \code{\link{settings.meta}} function.
-
+  using \code{\link{gs}} function). These defaults can be changed
+  using the \code{\link{settings.meta}} function.
+  
   Internally, both fixed effect and random effects models are
   calculated regardless of values choosen for arguments
   \code{comb.fixed} and \code{comb.random}. Accordingly, the estimate
   for the random effects model can be extracted from component
   \code{TE.random} of an object of class \code{"meta"} even if
   argument \code{comb.random=FALSE}. However, all functions in R
-  package \code{meta} will adequately consider the values for
+  package \bold{meta} will adequately consider the values for
   \code{comb.fixed} and \code{comb.random}. E.g. function
   \code{\link{print.meta}} will not print results for the random
   effects model if \code{comb.random=FALSE}.
@@ -202,11 +202,12 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   (1982) to estimate the between-study variance is used if argument
   \code{method.tau="PM"}. Internally, R function \code{paulemandel} is
   called which is based on R function \code{mpaule.default} from R
-  package metRology from S.L.R. Ellison <s.ellison at lgc.co.uk>.
+  package \bold{metRology} from S.L.R. Ellison <s.ellison at
+  lgc.co.uk>.
   
-  If R package metafor (Viechtbauer 2010) is installed, the following
-  methods to estimate the between-study variance \eqn{\tau^2}
-  (argument \code{method.tau}) are also available:
+  If R package \bold{metafor} (Viechtbauer 2010) is installed, the
+  following methods to estimate the between-study variance
+  \eqn{\tau^2} (argument \code{method.tau}) are also available:
   \itemize{
    \item Restricted maximum-likelihood estimator (\code{method.tau="REML"})
    \item Maximum-likelihood estimator (\code{method.tau="ML"})
@@ -215,9 +216,10 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
    \item Hedges estimator (\code{method.tau="HE"})
    \item Empirical Bayes estimator (\code{method.tau="EB"}).
   }
-  For these methods the R function \code{rma.uni} of R package metafor
-  is called internally. See help page of R function \code{rma.uni} for
-  more details on these methods to estimate between-study variance.
+  For these methods the R function \code{rma.uni} of R package
+  \bold{metafor} is called internally. See help page of R function
+  \code{rma.uni} for more details on these methods to estimate
+  between-study variance.
 }
 
 \value{
@@ -337,7 +339,7 @@ metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   \item{subset}{Information on subset of original data used in
     meta-analysis (if \code{keepdata=TRUE}).}
   \item{call}{Function call.}
-  \item{version}{Version of R package meta used to create object.}
+  \item{version}{Version of R package \bold{meta} used to create object.}
 }
 
 \references{

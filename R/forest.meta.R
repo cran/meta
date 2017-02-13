@@ -398,7 +398,7 @@ forest.meta <- function(x,
   if (!missing(addrow.overall))
     chklogical(addrow.overall)
   else
-    addrow.overall <- !jama
+    addrow.overall <- !jama & overall & (comb.fixed | comb.random | prediction)
   if (!missing(addrow.subgroups))
     chklogical(addrow.subgroups)
   else
@@ -752,7 +752,7 @@ forest.meta <- function(x,
   }
   ##
   prediction <- prediction & x$k >= 3
-  ##  
+  ##
   byvar <- x$byvar
   level <- x$level
   level.comb <- x$level.comb
@@ -762,7 +762,7 @@ forest.meta <- function(x,
   chklevel(level.comb)
   if (prediction)
     chklevel(level.predict)
-  ##  
+  ##
   if (is.logical(leftcols)) {
     if (!leftcols) {
       text.fixed <- ""
@@ -809,12 +809,12 @@ forest.meta <- function(x,
     ref <- log(ref)
     log.xaxis <- TRUE
   }
-  ##  
+  ##
   if (!backtransf & pscale != 1) {
     warning("Argument 'pscale' set to 1 as argument 'backtransf' is FALSE.")
     pscale <- 1
   }
-  ##  
+  ##
   if (!backtransf & irscale != 1) {
     warning("Argument 'irscale' set to 1 as argument 'backtransf' is FALSE.")
     irscale <- 1
@@ -838,6 +838,8 @@ forest.meta <- function(x,
     label.left <- ""
   ##
   by <- !is.null(byvar)
+  if (!by)
+    addrow.subgroups <- FALSE
   ##
   plotwidth <- setunit(plotwidth)
   colgap <- setunit(colgap)
@@ -993,17 +995,17 @@ forest.meta <- function(x,
       lab.method <- c("IV", "MH", "Peto", "GLMM")[sel.method]
       ##
       if (fixed.random)
-        lab.model <- "Fixed + Random"
+        lab.model <- "Fixed + Random, "
       else if (comb.fixed)
-        lab.model <- "Fixed"
+        lab.model <- "Fixed, "
       else if (comb.random)
-        lab.model <- "Random"
+        lab.model <- "Random, "
       else
         lab.model <- ""
       ##
       if (smlab.null)
         smlab <- paste(smlab, "\n", lab.method, ", ",
-                       lab.model, ", ",
+                       lab.model,
                        ci.lab, sep = "")
     }
   }
@@ -1326,7 +1328,7 @@ forest.meta <- function(x,
         leftcols[leftcols == "event"] <- "event.e"
     }
   }
-  ##  
+  ##
   if (metainf.metacum) {
     ##
     x$TE.fixed    <- rev(x$TE)[1]
@@ -1430,7 +1432,7 @@ forest.meta <- function(x,
   col.square.lines <- col.square.lines[sel]
   ##
   col.inside <- col.inside[sel]
-  ##  
+  ##
   if (sort | by) {
     if (bysort)
       bylevs <- sort(x$bylevs)
@@ -1569,6 +1571,8 @@ forest.meta <- function(x,
     Q.b.random <- x$Q.b.random
     df.Q.b     <- x$df.Q.b
   }
+  ##
+  hetstat.overall <- ""
   ##
   if (overall.hetstat) {
     ##
@@ -1921,8 +1925,6 @@ forest.meta <- function(x,
                           hb = hetstat.Rb))
     }
   }
-  else
-    hetstat.overall <- ""
   ##
   ## Text of test for subgroup differences
   ##
@@ -2253,10 +2255,21 @@ forest.meta <- function(x,
     bylevs <- bylevs[sel]
     ##
     if (!metainf.metacum & comb.fixed) {
-      if (!all(is.na(w.fixed.w)) && sum(w.fixed.w) > 0)
-        w.fixed.w.p <- round(100 * w.fixed.w / sum(w.fixed.w, na.rm = TRUE), digits.weight)
-      else
-        w.fixed.w.p <- w.fixed.w
+      if (!overall) {
+        i <- 0
+        for (bylev.i in bylevs) {
+          i <- i + 1
+          sel.i <- byvar == bylev.i
+          x$w.fixed[sel.i] <- x$w.fixed[sel.i] / w.fixed.w[i]
+        }
+        w.fixed.w.p <- ifelse(is.na(w.fixed.w), NA, 100)
+      }
+      else {
+        if (!all(is.na(w.fixed.w)) && sum(w.fixed.w) > 0)
+          w.fixed.w.p <- round(100 * w.fixed.w / sum(w.fixed.w, na.rm = TRUE), digits.weight)
+        else
+          w.fixed.w.p <- w.fixed.w
+      }
     }
     else {
       TE.fixed.w <- lower.fixed.w <- upper.fixed.w <- rep(NA, n.by)
@@ -2267,10 +2280,21 @@ forest.meta <- function(x,
     }
     ##
     if (!metainf.metacum & comb.random) {
-      if (!all(is.na(w.random.w)) && sum(w.random.w) > 0)
-        w.random.w.p <- round(100 * w.random.w / sum(w.random.w, na.rm = TRUE), digits.weight)
-      else
-        w.random.w.p <- w.random.w
+      if (!overall) {
+        i <- 0
+        for (bylev.i in bylevs) {
+          i <- i + 1
+          sel.i <- byvar == bylev.i
+          x$w.random[sel.i] <- x$w.random[sel.i] / w.random.w[i]
+        }
+        w.random.w.p <- ifelse(is.na(w.random.w), NA, 100)
+      }
+      else {
+        if (!all(is.na(w.random.w)) && sum(w.random.w) > 0)
+          w.random.w.p <- round(100 * w.random.w / sum(w.random.w, na.rm = TRUE), digits.weight)
+        else
+          w.random.w.p <- w.random.w
+      }
     }
     else {
       TE.random.w <- lower.random.w <- upper.random.w <- rep(NA, n.by)
@@ -2278,6 +2302,10 @@ forest.meta <- function(x,
       w.random.w.p <- rep(NA, n.by)
       text.random.w <- rep("", n.by)
     }
+    ##
+    hetstat.w <- vector("list", n.by)
+    for (i in 1:n.by)
+      hetstat.w[[i]] <- ""
     ##
     if (hetstat) {
       ##
@@ -2344,7 +2372,6 @@ forest.meta <- function(x,
       while(any(grepl("  ", hetstat.Rb.w)))
         hetstat.Rb.w <- gsub("  ", " ", hetstat.Rb.w)
       ##
-      hetstat.w <- vector("list", n.by)
       for (i in 1:n.by) {
         if (revman5)
           hetstat.w[[i]] <- substitute(paste(hl,
@@ -2644,11 +2671,6 @@ forest.meta <- function(x,
           hetstat.w[[i]] <- paste(hetlab, "Not applicable", sep = "")
       }
     }
-    else {
-      hetstat.w <- vector("list", n.by)
-      for (i in 1:n.by)
-        hetstat.w[[i]] <- ""
-    }
     ##
     TE.w <- c(TE.fixed.w, TE.random.w, rep(NA, 3 * n.by))
     lowTE.w <- c(lower.fixed.w, lower.random.w, rep(NA, 3 * n.by))
@@ -2912,7 +2934,7 @@ forest.meta <- function(x,
       uppTE.w <- irscale * uppTE.w
     }
   }
-  ##    
+  ##
   if (!comb.fixed) {
     TE.fixed    <- NA
     lowTE.fixed <- NA
@@ -2931,15 +2953,23 @@ forest.meta <- function(x,
   }
   ##
   if (!metainf.metacum) {
-    if (!all(is.na(x$w.fixed)) && sum(x$w.fixed) > 0)
-      w.fixed.p <- round(100 * x$w.fixed / sum(x$w.fixed, na.rm = TRUE), digits.weight)
-    else
-      w.fixed.p <- x$w.fixed
+    if (by & !overall)
+      w.fixed.p <- round(100 * x$w.fixed, digits.weight)
+    else {
+      if (!all(is.na(x$w.fixed)) && sum(x$w.fixed) > 0)
+        w.fixed.p <- round(100 * x$w.fixed / sum(x$w.fixed, na.rm = TRUE), digits.weight)
+      else
+        w.fixed.p <- x$w.fixed
+    }
     ##
-    if (!all(is.na(x$w.random)) && sum(x$w.random) > 0)
-      w.random.p <- round(100 * x$w.random / sum(x$w.random, na.rm = TRUE), digits.weight)
-    else
-      w.random.p <- x$w.random
+    if (by & !overall)
+      w.random.p <- round(100 * x$w.random, digits.weight)
+    else {
+      if (!all(is.na(x$w.random)) && sum(x$w.random) > 0)
+        w.random.p <- round(100 * x$w.random / sum(x$w.random, na.rm = TRUE), digits.weight)
+      else
+        w.random.p <- x$w.random
+    }
   }
   else {
     w.fixed.p  <- rep(NA, length(TE))
@@ -3692,8 +3722,10 @@ forest.meta <- function(x,
   ## y-axis:
   ##
   ##
-  if (any(rightcols %in% c("n.e", "n.c")) |
-      any(leftcols  %in% c("n.e", "n.c")) |
+  if ((!(metaprop | metacor) &
+         (any(rightcols %in% c("n.e", "n.c")) |
+            any(leftcols  %in% c("n.e", "n.c")))
+       ) |
       (metainc &
          (any(rightcols %in% c("time.e", "time.c")) |
             any(leftcols  %in% c("time.e", "time.c")))
@@ -3702,8 +3734,8 @@ forest.meta <- function(x,
          (any(rightcols %in% c("sd.e", "sd.c")) |
             any(leftcols  %in% c("sd.e", "sd.c")))
        ) |
-      !is.null(lab.e.attach.to.col) |
-      !is.null(lab.c.attach.to.col) |
+      (!is.null(lab.e.attach.to.col) & !is.null(lab.e)) |
+      (!is.null(lab.c.attach.to.col) & !is.null(lab.c)) |
       newline
       ) {
     yHead <- 2
@@ -3896,7 +3928,7 @@ forest.meta <- function(x,
   }
   ##
   yNext <- max.yTE + ifelse(max.yTE == 0 | !addrow.overall, 1, 2)
-  ##  
+  ##
   if (!is.na(ref) & missing(xlab.pos))
     if (ref <= min(xlim) | ref >= max(xlim))
       xlab.pos <- mean(xlim)
@@ -3976,7 +4008,7 @@ forest.meta <- function(x,
   if (!comb.fixed & !pooled.totals) text.fixed <- ""
   if (!comb.random) text.random <- ""
   if (!prediction) text.predict <- ""
-  ##  
+  ##
   yTE <- yHead + yTE + addrow
   ##
   yTE.fixed  <- yHead + yTE.fixed + addrow
@@ -3996,7 +4028,7 @@ forest.meta <- function(x,
   if (by) {
     yBylab <- yHead + yBylab + addrow
     yTE.w  <- yHead + yTE.w + addrow
-    ##  
+    ##
     yLab <- c(yHead,
               yTE.fixed, yTE.random, yPredict,
               yStats,
@@ -4276,7 +4308,7 @@ forest.meta <- function(x,
   ##
   col.TE <- formatcol(labs[["lab.TE"]], TE.format, yS, just.cols)
   col.seTE <- formatcol(labs[["lab.seTE"]], seTE.format, yS, just.cols)
-  ##  
+  ##
   col.n.e <- formatcol(labs[["lab.n.e"]], Ne.format, yS, just.cols)
   col.n.c <- formatcol(labs[["lab.n.c"]], Nc.format, yS, just.cols)
   ##
@@ -4307,7 +4339,7 @@ forest.meta <- function(x,
   ##
   col.TE.calc <- formatcol(longer.TE, TE.format, yS, just.cols)
   col.seTE.calc <- formatcol(longer.seTE, seTE.format, yS, just.cols)
-  ##  
+  ##
   col.n.e.calc <- formatcol(longer.n.e, Ne.format, yS, just.cols)
   col.n.c.calc <- formatcol(longer.n.c, Nc.format, yS, just.cols)
   ##
@@ -4870,7 +4902,7 @@ forest.meta <- function(x,
     ##
     if (!is.na(ref) && (col$range[1] <= ref & ref <= col$range[2]))
       grid.lines(x = unit(ref, "native"),
-                 y = unit(c(ymin.line,
+                 y = unit(c(ymin.line - (!addrow & !overall),
                             ymax.line +
                             (print.label & !bottom.lr)),
                           "lines"),
@@ -4987,7 +5019,7 @@ forest.meta <- function(x,
       grid.text(label.left,
                 x = unit(xlab.pos - (xlim[2] - xlim[1]) / 30, "native"),
                 y = if (bottom.lr)
-                      unit(ymin.line - 2.5, "lines")
+                      unit(ymin.line - 2.5 - (!addrow & !overall), "lines")
                     else
                       unit(max(yLab, na.rm = TRUE) -
                            ifelse(is.na(yHeadadd), 0.5, 1.5), "lines"),
@@ -4997,7 +5029,7 @@ forest.meta <- function(x,
         grid.text(add.label.left,
                   x = unit(xlab.pos - (xlim[2] - xlim[1]) / 30, "native"),
                   y = if (bottom.lr)
-                        unit(ymin.line - 2.5 - 1, "lines")
+                        unit(ymin.line - 2.5 - (!addrow & !overall) - 1, "lines")
                       else
                         unit(max(yLab, na.rm = TRUE) -
                              ifelse(is.na(yHeadadd), 0.5, 1.5) + 1, "lines"),
@@ -5007,7 +5039,7 @@ forest.meta <- function(x,
       grid.text(label.right,
                 x = unit(xlab.pos + (xlim[2] - xlim[1]) / 30, "native"),
                 y = if (bottom.lr)
-                      unit(ymin.line - 2.5, "lines")
+                      unit(ymin.line - 2.5 - (!addrow & !overall), "lines")
                     else
                       unit(max(yLab, na.rm = TRUE) -
                            ifelse(is.na(yHeadadd), 0.5, 1.5), "lines"),
@@ -5017,7 +5049,7 @@ forest.meta <- function(x,
         grid.text(add.label.right,
                   x = unit(xlab.pos + (xlim[2] - xlim[1]) / 30, "native"),
                   y = if (bottom.lr)
-                        unit(ymin.line - 2.5 - 1, "lines")
+                        unit(ymin.line - 2.5 - (!addrow & !overall) - 1, "lines")
                       else
                         unit(max(yLab, na.rm = TRUE) -
                              ifelse(is.na(yHeadadd), 0.5, 1.5) + 1, "lines"),
@@ -5029,7 +5061,7 @@ forest.meta <- function(x,
     ##
     grid.text(xlab,
               x = unit(xlab.pos, "native"),
-              y = unit(ymin.line - 2.5 -
+              y = unit(ymin.line - 2.5 - (!addrow & !overall) -
                        1 * (print.label & bottom.lr) -
                        1 * (print.label & bottom.lr &
                             (newline.label.right | newline.label.left)),
@@ -5218,7 +5250,7 @@ forest.meta <- function(x,
     if (i == 1) {
       if (leftcols[[i]] == "col.studlab" & !is.null(del.lines))
         x1 <- unit.c(wcalc(cols.calc[[leftcols[i]]]$labels[-del.lines]))
-      else
+       else
         x1 <- unit.c(wcalc(cols.calc[[leftcols[i]]]$labels))
     }
     else {
@@ -5269,7 +5301,7 @@ forest.meta <- function(x,
     nrow <- max(addline + c(yTE, yTE.fixed, yTE.random, yPredict,
                             yStats), na.rm = TRUE)
   }
-  ##  
+  ##
   summary.lines <- hetstat + test.overall.fixed + test.overall.random +
     test.subgroup.fixed + test.subgroup.random
   ymin.line <- summary.lines

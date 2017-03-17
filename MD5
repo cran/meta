@@ -1,7 +1,7 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
-c976c5121cd27d9517c8970220ad2162 *DESCRIPTION
+c0e22c0d9a5e39a34be347b9c7adef2b *DESCRIPTION
 224ab32477554c8a6e46a1c41114c5d2 *NAMESPACE
-6864f6a1d57e21aec4290ab54e5bfef2 *NEWS
+e2ecf62e7ec6dd07fbe7b69689624682 *NEWS
 0c5c46bedc6cf58cedc91e29b267891f *R/Rb.R
 c84bf38a1e5278dd6a76297bdac89ab8 *R/as.data.frame.meta.R
 3bc9a21ef8aad7644764c38decd62701 *R/asin2ir.R
@@ -63,10 +63,10 @@ fea7e4cadd2b11da47e87749c45f4610 *R/metabin.R
 6810c8b8668cfefdd79b5ebc406d4c2f *R/metacont.R
 ff730d201d4c2e2b1711950400547167 *R/metacor.R
 5e7783ea5bfc4167901ea44839c36b42 *R/metacr.R
-cc72791c649b36392d1946cb7bcb97f3 *R/metacum.R
+40ab17cc3760d88398b83e8b0d44e141 *R/metacum.R
 ee82cdb422c3852868ec73c8dae17c2e *R/metagen.R
 59fdabc4a9dd65a6af472cf10be70244 *R/metainc.R
-e59a2d0ba9903551b50f899f72c0655f *R/metainf.R
+a76f325413eff17029ebbf20f2f05b6d *R/metainf.R
 c52ade6a3e31191516d0b5bac6492a59 *R/metaprop.R
 aea0fdc56b5bad4a84792dc785bbface *R/metarate.R
 93bd5f6ad77ed3c7043e2afebba9c498 *R/metareg.R
@@ -132,10 +132,10 @@ d964182e2a7547dd2758749876785332 *man/metabias.Rd
 15b39857c973f00ef1d738059d89fc71 *man/metacont.Rd
 5f37aa178b8d147ae350e6770503a8b2 *man/metacor.Rd
 08246427cddb81744fa9fa9fa46df190 *man/metacr.Rd
-d100bdc418397d7b3e6af1cc757eb077 *man/metacum.Rd
+e45b3ccf01a3bb86c52e5bcd363a19f8 *man/metacum.Rd
 9b233af91756cced36e3c45bdbbde0f8 *man/metagen.Rd
 0e34f832f6dce1d971757d81016d6f53 *man/metainc.Rd
-12b46e7762d65bd12ec8b6a6e726cb68 *man/metainf.Rd
+bccc90b2b594f2629747c133dd6abf6a *man/metainf.Rd
 1fb085e483664e3e20e66cc762a12124 *man/metaprop.Rd
 4302ea1abcdea76cffa1c77b9f8c64cf *man/metarate.Rd
 0303861eb1728190b0b7233b2dcd56a2 *man/metareg.Rd

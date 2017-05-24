@@ -49,8 +49,8 @@ add.xlab <- function(x, column,
   ##
   if (clines$newline) {
     newline.xlab <- TRUE
-    xlab <- clines$bottom
-    add.xlab <- clines$top
+    xlab <- clines$top
+    add.xlab <- clines$bottom
   }
   else
     newline.xlab <- FALSE
@@ -353,7 +353,7 @@ draw.lines <- function(x, column,
   ##
   ## Line for fixed effect estimate:
   ##
-  if (comb.fixed & overall)
+  if (comb.fixed & overall & !is.na(TE.fixed))
     if (x$range[1] <= TE.fixed & TE.fixed <= x$range[2])
       if (!is.null(lty.fixed))
         grid.lines(x = unit(TE.fixed, "native"),
@@ -364,7 +364,7 @@ draw.lines <- function(x, column,
   ##
   ## Line for random effects estimate:
   ##
-  if (comb.random & overall)
+  if (comb.random & overall & !is.na(TE.random))
     if (x$range[1] <= TE.random & TE.random <= x$range[2])
       if (!is.null(lty.random) & !is.na(TE.random))
         grid.lines(x = unit(TE.random, "native"),
@@ -525,9 +525,11 @@ twolines <- function(x, xname = deparse(substitute(x)), arg = FALSE) {
       }
       else if (length(wsplit) != 2) {
         if (arg)
-          stop("Maximum of two lines for argument '", xname, "'.")
+          stop("Maximum of two lines for argument '", xname, "'.",
+               call. = FALSE)
         else
-          stop("Maximum of two lines for label of column '", xname, "'.")
+          stop("Maximum of two lines for label of column '", xname, "'.",
+               call. = FALSE)
       }
       else {
         top <- wsplit[1]

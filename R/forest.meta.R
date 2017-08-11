@@ -10,6 +10,7 @@ forest.meta <- function(x,
                         text.fixed = NULL,
                         text.random = NULL,
                         lty.fixed = 2, lty.random = 3,
+                        col.fixed = "black", col.random = "black",
                         ##
                         prediction = x$prediction,
                         text.predict = NULL,
@@ -264,6 +265,8 @@ forest.meta <- function(x,
     chknumeric(lty.fixed)
   if (!is.null(lty.random))
     chknumeric(lty.random)
+  chkchar(col.fixed)
+  chkchar(col.random)
   chklogical(prediction)
   chklogical(print.subgroup.labels)
   if (!is.null(print.byvar))
@@ -816,8 +819,7 @@ forest.meta <- function(x,
   ##
   log.xaxis <- FALSE
   ##
-  if (missing(ref) && sm %in% c("PLOGIT", "PLN", "PRAW", "PAS", "PFT",
-                                "IR", "IRLN", "IRS", "IRFT"))
+  if (missing(ref) && (is.prop(sm) | is.rate(sm)))
     ref <- NA
   ##
   if (backtransf & is.relative.effect(sm)) {
@@ -840,7 +842,7 @@ forest.meta <- function(x,
   ##
   smlab.null <- is.null(smlab)
   if (smlab.null)
-    if (sm %in% c("IR", "IRLN", "IRS", "IRFT"))
+    if (is.rate(sm))
       smlab <- xlab(sm, backtransf, irscale = irscale, irunit = irunit,
                     newline = !revman5.jama, revman5 = revman5)
     else
@@ -940,13 +942,13 @@ forest.meta <- function(x,
   if (backtransf) {
     if (sm == "ZCOR")
       sm.lab <- "COR"
-    else if (sm %in% c("PLOGIT", "PLN", "PRAW", "PAS", "PFT")) {
+    else if (is.prop(sm)) {
       if (pscale == 1)
         sm.lab <- "Proportion"
       else
         sm.lab <- "Events"
     }
-    else if (sm %in% c("IR", "IRLN", "IRS", "IRFT")) {
+    else if (is.rate(sm)) {
       if (irscale == 1)
         sm.lab <- "Rate"
       else
@@ -1408,7 +1410,7 @@ forest.meta <- function(x,
   if (!by)
     byvar <- rep(1, k.all)
   ##
-  if (by & any(is.na(byvar)))
+  if (by & anyNA(byvar))
     stop("Missing values in 'byvar'")
   ##
   if (allstudies)
@@ -3048,7 +3050,7 @@ forest.meta <- function(x,
     ##
     ## Apply argument 'pscale' to proportions
     ##
-    if (sm %in% c("PLOGIT", "PLN", "PRAW", "PAS", "PFT")) {
+    if (is.prop(sm)) {
       TE <- pscale * TE
       lowTE <- pscale * lowTE
       uppTE <- pscale * uppTE
@@ -3074,7 +3076,7 @@ forest.meta <- function(x,
   ##
   ## Apply argument 'irscale' to rates
   ##
-  if (sm %in% c("IR", "IRLN", "IRS", "IRFT")) {
+  if (is.rate(sm)) {
     TE <- irscale * TE
     lowTE <- irscale * lowTE
     uppTE <- irscale * uppTE
@@ -5037,10 +5039,10 @@ forest.meta <- function(x,
   draw.lines(col.forest, j,
              ref, TE.fixed, TE.random,
              overall, comb.fixed, comb.random, prediction,
-             lwd, lty.fixed, lty.random,
-             spacing * ymin.line, spacing * ymax.line,
-             spacing * (ymin.line + 0.5), spacing * ymax.line,
-             addrow, print.label, bottom.lr)
+             lwd, lty.fixed, lty.random, col.fixed, col.random,
+             ymin.line, ymax.line,
+             addrow, print.label, bottom.lr,
+             spacing)
   ##
   draw.axis(col.forest, j, yS, log.xaxis, at, label,
             fs.axis, ff.axis, lwd,

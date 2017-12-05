@@ -1,5 +1,4 @@
 print.summary.meta <- function(x,
-                               digits = gs("digits"),
                                comb.fixed = x$comb.fixed,
                                comb.random = x$comb.random,
                                prediction = x$prediction,
@@ -12,6 +11,7 @@ print.summary.meta <- function(x,
                                irscale = x$irscale,
                                irunit = x$irunit,
                                bylab.nchar = 35,
+                               digits = gs("digits"),
                                digits.zval = gs("digits.zval"),
                                digits.pval = max(gs("digits.pval"), 2),
                                digits.pval.Q = max(gs("digits.pval.Q"), 2),
@@ -20,6 +20,7 @@ print.summary.meta <- function(x,
                                digits.H = gs("digits.H"),
                                digits.I2 = gs("digits.I2"),
                                scientific.pval = gs("scientific.pval"),
+                               big.mark = gs("big.mark"),
                                print.I2 = gs("print.I2"),
                                print.H = gs("print.H"),
                                print.Rb = gs("print.Rb"),
@@ -120,8 +121,9 @@ print.summary.meta <- function(x,
   sm <- x$sm
   ##
   bip <- inherits(x, c("metabin", "metainc", "metaprop"))
-  null.given <- inherits(x, c("metaprop", "metarate", "metacor")) |
-    is.prop(sm) | is.rate(sm) | is.cor(sm)
+  null.given <- (inherits(x, c("metacor", "metagen", "metamean",
+                               "metaprop", "metarate")) |
+                 is.prop(sm) | is.rate(sm) | is.cor(sm) | is.mean(sm))
   ##
   null.effect <- x$null.effect
   ##
@@ -129,7 +131,7 @@ print.summary.meta <- function(x,
     ##
     if (sm %in% c("PFT", "PAS"))
       null.effect <- asin(sqrt(null.effect))
-    else if (sm %in% c("PLN", "IRLN"))
+    else if (is.log.effect(sm))
       null.effect <- log(null.effect)
     else if (sm == c("PLOGIT"))
       null.effect <- log(null.effect / (1 - null.effect))
@@ -140,6 +142,8 @@ print.summary.meta <- function(x,
   }
   ##
   prediction <- prediction & k >= 3
+  if (is.na(prediction))
+    prediction <- FALSE
   ##
   if (is.null(x$df.Q))
     df.Q <- k - 1
@@ -164,6 +168,8 @@ print.summary.meta <- function(x,
   if (backtransf) {
     if (sm == "ZCOR")
       sm.lab <- "COR"
+    else if (is.mean(sm))
+      sm.lab <- "mean"
     else if (is.prop) {
       if (pscale == 1)
         sm.lab <- "proportion"
@@ -348,7 +354,9 @@ print.summary.meta <- function(x,
     lowI2 <- round(100 * x$I2$lower, digits.I2)
     uppI2 <- round(100 * x$I2$upper, digits.I2)
     print.ci.I2 <- ((Q > k & k >= 2) | (Q <= k & k > 2)) &
-                   !(is.na(lowI2) | is.na(uppI2))
+      !(is.na(lowI2) | is.na(uppI2))
+    if (is.na(print.ci.I2))
+      print.ci.I2 <- FALSE
   }
   else
     print.ci.I2 <- FALSE
@@ -368,15 +376,21 @@ print.summary.meta <- function(x,
   if (header)
     crtitle(x)
   ##
-  if (k.all == 1) {
+  if (is.na(k.all)) {
+    ## Do nothing
+  }
+  else if (k.all == 1) {
     ##
     ## Print results for a single study
     ##
-    res <- cbind(format.NA(TE.fixed, digits, "NA"),
-                 p.ci(format.NA(lowTE.fixed, digits, "NA"),
-                      format.NA(uppTE.fixed, digits, "NA")),
-                 format.NA(zTE.fixed, digits.zval),
-                 format.p(pTE.fixed, digits = digits.pval,
+    res <- cbind(formatN(TE.fixed, digits, "NA",
+                         big.mark = big.mark),
+                 formatCI(formatN(lowTE.fixed, digits, "NA",
+                                  big.mark = big.mark),
+                          formatN(uppTE.fixed, digits, "NA",
+                                  big.mark = big.mark)),
+                 formatN(zTE.fixed, digits.zval, big.mark = big.mark),
+                 formatPT(pTE.fixed, digits = digits.pval,
                           scientific = scientific.pval))
     dimnames(res) <- list("", c(sm.lab, x$ci.lab, "z", "p-value"))
     prmatrix(res, quote = FALSE, right = TRUE, ...)
@@ -403,7 +417,12 @@ print.summary.meta <- function(x,
             pscale = pscale,
             irscale = irscale,
             irunit = irunit,
-            null.effect = if (null.given) null.effect else 0)
+            null.effect = if (null.given) null.effect else 0,
+            big.mark = big.mark,
+            digits = digits, digits.tau2 = digits.tau2)
+  }
+  else if (is.na(k)) {
+    ## Do nothing
   }
   else {
     ##
@@ -416,30 +435,37 @@ print.summary.meta <- function(x,
              comb.fixed & sm %in% c("RD", "IRD") &
              (!is.null(x$k.MH) == 1 && k != x$k.MH)))
           cat(paste("Number of studies combined:   k.MH = ", x$k.MH,
-                    " (fixed effect), k = ", k, " (random effects)\n\n", sep = ""))
+                    " (fixed effect), k = ", format(k, big.mark = big.mark),
+                    " (random effects)\n\n", sep = ""))
         else
-          cat(paste("Number of studies combined: k = ", k, "\n\n", sep = ""))
+          cat(paste("Number of studies combined: k = ",
+                    format(k, big.mark = big.mark), "\n\n", sep = ""))
       }
       else
-        cat(paste("Number of studies combined: k = ", k,
-                  " (with ", x$k0, " added studies)\n\n", sep = ""))
+        cat(paste("Number of studies combined: k = ",
+                  format(k, big.mark = big.mark),
+                  " (with ",
+                  format(x$k0, big.mark = big.mark),
+                  " added studies)\n\n", sep = ""))
       ##
-      res <- cbind(format(c(if (comb.fixed) TE.fixed,
-                            if (comb.random) TE.random,
-                            if (prediction) NA)),
-                   p.ci(format.NA(c(if (comb.fixed) lowTE.fixed,
-                                    if (comb.random) lowTE.random,
-                                    if (prediction) lowTE.predict),
-                                  digits, "NA"),
-                        format.NA(c(if (comb.fixed) uppTE.fixed,
-                                    if (comb.random) uppTE.random,
-                                    if (prediction) uppTE.predict),
-                                  digits, "NA")),
-                   format.NA(c(if (comb.fixed) zTE.fixed,
-                               if (comb.random) zTE.random,
-                               if (prediction) NA),
-                             digits = digits.zval),
-                   format.p(c(if (comb.fixed) pTE.fixed,
+      res <- cbind(formatN(c(if (comb.fixed) TE.fixed,
+                             if (comb.random) TE.random,
+                             if (prediction) NA),
+                           digits, "NA",
+                           big.mark = big.mark),
+                   formatCI(formatN(c(if (comb.fixed) lowTE.fixed,
+                                      if (comb.random) lowTE.random,
+                                      if (prediction) lowTE.predict),
+                                    digits, "NA", big.mark = big.mark),
+                            formatN(c(if (comb.fixed) uppTE.fixed,
+                                      if (comb.random) uppTE.random,
+                                      if (prediction) uppTE.predict),
+                                    digits, "NA", big.mark = big.mark)),
+                   formatN(c(if (comb.fixed) zTE.fixed,
+                             if (comb.random) zTE.random,
+                             if (prediction) NA),
+                           digits = digits.zval, big.mark = big.mark),
+                   formatPT(c(if (comb.fixed) pTE.fixed,
                               if (comb.random) pTE.random,
                               if (prediction) NA),
                             digits = digits.pval,
@@ -464,8 +490,9 @@ print.summary.meta <- function(x,
       prmatrix(res, quote = FALSE, right = TRUE, ...)
       ##
       if (inherits(x, "metabin") && print.CMH) {
-        Qdata <- cbind(format.NA(round(Q.CMH, digits.Q), digits.Q, "NA"),
-                       1, format.p(pvalQ(Q.CMH, 1),
+        Qdata <- cbind(formatN(round(Q.CMH, digits.Q), digits.Q, "NA",
+                               big.mark = big.mark),
+                       1, formatPT(pvalQ(Q.CMH, 1),
                                    digits = digits.pval.Q,
                                    scientific = scientific.pval))
         dimnames(Qdata) <- list("", c("Q", "d.f.", "p-value"))
@@ -480,47 +507,54 @@ print.summary.meta <- function(x,
     ## Print information on heterogeneity
     ##
     if (k.all > 1)
-      cat(paste("\nQuantifying heterogeneity:\n ",
+      cat(paste("\nQuantifying heterogeneity:\n",
                 ##
-                if (is.na(x$tau))
-                  paste(text.tau2, "= NA")
-                else if (x$tau^2 > 0 & x$tau^2 < 0.0001)
-                  paste(text.tau2, format.tau(x$tau^2))
-                else
-                  paste(text.tau2, " = ",
-                        ifelse(x$tau == 0,
-                               "0",
-                               format.NA(round(x$tau^2, digits.tau2), digits.tau2)),
-                        sep = ""),
+                formatPT(x$tau^2,
+                         lab = TRUE, labval = text.tau2,
+                         digits = digits.tau2,
+                         lab.NA = "NA",
+                         big.mark = big.mark),
                 ##
                 if (print.H)
                   paste("; H = ",
-                        if (is.na(H)) "NA" else format.NA(H, digits.H, "NA"),
+                        if (is.na(H)) "NA" else formatN(H, digits.H, "NA",
+                                                        big.mark = big.mark),
                         ifelse(k > 2 & !(is.na(lowH) | is.na(uppH)),
-                               paste(" ", p.ci(format.NA(lowH, digits.H),
-                                               format.NA(uppH, digits.H)),
+                               paste(" ", formatCI(formatN(lowH, digits.H,
+                                                           big.mark = big.mark),
+                                                   formatN(uppH, digits.H,
+                                                           big.mark = big.mark)),
                                      sep = ""),
                                ""),
                         sep = ""),
                 ##
                 if (print.I2)
                   paste("; ", text.I2, " = ",
-                        if (is.na(I2)) "NA" else paste(format.NA(I2, digits.I2), "%", sep = ""),
+                        if (is.na(I2)) "NA" else paste(formatN(I2, digits.I2),
+                                                       "%", sep = ""),
                         if (print.ci.I2)
                           paste(" ",
-                                p.ci(paste(format.NA(lowI2, digits.I2), "%", sep = ""),
-                                     paste(format.NA(uppI2, digits.I2), "%", sep = "")),
+                                formatCI(paste(formatN(lowI2, digits.I2),
+                                               "%", sep = ""),
+                                         paste(formatN(uppI2, digits.I2),
+                                               "%", sep = "")),
                                 sep = ""),
                         sep = ""),
                 ##
                 if (print.Rb)
                   paste("; ",
                         text.Rb, " = ",
-                        if (is.na(Rb)) "NA" else paste(format.NA(Rb, digits.I2), "%", sep = ""),
+                        if (is.na(Rb)) "NA" else paste(formatN(Rb, digits.I2,
+                                                               big.mark = big.mark),
+                                                       "%", sep = ""),
                         ifelse(k > 2 & !(is.na(lowRb) | is.na(uppRb)),
                                paste(" ",
-                                     p.ci(paste(format.NA(lowRb, digits.I2), "%", sep = ""),
-                                          paste(format.NA(uppRb, digits.I2), "%", sep = "")),
+                                     formatCI(paste(formatN(lowRb, digits.I2,
+                                                            big.mark = big.mark),
+                                                    "%", sep = ""),
+                                              paste(formatN(uppRb, digits.I2,
+                                                            big.mark = big.mark),
+                                                    "%", sep = "")),
                                      sep = ""),
                                ""),
                         sep = ""),
@@ -531,16 +565,19 @@ print.summary.meta <- function(x,
       if (k > 1) {
         if (x$method != "GLMM") {
           pval.Q.glmm <- 
-          Qdata <- cbind(format.NA(round(Q, digits.Q), digits.Q, "NA"),
-                         df.Q, format.p(pvalQ(Q, df.Q),
-                                        digits = digits.pval.Q,
-                                        scientific = scientific.pval))
+            Qdata <- cbind(formatN(round(Q, digits.Q), digits.Q, "NA",
+                                   big.mark = big.mark),
+                           format(df.Q, big.mark = big.mark),
+                           formatPT(pvalQ(Q, df.Q),
+                                    digits = digits.pval.Q,
+                                    scientific = scientific.pval))
           dimnames(Qdata) <- list("", c("Q", "d.f.", "p-value"))
         }
         else {
-          Qdata <- cbind(format.NA(round(c(Q, Q.LRT), digits.Q), digits.Q, "NA"),
-                         df.Q,
-                         format.p(pvalQ(c(Q, Q.LRT), df.Q),
+          Qdata <- cbind(formatN(round(c(Q, Q.LRT), digits.Q), digits.Q, "NA",
+                                 big.mark = big.mark),
+                         format(df.Q, big.mark = big.mark),
+                         formatPT(pvalQ(c(Q, Q.LRT), df.Q),
                                   digits = digits.pval.Q,
                                   scientific = scientific.pval),
                          c("Wald-type", "Likelihood-Ratio"))
@@ -560,23 +597,34 @@ print.summary.meta <- function(x,
           ##
           ## Subgroup analysis based on fixed effect model
           ##
-          Tdata <- cbind(format(k.w),
-                         format(TE.fixed.w),
-                         p.ci(format.NA(lowTE.fixed.w, digits, "NA"),
-                              format.NA(uppTE.fixed.w, digits, "NA")),
-                         format.NA(round(Q.w, digits.Q), digits.Q),
-                         ifelse(k.w == 1, "--", format.tau(x$tau.w^2)),
+          Tdata <- cbind(format(k.w, big.mark = big.mark),
+                         formatN(TE.fixed.w, digits, "NA",
+                                 big.mark = big.mark),
+                         formatCI(formatN(lowTE.fixed.w, digits, "NA",
+                                          big.mark = big.mark),
+                                  formatN(uppTE.fixed.w, digits, "NA",
+                                          big.mark = big.mark)),
+                         formatN(round(Q.w, digits.Q), digits.Q,
+                                 big.mark = big.mark),
+                         ifelse(k.w == 1, "--",
+                                formatPT(x$tau.w^2,
+                                         digits = digits.tau2,
+                                         big.mark = big.mark,
+                                         noblanks = TRUE)),
                          if (print.I2)
                            ifelse(is.na(I2.w),
                                   "--",
-                                  paste(format.NA(I2.w, digits.I2), "%", sep = "")),
+                                  paste(formatN(I2.w, digits.I2),
+                                        "%", sep = "")),
                          if (print.Rb)
                            ifelse(is.na(Rb.w),
                                   "--",
-                                  paste(format.NA(Rb.w, digits.I2), "%", sep = ""))
+                                  paste(formatN(Rb.w, digits.I2),
+                                        "%", sep = ""))
                          )
           ##
-          bylab <- bylabel(x$bylab, bylevs, print.byvar, byseparator)
+          bylab <- bylabel(x$bylab, bylevs, print.byvar, byseparator,
+                           big.mark = big.mark)
           ##
           dimnames(Tdata) <- list(bylab,
                                   c("  k", sm.lab, x$ci.lab,
@@ -584,30 +632,38 @@ print.summary.meta <- function(x,
                                     if (print.I2) text.I2,
                                     if (print.Rb) text.Rb)
                                   )
-          cat("\nResults for subgroups (fixed effect model):\n")
+          if (inherits(x, "metabind"))
+            cat("\nResults for meta-analyses (fixed effect model):\n")
+          else
+            cat("\nResults for subgroups (fixed effect model):\n")
           prmatrix(Tdata, quote = FALSE, right = TRUE, ...)
           ##
-          cat("\nTest for subgroup differences (fixed effect model):\n")
-          if (x$method == "MH") {
-            Qdata <- cbind(format.NA(round(Q.b.fixed, digits.Q), digits.Q, "NA"),
-                           df.Q.b, format.p(pvalQ(Q.b.fixed, df.Q.b),
-                                            digits = digits.pval.Q,
-                                            scientific = scientific.pval))
-            dimnames(Qdata) <- list("Between groups  ",
-                                    c("Q", "d.f.", "p-value"))
-            prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
-          }
-          else {
-            Qs  <- c(Q.b.fixed, Q.w.fixed)
-            dfs <- c(df.Q.b, df.Q.w)
-            Qdata <- cbind(format.NA(round(Qs, digits.Q), digits.Q, "NA"),
-                           dfs,
-                           format.p(pvalQ(Qs, dfs),
-                                    digits = digits.pval.Q,
-                                    scientific = scientific.pval))
-            dimnames(Qdata) <- list(c("Between groups", "Within groups"),
-                                    c("Q", "d.f.", "p-value"))
-            prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
+          if (!inherits(x, "metabind")) {
+            cat("\nTest for subgroup differences (fixed effect model):\n")
+            if (x$method == "MH") {
+              Qdata <- cbind(formatN(round(Q.b.fixed, digits.Q), digits.Q, "NA",
+                                     big.mark = big.mark),
+                             format(df.Q.b, big.mark = big.mark),
+                             formatPT(pvalQ(Q.b.fixed, df.Q.b),
+                                      digits = digits.pval.Q,
+                                      scientific = scientific.pval))
+              dimnames(Qdata) <- list("Between groups  ",
+                                      c("Q", "d.f.", "p-value"))
+              prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
+            }
+            else {
+              Qs  <- c(Q.b.fixed, Q.w.fixed)
+              dfs <- c(df.Q.b, df.Q.w)
+              Qdata <- cbind(formatN(round(Qs, digits.Q), digits.Q, "NA",
+                                     big.mark = big.mark),
+                             format(dfs, big.mark = big.mark),
+                             formatPT(pvalQ(Qs, dfs),
+                                      digits = digits.pval.Q,
+                                      scientific = scientific.pval))
+              dimnames(Qdata) <- list(c("Between groups", "Within groups"),
+                                      c("Q", "d.f.", "p-value"))
+              prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
+            }
           }
         }
         ##
@@ -615,23 +671,35 @@ print.summary.meta <- function(x,
           ##
           ## Subgroup analysis based on random effects model
           ##
-          Tdata <- cbind(format(k.w),
-                         format(TE.random.w),
-                         p.ci(format.NA(lowTE.random.w, digits, "NA"),
-                              format.NA(uppTE.random.w, digits, "NA")),
-                         format.NA(round(Q.w, digits.Q), digits.Q),
-                         ifelse(k.w == 1, "--", format.tau(x$tau.w^2)),
+          Tdata <- cbind(format(k.w, big.mark = big.mark),
+                         formatN(TE.random.w, digits, "NA",
+                                 big.mark = big.mark),
+                         formatCI(formatN(lowTE.random.w, digits, "NA",
+                                          big.mark = big.mark),
+                                  formatN(uppTE.random.w, digits, "NA",
+                                          big.mark = big.mark)),
+                         formatN(round(Q.w, digits.Q), digits.Q,
+                                 big.mark = big.mark),
+                         ifelse(k.w == 1, "--",
+                                formatPT(x$tau.w^2,
+                                         digits = digits.tau2,
+                                         big.mark = big.mark,
+                                         noblanks = TRUE)),
                          if (print.I2)
                            ifelse(is.na(I2.w),
                                   "--",
-                                  paste(format.NA(I2.w, digits.I2), "%", sep = "")),
+                                  paste(formatN(I2.w, digits.I2),
+                                        "%", sep = "")),
                          if (print.Rb)
                            ifelse(is.na(Rb.w),
                                   "--",
-                                  paste(format.NA(Rb.w, digits.I2), "%", sep = ""))
+                                  paste(formatN(Rb.w, digits.I2,
+                                                big.mark = big.mark),
+                                        "%", sep = ""))
                          )
           ##
-          bylab <- bylabel(x$bylab, bylevs, print.byvar, byseparator)
+          bylab <- bylabel(x$bylab, bylevs, print.byvar, byseparator,
+                           big.mark = big.mark)
           ##
           dimnames(Tdata) <- list(bylab,
                                   c("  k", sm.lab, x$ci.lab,
@@ -639,32 +707,45 @@ print.summary.meta <- function(x,
                                     if (print.I2) text.I2,
                                     if (print.Rb) text.Rb)
                                   )
-          cat("\nResults for subgroups (random effects model):\n")
+          if (inherits(x, "metabind"))
+            cat("\nResults for meta-analyses (random effects model):\n")
+          else
+            cat("\nResults for subgroups (random effects model):\n")
           prmatrix(Tdata, quote = FALSE, right = TRUE, ...)
           ##
-          cat("\nTest for subgroup differences (random effects model):\n")
-          if (is.na(Q.w.random)) {
-            Qdata <- cbind(format.NA(round(Q.b.random, digits.Q), digits.Q, "NA"),
-                           df.Q.b, format.p(pvalQ(Q.b.random, df.Q.b),
-                                            digits = digits.pval.Q,
-                                            scientific = scientific.pval))
-            dimnames(Qdata) <- list("Between groups  ",
-                                    c("Q", "d.f.", "p-value"))
+          if (!inherits(x, "metabind")) {
+            cat("\nTest for subgroup differences (random effects model):\n")
+            if (is.na(Q.w.random)) {
+              Qdata <- cbind(formatN(round(Q.b.random, digits.Q), digits.Q,
+                                     "NA", big.mark = big.mark),
+                             format(df.Q.b, big.mark = big.mark),
+                             formatPT(pvalQ(Q.b.random, df.Q.b),
+                                      digits = digits.pval.Q,
+                                      scientific = scientific.pval))
+              dimnames(Qdata) <- list("Between groups  ",
+                                      c("Q", "d.f.", "p-value"))
+            }
+            else {
+              Qs  <- c(Q.b.random, Q.w.random)
+              dfs <- c(df.Q.b, df.Q.w)
+              Qdata <- cbind(formatN(round(Qs, digits.Q), digits.Q, "NA",
+                                     big.mark = big.mark),
+                             format(dfs, big.mark = big.mark),
+                             formatPT(pvalQ(Qs, dfs),
+                                      digits = digits.pval.Q,
+                                      scientific = scientific.pval))
+              dimnames(Qdata) <- list(c("Between groups", "Within groups"),
+                                      c("Q", "d.f.", "p-value"))
+            }
+            prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
           }
-          else {
-            Qs  <- c(Q.b.random, Q.w.random)
-            dfs <- c(df.Q.b, df.Q.w)
-            Qdata <- cbind(format.NA(round(Qs, digits.Q), digits.Q, "NA"),
-                           dfs, format.p(pvalQ(Qs, dfs),
-                                         digits = digits.pval.Q,
-                                         scientific = scientific.pval))
-            dimnames(Qdata) <- list(c("Between groups", "Within groups"),
-                                    c("Q", "d.f.", "p-value"))
-          }
-          prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
         }
       }
     }
+  }
+  
+  
+  if ((comb.fixed | comb.random | prediction) & (is.na(k.all) | k.all > 1)) {
     ##
     ## Print information on summary method:
     ##
@@ -696,7 +777,9 @@ print.summary.meta <- function(x,
             pscale = pscale,
             irscale = irscale,
             irunit = irunit,
-            null.effect = if (null.given) null.effect else 0)
+            null.effect = if (null.given) null.effect else 0,
+            big.mark = big.mark,
+            digits = digits, digits.tau2 = digits.tau2)
   }
   
   

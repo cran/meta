@@ -1,5 +1,3 @@
-useDynLib(meta, .registration = TRUE)
-
 export(ci, settings.meta, forest, forest.meta,
        funnel, funnel.default, funnel.meta,
        baujat, baujat.meta,
@@ -7,9 +5,10 @@ export(ci, settings.meta, forest, forest.meta,
        as.data.frame.meta,
        metabias, metabias.default, metabias.meta,
        metabin, metacont, metacor, metacr, metaprop, metarate,
-       metareg, metainc,
+       metareg, metainc, metamean,
        metacum, metagen, metainf, radial, radial.default, radial.meta,
        print.meta, print.metabias,
+       metabind, forest.metabind,
        read.rm5, print.rm5, print.summary.rm5, summary.rm5, metabias.rm5,
        read.mtv,
        print.summary.meta, summary.meta,
@@ -19,22 +18,23 @@ export(ci, settings.meta, forest, forest.meta,
        gs)
 
 # not visible:
-# asin2p, format.p, meta-internal, logit2p, p.ci, rmSpace, xlab, z2cor,
+# asin2p, formatPT, meta-internal, logit2p, formatCI, rmSpace, xlab, z2cor,
 # is.installed.package, crtitle, catmeth,
-# kentau, hypergeometric, linregcore, setOption, warnarg, format.tau,
+# kentau, hypergeometric, linregcore, setOption, warnarg,
 # isquared, calcH, paulemandel, estimate.missing,
 # ciWilsonScore, ciAgrestiCoull, ciSimpleAsymptotic,
 # is.relative.effect, backtransf,
-# hetcalc, chkarg, chklevel, chklogical, format.NA, bylabel, asin2ir, Rb,
+# hetcalc, chkarg, chklevel, chklogical, formatN, bylabel, asin2ir, Rb,
 # setunit, add.label, add.text, add.xlab, draw.axis, draw.ci.square,
 # draw.ci.diamond, draw.ci.predict, draw.forest, draw.lines,
 # formatcol, removeNULL, tg, tgl, twolines, wcalc, pvalQ,
-# is.prop, is.rate
+# is.prop, is.rate, is.log.effect, is.mean
 
 S3method(as.data.frame, meta)
 S3method(baujat, meta)
 S3method(bubble, metareg)
 S3method(forest, meta)
+S3method(forest, metabind)
 S3method(funnel, default)
 S3method(funnel, meta)
 S3method(labbe, default)
@@ -65,7 +65,7 @@ importFrom("grDevices", "gray")
 
 importFrom("graphics", "abline", "axis", "lines", "par", "plot", "points", "polygon", "text")
 
-importFrom("stats", "as.formula", "binom.test", "coef", "lm", "pchisq",
+importFrom("stats", "as.formula", "binom.test", "coef", "cor", "lm", "pchisq",
            "pnorm", "pt", "qnorm", "qt", "runif", "update", "var", "weighted.mean",
            "weights")
 

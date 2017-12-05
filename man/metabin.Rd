@@ -292,8 +292,8 @@ metabin(event.e, n.e, event.c, n.c, studlab,
 
 \value{
   An object of class \code{c("metabin", "meta")} with corresponding
-  \code{print}, \code{summary}, \code{plot} function. The object is a
-  list containing the following components:
+  \code{print}, \code{summary}, and \code{forest} functions. The
+  object is a list containing the following components:
   \item{event.e, n.e, event.c, n.c, studlab, exclude,}{}
   \item{sm, method, incr, allincr, addincr,}{}
   \item{allstudies, MH.exact, RR.cochrane, model.glmm, warn,}{}
@@ -309,14 +309,16 @@ metabin(event.e, n.e, event.c, n.c, studlab,
     effect for individual studies.}
   \item{w.fixed, w.random}{Weight of individual studies (in fixed and
     random effects model).}
-  \item{TE.fixed, seTE.fixed}{Estimated overall treatment effect and
-    standard error (fixed effect model).}
+  \item{TE.fixed, seTE.fixed}{Estimated overall treatment effect,
+    e.g., log risk ratio or risk difference, and standard error (fixed
+    effect model).}
   \item{lower.fixed, upper.fixed}{Lower and upper confidence interval limits
   (fixed effect model).}
   \item{zval.fixed, pval.fixed}{z-value and p-value for test of
     overall treatment effect (fixed effect model).}
-  \item{TE.random, seTE.random}{Estimated overall treatment effect and
-    standard error (random effects model).}
+  \item{TE.random, seTE.random}{Estimated overall treatment effect,
+    e.g., log risk ratio or risk difference, and standard error
+    (random effects model).}
   \item{lower.random, upper.random}{Lower and upper confidence interval limits
     (random effects model).}
   \item{zval.random, pval.random}{z-value or t-value and corresponding
@@ -535,7 +537,6 @@ meta1 <- metabin(event.e, n.e, event.c, n.c,
                  data = Olkin95, subset = c(41, 47, 51, 59),
                  method = "Inverse")
 summary(meta1)
-funnel(meta1)
 
 
 #

@@ -1,7 +1,8 @@
-\name{forest.meta}
+\name{forest}
 
 \alias{forest}
 \alias{forest.meta}
+\alias{forest.metabind}
 
 \title{Forest plot to display the result of a meta-analysis}
 
@@ -22,9 +23,10 @@ forest(x, ...)
        lty.fixed=2, lty.random=3, col.fixed="black", col.random="black",
        prediction=x$prediction,
        text.predict=NULL,
+       subgroup=TRUE,
        print.subgroup.labels=TRUE,
        bylab=x$bylab, print.byvar=x$print.byvar,
-       byseparator=gs("byseparator"),
+       byseparator=x$byseparator,
        text.fixed.w=text.fixed, text.random.w=text.random, bysort=FALSE, 
        pooled.totals=comb.fixed|comb.random, pooled.events=FALSE,
        pooled.times=FALSE, study.results=TRUE,
@@ -138,17 +140,40 @@ forest(x, ...)
        digits.I2=max(gs("digits.I2")-1, 0),
        digits.weight=gs("digits.weight"),
        #
-       digits.mean = NULL, digits.sd = NULL,
-       digits.cor = NULL, digits.time = NULL,
+       digits.mean = digits, digits.sd = digits.se,
+       digits.cor = digits, digits.time = digits,
        #
-       scientific.pval = gs("scientific.pval"),
+       scientific.pval = gs("scientific.pval"), big.mark = gs("big.mark"),
        #
        col.i=col.study, weight=weight.study,
        ...)
+
+\method{forest}{metabind}(x,
+       leftcols, leftlabs,
+       rightcols=c("effect", "ci"), rightlabs,
+       #
+       overall=FALSE, subgroup=FALSE, overall.hetstat=FALSE,
+       #
+       lab.NA="",
+       #
+       digits=gs("digits.forest"),
+       digits.se=gs("digits.se"),
+       digits.zval=gs("digits.zval"),
+       digits.pval=max(gs("digits.pval") - 2, 2),
+       digits.pval.Q=max(gs("digits.pval.Q") - 2, 2),
+       digits.Q=gs("digits.Q"),
+       digits.tau2=gs("digits.tau2"),
+       digits.I2=max(gs("digits.I2") - 1, 0),
+       #
+       scientific.pval=gs("scientific.pval"),
+       big.mark=gs("big.mark"),
+       #
+       smlab,
+       ...)			    
 }
 
 \arguments{
-  \item{x}{An object of class \code{meta}.}
+  \item{x}{An object of class \code{meta} or \code{metabind}.}
   \item{sortvar}{An optional vector used to sort the individual studies
     (must be of same length as \code{x$TE}).}
   \item{studlab}{A logical indicating whether study labels should be
@@ -175,6 +200,10 @@ forest(x, ...)
     should be printed.}
   \item{text.predict}{A character string used in the plot to label the
     prediction interval.}
+  \item{subgroup}{A logical indicating whether subgroup results should
+    be shown in forest plot. This argument is useful in a
+    meta-analysis with subgroups if summaries should not be plotted on
+    group level.}
   \item{print.subgroup.labels}{A logical indicating whether subgroup
     label should be printed.}
   \item{bylab}{A character string with a label for the grouping variable.}
@@ -473,8 +502,8 @@ forest(x, ...)
   \item{spacing}{A numeric determining line spacing in a forest plot.}
   \item{addrow}{A logical value indicating whether an empty row is
     printed above and below study results.}
-  \item{addrow.overall}{A logical value indicating whether an emtpy
-    row is above overall meta-analysis results.}
+  \item{addrow.overall}{A logical value indicating whether an empty
+    row is printed above overall meta-analysis results.}
   \item{addrow.subgroups}{A logical value indicating whether an empty
     row is printed between results for subgroups.}    
   \item{new}{A logical value indicating whether a new figure should
@@ -503,7 +532,7 @@ forest(x, ...)
     statistic, see \code{print.default}.}
   \item{digits.weight}{Minimal number of significant digits for
     weights, see \code{print.default}.}
-       digits.cor = NULL, digits.time = NULL,
+       digits.cor=NULL, digits.time=NULL,
   \item{digits.mean}{Minimal number of significant digits for means;
     only applies to \code{\link{metacont}} objects.}
   \item{digits.sd}{Minimal number of significant digits for standard
@@ -516,6 +545,7 @@ forest(x, ...)
   \item{scientific.pval}{A logical specifying whether p-values should
     be printed in scientific notation, e.g., 1.2345e-01 instead of
     0.12345.}
+  \item{big.mark}{A character used as thousands separator.} 
   \item{col.i}{Deprecated argument (replaced by \code{col.study}).}
   \item{weight}{Deprecated argument (replaced by \code{weight.study}).}
   \item{\dots}{Additional graphical arguments (ignored at the moment).}
@@ -747,7 +777,7 @@ forest(x, ...)
 
 \author{Guido Schwarzer \email{sc@imbi.uni-freiburg.de}}
 
-\seealso{\code{\link{metabin}}, \code{\link{metacont}}, \code{\link{metagen}}, \code{\link{settings.meta}}}
+\seealso{\code{\link{metabin}}, \code{\link{metacont}}, \code{\link{metagen}}, \code{\link{metabind}}, \code{\link{settings.meta}}}
 
 \examples{
 data(Olkin95)
@@ -943,14 +973,14 @@ forest(meta2,
 #
 # Print only subgroup results
 #
-forest(meta2, layout = "subgroup")
+forest(meta2, layout="subgroup")
 
 #
 # Print only subgroup results
 # (and consider text for heterogeneity measures in width of subgroup
 #  column)
 #
-forest(meta2, layout = "subgroup", calcwidth.hetstat = TRUE)
+forest(meta2, layout="subgroup", calcwidth.hetstat=TRUE)
 }
 }
 

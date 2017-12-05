@@ -7,19 +7,13 @@ print.meta <- function(x,
                        backtransf = x$backtransf,
                        pscale = x$pscale,
                        irscale = x$irscale,
-                       irunit = x$irunit,
                        digits = gs("digits"),
                        digits.se = gs("digits.se"),
-                       digits.zval = gs("digits.zval"),
-                       digits.pval = max(gs("digits.pval"), 2),
-                       digits.pval.Q = max(gs("digits.pval.Q"), 2),
-                       digits.Q = gs("digits.Q"),
                        digits.tau2 = gs("digits.tau2"),
-                       digits.H = gs("digits.H"),
                        digits.I2 = gs("digits.I2"),
                        digits.prop = gs("digits.prop"),
                        digits.weight = gs("digits.weight"),
-                       scientific.pval = gs("scientific.pval"),
+                       big.mark = gs("big.mark"),
                        warn.backtransf = FALSE,
                        ...
                        ) {
@@ -65,6 +59,8 @@ print.meta <- function(x,
   chklogical(details)
   chklogical(ma)
   chklogical(backtransf)
+  chklogical(warn.backtransf)
+  ##
   if (!is.prop(x$sm))
     pscale <- 1
   if (!is.null(pscale))
@@ -85,17 +81,12 @@ print.meta <- function(x,
     warning("Argument 'irscale' set to 1 as argument 'backtransf' is FALSE.")
     irscale <- 1
   }
+  ##
   chknumeric(digits, min = 0, single = TRUE)
   chknumeric(digits.se, min = 0, single = TRUE)
   chknumeric(digits.tau2, min = 0, single = TRUE)
-  chknumeric(digits.zval, min = 0, single = TRUE)
-  chknumeric(digits.pval, min = 1, single = TRUE)
-  chknumeric(digits.pval.Q, min = 1, single = TRUE)
-  chknumeric(digits.Q, min = 0, single = TRUE)
-  chknumeric(digits.H, min = 0, single = TRUE)
   chknumeric(digits.I2, min = 0, single = TRUE)
   chknumeric(digits.prop, min = 0, single = TRUE)
-  chklogical(scientific.pval)
   ##
   ## Additional arguments / checks for metacont objects
   ##
@@ -120,8 +111,11 @@ print.meta <- function(x,
   ##
   ##
   metainf.metacum <- inherits(x, "metainf") | inherits(x, "metacum")
+  mb <- inherits(x, "metabind")
   ##  
   prediction <- prediction & x$k >= 3
+  if (is.na(prediction))
+    prediction <- FALSE
   ##  
   ci.lab <- paste(round(100 * level, 1), "%-CI", sep = "")
   ##  
@@ -132,6 +126,8 @@ print.meta <- function(x,
   if (backtransf) {
     if (sm == "ZCOR")
       sm.lab <- "COR"
+    else if (is.mean(sm))
+      sm.lab <- "mean"
     else if (is.prop(sm)) {
       if (pscale == 1)
         sm.lab <- "proportion"
@@ -159,52 +155,86 @@ print.meta <- function(x,
   ##  
   if (details) {
     if (inherits(x, "metabin")) {
-      res <- data.frame(event.e = x$event.e, n.e = x$n.e,
-                        event.c = x$event.c, n.c = x$n.c,
-                        p.e = format.NA(round(x$event.e / x$n.e, digits.prop)),
-                        p.c = format.NA(round(x$event.c / x$n.c, digits.prop)))
+      res <- data.frame(event.e = formatN(x$event.e, digits = 0,
+                                          "NA", big.mark = big.mark),
+                        n.e = formatN(x$n.e, digits = 0,
+                                      "NA", big.mark = big.mark),
+                        event.c = formatN(x$event.c, digits = 0,
+                                          "NA", big.mark = big.mark),
+                        n.c = formatN(x$n.c, digits = 0,
+                                      "NA", big.mark = big.mark),
+                        p.e = formatN(round(x$event.e / x$n.e, digits.prop),
+                                      big.mark = big.mark),
+                        p.c = formatN(round(x$event.c / x$n.c, digits.prop),
+                                      big.mark = big.mark))
     }
     else if (inherits(x, "metacont")) {
-      res <- data.frame(n.e = x$n.e,
-                        mean.e = format.NA(round(x$mean.e, digits), digits, "NA"),
-                        sd.e = format.NA(round(x$sd.e, digits.se), digits.se, "NA"),
-                        n.c = x$n.c,
-                        mean.c = format.NA(round(x$mean.c, digits), digits, "NA"),
-                        sd.c = format.NA(round(x$sd.c, digits.se), digits.se, "NA"))
+      res <- data.frame(n.e = formatN(x$n.e, digits = 0,
+                                      "NA", big.mark = big.mark),
+                        mean.e = formatN(round(x$mean.e, digits), digits,
+                                         "NA", big.mark = big.mark),
+                        sd.e = formatN(round(x$sd.e, digits.se), digits.se,
+                                       "NA", big.mark = big.mark),
+                        n.c = formatN(x$n.c, digits = 0,
+                                      "NA", big.mark = big.mark),
+                        mean.c = formatN(round(x$mean.c, digits), digits,
+                                         "NA", big.mark = big.mark),
+                        sd.c = formatN(round(x$sd.c, digits.se), digits.se,
+                                       "NA", big.mark = big.mark))
     }
     else if (inherits(x, "metacor")) {
-      res <- data.frame(cor = x$cor, n = x$n)
+      res <- data.frame(cor = x$cor,
+                        n = formatN(x$n, digits = 0,
+                                    "NA", big.mark = big.mark))
     }
     else if (inherits(x, "metagen")) {
-      res <- data.frame(TE = format.NA(round(x$TE, digits), digits, "NA"),
-                        seTE = format.NA(round(x$seTE, digits.se), digits.se, "NA"))
+      res <- data.frame(TE = formatN(round(x$TE, digits), digits,
+                                     "NA", big.mark = big.mark),
+                        seTE = formatN(round(x$seTE, digits.se), digits.se,
+                                       "NA", big.mark = big.mark))
     }
     else if (inherits(x, "metainc")) {
-      res <- data.frame(event.e = x$event.e,
-                        time.e = format.NA(round(x$time.e, digits), digits, "NA"),
-                        event.c = x$event.c,
-                        time.c = format.NA(round(x$time.c, digits), digits, "NA"))
+      res <- data.frame(event.e = formatN(x$event.e, digits = 0,
+                                          "NA", big.mark = big.mark),
+                        time.e = formatN(round(x$time.e, digits), digits,
+                                         "NA", big.mark = big.mark),
+                        event.c = formatN(x$event.c, digits = 0,
+                                          "NA", big.mark = big.mark),
+                        time.c = formatN(round(x$time.c, digits), digits,
+                                         "NA", big.mark = big.mark))
     }
     else if (inherits(x, "metaprop")) {
-      res <- data.frame(event = x$event, n = x$n)
+      res <- data.frame(event = formatN(x$event, digits = 0,
+                                        "NA", big.mark = big.mark),
+                        n = formatN(x$n, digits = 0,
+                                    "NA", big.mark = big.mark))
       if (pscale == 1)
-        res$p <- format.NA(round(x$event / x$n, digits.prop), digits.prop, "NA")
+        res$p <- formatN(round(x$event / x$n, digits.prop), digits.prop,
+                         "NA", big.mark = big.mark)
       else
-        res$events <- format.NA(round(pscale * x$event / x$n, digits.prop), digits.prop, "NA")
+        res$events <- formatN(round(pscale * x$event / x$n, digits.prop), digits.prop,
+                              "NA", big.mark = big.mark)
     }
     else if (inherits(x, "metarate")) {
-      res <- data.frame(event = x$event, time = x$time)
+      res <- data.frame(event = formatN(x$event, digits = 0,
+                                        "NA", big.mark = big.mark),
+                        time = formatN(x$time, digits = digits,
+                                       "NA", big.mark = big.mark))
       if (irscale == 1)
-        res$rate <- format.NA(round(x$event / x$time, digits.prop), digits.prop, "NA")
+        res$rate <- formatN(round(x$event / x$time, digits.prop), digits.prop,
+                            "NA", big.mark = big.mark)
       else
-        res$events <- format.NA(round(irscale * x$event / x$time, digits.prop), digits.prop, "NA")
+        res$events <- formatN(round(irscale * x$event / x$time, digits.prop),
+                              digits.prop, "NA", big.mark = big.mark)
     }
     else {
-      res <- data.frame(TE = format.NA(round(x$TE, digits), digits, "NA"),
-                        seTE = format.NA(round(x$seTE, digits), digits, "NA"))
+      res <- data.frame(TE = formatN(round(x$TE, digits), digits,
+                                     "NA", big.mark = big.mark),
+                        seTE = formatN(round(x$seTE, digits), digits,
+                                       "NA", big.mark = big.mark))
     }
     dimnames(res)[[1]] <- x$studlab
-    prmatrix(res[order(sortvar),])
+    prmatrix(res[order(sortvar), ], quote = FALSE, right = TRUE)
     cat("\n\n")
   }
   
@@ -226,18 +256,19 @@ print.meta <- function(x,
                             doublezeros = x$doublezeros,
                             MH.exact = x$MH.exact,
                             warn = FALSE, level.comb = level.comb)),
-            digits = digits, header = FALSE,
+            header = FALSE,
+            digits = digits,
             backtransf = backtransf, pscale = pscale,
-            irscale = irscale, irunit = irunit,
-            digits.zval = digits.zval, digits.pval = digits.pval,
-            scientific.pval = scientific.pval)
+            irscale = irscale, big.mark = big.mark,
+            warn.backtransf = warn.backtransf,
+            ...)
     else
       print(summary(x),
-            digits = digits, header = FALSE,
+            header = FALSE,
+            digits = digits,
             backtransf = backtransf, pscale = pscale,
-            irscale = irscale, irunit = irunit,
-            digits.zval = digits.zval, digits.pval = digits.pval,
-            scientific.pval = scientific.pval,
+            irscale = irscale, big.mark = big.mark,
+            warn.backtransf = warn.backtransf,
             ...)
   }
   else {
@@ -297,35 +328,43 @@ print.meta <- function(x,
     if (!metainf.metacum) {
       if (comb.fixed)
         if (!all(is.na(x$w.fixed)) && sum(x$w.fixed) > 0)
-          w.fixed.p <- round(100 * x$w.fixed / sum(x$w.fixed, na.rm = TRUE), digits.weight)
+          w.fixed.p <- round(100 * x$w.fixed / sum(x$w.fixed, na.rm = TRUE),
+                             digits.weight)
         else w.fixed.p <- x$w.fixed
       ##
       if (comb.random)
-        if (!is.null(x$w.random) & !all(is.na(x$w.random)) && sum(x$w.random) > 0)
-          w.random.p <- round(100 * x$w.random / sum(x$w.random, na.rm = TRUE), digits.weight)
+        if (!is.null(x$w.random) & !all(is.na(x$w.random)) &&
+            sum(x$w.random) > 0)
+          w.random.p <- round(100 * x$w.random / sum(x$w.random, na.rm = TRUE),
+                              digits.weight)
         else w.random.p <- x$w.random
     }
     ##    
     if (metainf.metacum) {
       is.random <- x$pooled == "random"
       ##
-      I2 <- format.NA(round(100 * x$I2, digits.I2), digits.I2, "")
+      I2 <- formatN(round(100 * x$I2, digits.I2), digits.I2, "")
       ##
       sel <- is.na(x$p.value)
-      p.value <- format.p(x$p.value)
+      p.value <- formatPT(x$p.value)
       p.value <- ifelse(sel, "", p.value)
       ##
       tau2 <- x$tau^2
-      tau2 <- format.NA(round(tau2, digits.tau2), digits.tau2, "")
+      tau2 <- formatN(round(tau2, digits.tau2), digits.tau2, "",
+                      big.mark = big.mark)
       ##
-      res <- cbind(format.NA(round(TE, digits), digits, ""),
-                   p.ci(format.NA(round(lowTE, digits), digits, "NA"),
-                        format.NA(round(uppTE, digits), digits, "NA")),
+      res <- cbind(formatN(round(TE, digits), digits, "",
+                           big.mark = big.mark),
+                   formatCI(formatN(round(lowTE, digits), digits, "NA",
+                                    big.mark = big.mark),
+                            formatN(round(uppTE, digits), digits, "NA",
+                                    big.mark = big.mark)),
                    p.value,
-                   paste("  ", tau2, sep = ""),
-                   paste("  ", I2, ifelse(I2 == "", "", "%"), sep = ""))
+                   paste(" ", tau2, sep = ""),
+                   paste(" ", I2, ifelse(I2 == "", "", "%"), sep = ""))
       dimnames(res) <- list(paste(x$studlab, "  ", sep = ""),
-                            c(sm.lab, ci.lab, "p-value", "tau^2", "I^2"))
+                            c(sm.lab, ci.lab, "p-value",
+                              gs("text.tau2"), gs("text.I2")))
       ##
       if (inherits(x, "metainf")) {
         if (!is.random)
@@ -353,18 +392,27 @@ print.meta <- function(x,
               method.smd = x$method.smd,
               sd.glass = x$sd.glass,
               exact.smd = x$exact.smd,
-              model.glmm = x$model.glmm)
+              model.glmm = x$model.glmm,
+              big.mark = big.mark,
+              digits = digits, digits.tau2 = digits.tau2,
+              text.tau2 = gs("text.tau2"))
     }
     else {
-      res <- cbind(format.NA(round(TE, digits), digits, "NA"),
-                   p.ci(format.NA(round(lowTE, digits), digits, "NA"),
-                        format.NA(round(uppTE, digits), digits, "NA")),
-                   if (comb.fixed) format.NA(w.fixed.p, digits.weight),
-                   if (comb.random) format.NA(w.random.p, digits.weight),
+      res <- cbind(formatN(round(TE, digits), digits, "NA", big.mark = big.mark),
+                   formatCI(formatN(round(lowTE, digits), digits, "NA",
+                                    big.mark = big.mark),
+                            formatN(round(uppTE, digits), digits, "NA",
+                                    big.mark = big.mark)),
+                   if (comb.fixed & !mb)
+                     formatN(w.fixed.p, digits.weight,
+                             big.mark = big.mark),
+                   if (comb.random & !mb)
+                     formatN(w.random.p, digits.weight,
+                             big.mark = big.mark),
                    if (!is.null(x$byvar)) x$byvar,
                    if (!is.null(x$exclude))
                      ifelse(is.na(x$exclude), "",
-                            ifelse(x$exclude, "*", "")))
+                     ifelse(x$exclude, "*", "")))
       ## Printout for a single proportion:
       if (k.all == 1) {
         ##
@@ -384,8 +432,8 @@ print.meta <- function(x,
           if (x$method.ci != "NAsm") {
             cat(method.ci.details)
             dimnames(res) <- list("", c(sm.lab, ci.lab,
-                                        if (comb.fixed) "%W(fixed)",
-                                        if (comb.random) "%W(random)",
+                                        if (comb.fixed & !mb) "%W(fixed)",
+                                        if (comb.random & !mb) "%W(random)",
                                         if (!is.null(x$byvar)) x$bylab,
                                         if (!is.null(x$exclude)) "exclude"))
             prmatrix(res, quote = FALSE, right = TRUE)
@@ -397,8 +445,8 @@ print.meta <- function(x,
       else {
         dimnames(res) <-
           list(x$studlab, c(sm.lab, ci.lab,
-                            if (comb.fixed) "%W(fixed)",
-                            if (comb.random) "%W(random)",
+                            if (comb.fixed & !mb) "%W(fixed)",
+                            if (comb.random & !mb) "%W(random)",
                             if (!is.null(x$byvar)) x$bylab,
                             if (!is.null(x$exclude)) "exclude"))
         prmatrix(res[order(sortvar),], quote = FALSE, right = TRUE)
@@ -412,21 +460,19 @@ print.meta <- function(x,
     ##
     ##
     if (ma & !metainf.metacum) {
-      cat("\n")
-      print(summary(x, warn = FALSE), digits = digits,
+      if (!is.na(x$k))
+        cat("\n")
+      ##
+      print(summary(x, warn = FALSE),
+            header = FALSE,
+            digits = digits,
             comb.fixed = comb.fixed, comb.random = comb.random,
             prediction = prediction,
-            header = FALSE,
-            backtransf = backtransf, pscale = pscale,
-            irscale = irscale, irunit = irunit,
-            digits.tau2 = digits.tau2,
-            digits.zval = digits.zval,
-            digits.pval = digits.pval,
-            digits.pval.Q = digits.pval.Q,
-            digits.Q = digits.Q,
-            digits.H = digits.H,
-            digits.I2 = digits.I2,
-            scientific.pval = scientific.pval)
+            backtransf = backtransf, pscale = pscale, irscale = irscale,
+            digits.tau2 = digits.tau2, digits.I2 = digits.I2,
+            big.mark = big.mark,
+            warn.backtransf = warn.backtransf,
+            ...)
     }
   }
   

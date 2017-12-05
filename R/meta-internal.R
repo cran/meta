@@ -1,11 +1,3 @@
-.onLoad <- function(libname, pkgname) {
-  library.dynam("meta", pkgname, libname)
-}
-
-.onUnload <- function(libpath) {
-  library.dynam.unload("meta", libpath)
-}
-
 .onAttach <- function (libname, pkgname) {
   msg <- paste("Loading 'meta' package (version ",
                utils::packageDescription("meta")$Version,
@@ -84,12 +76,21 @@ setVar <- function(var = NULL, arg = NULL) {
 
 .settings <- list()
 ##
-## Set defaults
+## Set defaults (for internal options)
 ##
 setOption("metafor", "1.9.9")
+##
+setOption("sm4bin", c("OR", "RD", "RR", "ASD"))
+setOption("sm4cont", c("MD", "SMD", "ROM"))
 setOption("sm4cor", c("ZCOR", "COR"))
+setOption("sm4inc", c("IRR", "IRD"))
+setOption("sm4mean", c("MRAW", "MLN"))
 setOption("sm4prop", c("PLOGIT", "PLN", "PRAW", "PAS", "PFT"))
 setOption("sm4rate", c("IR", "IRLN", "IRS", "IRFT"))
+##
+setOption("ci4prop", c("CP", "WS", "WSCC", "AC", "SA", "SACC", "NAsm"))
+##
+## List of arguments that can be changed by user
 ##
 argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
               "hakn", "method.tau", "tau.common",
@@ -97,7 +98,7 @@ argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
               "method.bias", "title", "complab", "CIbracket", "CIseparator",
               "print.byvar", "byseparator", "keepdata", "warn",
               "backtransf",
-              "smbin", "smcont", "smcor", "sminc", "smprop", "smrate",
+              "smbin", "smcont", "smcor", "sminc", "smmean", "smprop", "smrate",
               "incr", "allincr", "addincr",
               "method", "allstudies", "MH.exact",
               "RR.cochrane", "model.glmm", "print.CMH",
@@ -109,10 +110,11 @@ argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
               "digits.Q", "digits.tau2", "digits.H", "digits.I2",
               "digits.prop", "digits.weight",
               "digits.pval", "digits.pval.Q", "digits.forest",
-              "scientific.pval",
+              "scientific.pval", "big.mark",
               "print.I2", "print.H", "print.Rb",
               "text.tau2", "text.I2", "text.Rb"
               )
+##
 setOption("argslist", argslist)
 ##
 ## General settings
@@ -148,6 +150,7 @@ setOption("digits.weight", 1)
 setOption("digits.pval", 4)
 setOption("digits.pval.Q", 4)
 setOption("scientific.pval", FALSE)
+setOption("big.mark", "")
 setOption("print.I2", TRUE)
 setOption("print.H", TRUE)
 setOption("print.Rb", FALSE)
@@ -161,6 +164,7 @@ setOption("smbin", "RR")
 setOption("smcont", "MD")
 setOption("smcor", "ZCOR")
 setOption("sminc", "IRR")
+setOption("smmean", "MRAW")
 setOption("smprop", "PLOGIT")
 setOption("smrate", "IRLN")
 ##

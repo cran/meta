@@ -34,7 +34,8 @@ metagen(TE, seTE, studlab,
 }
 
 \arguments{
-  \item{TE}{Estimate of treatment effect.}
+  \item{TE}{Estimate of treatment effect, e.g., log hazard ratio or
+    risk difference.}
   \item{seTE}{Standard error of treatment estimate.}
   \item{studlab}{An optional vector with study labels.}
   \item{data}{An optional data frame containing the study information.}
@@ -184,8 +185,8 @@ metagen(TE, seTE, studlab,
 
 \value{
   An object of class \code{c("metagen", "meta")} with corresponding
-  \code{print}, \code{summary}, \code{plot} function. The object is a
-  list containing the following components:
+  \code{print}, \code{summary}, and \code{forest} functions. The
+  object is a list containing the following components:
   \item{TE, seTE, studlab, exclude, n.e, n.c}{}
   \item{sm, level, level.comb,}{}
   \item{comb.fixed, comb.random,}{}

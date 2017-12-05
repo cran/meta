@@ -72,6 +72,7 @@ update.meta <- function(object,
   metacor  <- inherits(object, "metacor")
   metagen  <- inherits(object, "metagen")
   metainc  <- inherits(object, "metainc")
+  metamean <- inherits(object, "metamean")
   metaprop <- inherits(object, "metaprop")
   metarate <- inherits(object, "metarate")
   
@@ -281,13 +282,13 @@ update.meta <- function(object,
     warning("Necessary data not available. Please, recreate meta-analysis object without option 'keepdata = FALSE'.")
     return(invisible(NULL))
   }
-  ##  
+  ##
   missing.subset  <- missing(subset)
   missing.incr    <- missing(incr)
   missing.byvar   <- missing(byvar)
   missing.studlab <- missing(studlab)
   missing.exclude <- missing(exclude)
-  ##  
+  ##
   mf <- match.call()
   ##
   subset <- eval(mf[[match("subset", names(mf))]],
@@ -355,7 +356,7 @@ update.meta <- function(object,
   ##
   ##
   if (metabin) {
-    sm <- setchar(sm, c("OR", "RD", "RR", "ASD"))
+    sm <- setchar(sm, .settings$sm4bin)
     method <- setchar(method, c("Inverse", "MH", "Peto", "GLMM"))
     if (sm == "ASD") {
       if (!missing.incr)
@@ -592,6 +593,39 @@ update.meta <- function(object,
     if (add.e | add.c)
       m$data <- m$data[, names(data)]
   }
+  ##
+  if (metamean)
+    m <- metamean(n = object$data$.n,
+                  mean = object$data$.mean,
+                  sd = object$data$.sd,
+                  ##
+                  studlab = studlab,
+                  exclude = exclude,
+                  ##
+                  data = data, subset = subset,
+                  ##
+                  sm = sm,
+                  ##
+                  level = level, level.comb = level.comb,
+                  comb.fixed = comb.fixed, comb.random = comb.random,
+                  ##
+                  hakn = hakn, method.tau = method.tau,
+                  tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                  ##
+                  prediction = prediction, level.predict = level.predict,
+                  ##
+                  null.effect = null.effect,
+                  ##
+                  method.bias = method.bias,
+                  ##
+                  backtransf = backtransf,
+                  title = title, complab = complab, outclab = outclab,
+                  ##
+                  byvar = byvar, bylab = bylab, print.byvar = print.byvar,
+                  byseparator = byseparator,
+                  ##
+                  keepdata = keepdata,
+                  warn = warn)
   ##
   if (metaprop)
     m <- metaprop(event = object$data$.event,

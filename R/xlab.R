@@ -1,6 +1,7 @@
 xlab <- function(sm, backtransf,
                  pscale = 1, irscale = 1, irunit = "person-years",
-                 newline = FALSE, revman5 = FALSE) {
+                 newline = FALSE, revman5 = FALSE,
+                 big.mark = big.mark) {
   
   res <- NULL
   
@@ -33,6 +34,9 @@ xlab <- function(sm, backtransf,
   else if (sm == "IR")
     res <- "Incidence Rate"
   ##
+  else if (sm == "MRAW")
+    res <- "Mean"
+  ##
   else if (backtransf) {
     if (sm == "OR")
       res <- "Odds Ratio"
@@ -58,7 +62,7 @@ xlab <- function(sm, backtransf,
         res <- ""
       else
         res <- paste("Events per ",
-                     format(pscale, scientific = FALSE),
+                     format(pscale, scientific = FALSE, big.mark = big.mark),
                      newline,
                      "observations", sep = "")
     }
@@ -68,10 +72,13 @@ xlab <- function(sm, backtransf,
         res <- "Incidence Rate"
       else
         res <- paste("Events per ",
-                     format(irscale, scientific = FALSE),
+                     format(irscale, scientific = FALSE, big.mark = big.mark),
                      newline,
                      irunit, sep = "")
     }
+    ##
+    else if (sm == "MLN")
+      res <- "Mean"
   }
   else {
     if (sm == "OR")
@@ -130,6 +137,9 @@ xlab <- function(sm, backtransf,
     else if (sm == "IRFT")
       res <- paste("Freeman-Tukey Double Arcsine", newline,
                    "Transformed Rate", sep = "")
+    ##
+    else if (sm == "MLN")
+      res <- "Log Mean"
   }
   
   

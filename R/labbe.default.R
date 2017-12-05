@@ -12,7 +12,7 @@ labbe.default <- function(x, y,
                           col.fixed = col, col.random = col,
                           nulleffect = TRUE,
                           lwd.nulleffect = lwd, col.nulleffect = "lightgray",
-                          sm = NULL, weight,
+                          sm = "", weight,
                           studlab = FALSE, cex.studlab = 0.8,
                           label.e = NULL, label.c = NULL,
                           ...) {
@@ -23,7 +23,8 @@ labbe.default <- function(x, y,
   if(length(xpos) != length(ypos))
     stop("arguments 'x' and 'y' must be of same length")
   
-  sm <- setchar(sm, c("OR", "RD", "RR", "ASD"))
+  chknull(sm)
+  sm <- setchar(sm, .settings$sm4bin)
   
   if (!backtransf) {
     if (sm == "OR") {

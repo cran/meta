@@ -252,8 +252,8 @@ metaprop(event, n, studlab,
 
 \value{
   An object of class \code{c("metaprop", "meta")} with corresponding
-  \code{print}, \code{summary}, \code{plot} function. The object is a
-  list containing the following components:
+  \code{print}, \code{summary}, and \code{forest} functions. The
+  object is a list containing the following components:
   \item{event, n, studlab, exclude,}{}
   \item{sm, incr, allincr, addincr, method.ci,}{}
   \item{level, level.comb,}{As defined above.}
@@ -532,10 +532,10 @@ lower <- round(rbind(NA, m1$lower, m2$lower, NA, m3$lower, m4$lower, NA, m5$lowe
 upper <- round(rbind(NA, m1$upper, m2$upper, NA, m3$upper, m4$upper, NA, m5$upper), 4)
 #
 tab1 <- data.frame(
-  scen1=meta:::p.ci(lower[,1], upper[,1]),
-  scen2=meta:::p.ci(lower[,2], upper[,2]),
-  scen3=meta:::p.ci(lower[,3], upper[,3]),
-  scen4=meta:::p.ci(lower[,4], upper[,4]),
+  scen1=meta:::formatCI(lower[,1], upper[,1]),
+  scen2=meta:::formatCI(lower[,2], upper[,2]),
+  scen3=meta:::formatCI(lower[,3], upper[,3]),
+  scen4=meta:::formatCI(lower[,4], upper[,4]),
   stringsAsFactors=FALSE
   )
 names(tab1) <- c("r=81, n=263", "r=15, n=148", "r=0, n=20", "r=1, n=29")

@@ -1,4 +1,82 @@
-*** meta, version 4.9-0, 2017-12-04 ***
+*** meta, version 4.9-1, 2018-03-21 ***
+
+ ** Major changes **
+
+  * Subgroup results consider the exclusion of individual studies
+    (bug fix)
+
+  * For generalized linear mixed models, between-study variance set to
+    NA if only a single study is considered in meta-analysis
+
+ ** Bug fixes **
+
+  * metamean():
+    - use of argument 'byvar' for subgroup analyses possible
+
+  * metacor(), metamean(), metaprop(), and metarate():
+    - use as input to metabind() possible
+
+  * Internal function subgroup():
+    - consider argument 'exclude' in subgroup analyses
+
+  * Internal function bylevs():
+    - drop unused levels if subgroup variable is a factor variable
+
+ ** User-visible changes **
+
+  * print.summary.meta():
+    - print information on Generalized Linear Mixed Model (GLMM) for
+      metarate() objects
+    - print information on increments added to calculate confidence
+      intervals for individual studies (for metarate() with GLMM)
+
+  * funnel.meta():
+    - new arguments 'ref.triangle', 'lty.ref', 'lwd.ref', 'col.ref',
+      and 'lty.ref.triangle' to add reference value (null effect) and
+      corresponding confidence intervals to the funnel plot
+
+  * metabin():
+    - new argument 'pscale' to change printout of risk differences
+
+  * metainc():
+    - new arguments 'irscale' and 'irunit' to change printout of
+      incidence rate differences
+
+  * forest.meta(), print.meta(), print.summary.meta(), update.meta():
+    - consider arguments 'pscale', 'irscale', and 'irunit' for
+      meta-analysis objects created with metabin() and metainc()
+
+  * print.meta():
+    - new argument 'irunit'
+
+ ** Internal changes **
+
+  * metaprop():
+    - for random effects model, rma.glmm() from package metafor is
+      called internally with argument 'method = "FE"' if only a single
+      study is available
+
+  * metareg():
+    - for generalised linear mixed models, fallback to fixed effect
+      model if number of studies is too small for random effects
+      meta-regression
+
+  * asin2ir():
+    - back-transformation could result in (very small) negative zero
+      values due to imprecisions (-1e-19); these values are set to
+      zero now
+
+  * subgroup():
+    - code for metamean() added
+
+  * chkchar():
+    - new argument 'nchar' to test the length of character string(s)
+
+  * New internal function is.untransformed() to check for effect
+    measures without (back-)transformation
+
+
+*** meta, version 4.9-0, 2017-12-06 ***
 
  ** Major changes **
 

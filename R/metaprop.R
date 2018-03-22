@@ -48,6 +48,8 @@ metaprop <- function(event, n, studlab,
   ##
   ##
   chknull(sm)
+  sm <- setchar(sm, .settings$sm4prop)
+  ##
   chklevel(level)
   chklevel(level.comb)
   chklogical(comb.fixed)
@@ -68,8 +70,9 @@ metaprop <- function(event, n, studlab,
                          c("rank", "linreg", "mm", "count", "score", "peters"))
   ##
   chklogical(backtransf)
+  ##
   chknumeric(pscale, single = TRUE)
-  if (!backtransf & pscale != 1) {
+  if (!backtransf & pscale != 1 & !is.untransformed(sm)) {
     warning("Argument 'pscale' set to 1 as argument 'backtransf' is FALSE.")
     pscale <- 1
   }
@@ -89,7 +92,6 @@ metaprop <- function(event, n, studlab,
                          version = .settings$metafor)
   }
   ##
-  sm <- setchar(sm, .settings$sm4prop)
   chklogical(allincr)
   chklogical(addincr)
   method.ci <- setchar(method.ci, .settings$ci4prop)
@@ -438,7 +440,9 @@ metaprop <- function(event, n, studlab,
   ## (8) Do meta-analysis
   ##
   ##
-  if (is.glmm) {
+  k <- sum(!is.na(event[!exclude]) & !is.na(n[!exclude]))
+  ##
+  if (is.glmm & k > 0) {
     glmm.fixed <- metafor::rma.glmm(xi = event[!exclude], ni = n[!exclude],
                                     method = "FE",
                                     test = ifelse(hakn, "t", "z"),
@@ -505,17 +509,17 @@ metaprop <- function(event, n, studlab,
   ##
   m$n.e <- NULL
   m$n.c <- NULL
-  m$label.e <- NULL
-  m$label.c <- NULL
-  m$label.left <- NULL
-  m$label.right <- NULL
+  m$label.e <- ""
+  m$label.c <- ""
+  m$label.left <- ""
+  m$label.right <- ""
   ##
   res <- c(res, m)
   res$null.effect <- null.effect
   ##
   ## Add data
   ##
-  if (is.glmm) {
+  if (is.glmm & k > 0) {
     ##
     ci.f <- ci(TE.fixed, seTE.fixed, level = level.comb,
                null.effect = transf.null.effect)
@@ -530,12 +534,19 @@ metaprop <- function(event, n, studlab,
     res$zval.fixed <- ci.f$z
     res$pval.fixed <- ci.f$p
     ##
-    glmm.random <- metafor::rma.glmm(xi = event[!exclude], ni = n[!exclude],
-                                     method = method.tau,
-                                     test = ifelse(hakn, "t", "z"),
-                                     level = 100 * level.comb,
-                                     measure = "PLO",
-                                     ...)
+    if (sum(!exclude) > 1)
+      glmm.random <- metafor::rma.glmm(xi = event[!exclude], ni = n[!exclude],
+                                       method = method.tau,
+                                       test = ifelse(hakn, "t", "z"),
+                                       level = 100 * level.comb,
+                                       measure = "PLO",
+                                       ...)
+    else {
+      ##
+      ## Fallback to fixed effect model due to small number of studies
+      ##
+      glmm.random <- glmm.fixed
+    }
     ##
     TE.random   <- as.numeric(glmm.random$b)
     seTE.random <- as.numeric(glmm.random$se)
@@ -557,12 +568,17 @@ metaprop <- function(event, n, studlab,
     res$seTE.predict <- NA
     res$lower.predict <- ci.p$cr.lb
     res$upper.predict <- ci.p$cr.ub
+    if (is.null(res$lower.predict))
+      res$lower.predict <- NA
+    if (is.null(res$upper.predict))
+      res$upper.predict <- NA
     ##
     res$Q <- glmm.random$QE.Wld
     res$df.Q <- glmm.random$QE.df
     res$Q.LRT <- glmm.random$QE.LRT
     ##
-    res$tau <- sqrt(glmm.random$tau2)
+    if (k > 1)
+      res$tau <- sqrt(glmm.random$tau2)
     ##
     res$H <- sqrt(glmm.random$H2)
     res$lower.H <- NA

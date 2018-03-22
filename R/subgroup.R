@@ -17,6 +17,7 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
   cont <- inherits(x, "metacont")
   cor  <- inherits(x, "metacor")
   gen  <- inherits(x, "metagen")
+  mean <- inherits(x, "metamean")
   inc  <- inherits(x, "metainc")
   prop <- inherits(x, "metaprop")
   rate <- inherits(x, "metarate")
@@ -48,6 +49,7 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
       meta1 <- metabin(x$event.e[sel], x$n.e[sel],
                        x$event.c[sel], x$n.c[sel],
                        studlab = x$studlab[sel],
+                       exclude = x$exclude[sel],
                        method = x$method,
                        sm = x$sm,
                        incr = if (length(x$incr) == 1) x$incr else x$incr[sel],
@@ -63,56 +65,46 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
                        TE.tau = x$TE.tau,
                        warn = x$warn)
     ##
-    if (cont)
+    else if (cont)
       meta1 <- metacont(x$n.e[sel], x$mean.e[sel],
                         x$sd.e[sel],
                         x$n.c[sel], x$mean.c[sel],
                         x$sd.c[sel],
-                        sm = x$sm, pooledvar = x$pooledvar,
                         studlab = x$studlab[sel],
+                        exclude = x$exclude[sel],
+                        sm = x$sm, pooledvar = x$pooledvar,
                         level = x$level, level.comb = x$level.comb,
                         hakn = x$hakn,
                         method.tau = x$method.tau,
                         tau.preset = tau.preset, TE.tau = x$TE.tau,
                         warn = x$warn)
     ##
-    if (gen)
+    else if (cor)
+      meta1 <- metacor(x$cor[sel], x$n[sel],
+                       sm = x$sm,
+                       studlab = x$studlab[sel],
+                       exclude = x$exclude[sel],
+                       level = x$level, level.comb = x$level.comb,
+                       hakn = x$hakn,
+                       method.tau = x$method.tau,
+                       tau.preset = tau.preset, TE.tau = x$TE.tau)
+    ##
+    else if (gen)
       meta1 <- metagen(x$TE[sel], x$seTE[sel],
                        sm = x$sm,
                        studlab = x$studlab[sel],
+                       exclude = x$exclude[sel],
                        level = x$level, level.comb = x$level.comb,
                        hakn = x$hakn,
                        method.tau = x$method.tau,
                        tau.preset = tau.preset, TE.tau = x$TE.tau,
                        warn = x$warn)
     ##
-    if (prop)
-      meta1 <- metaprop(x$event[sel], x$n[sel],
-                        sm = x$sm,
-                        studlab = x$studlab[sel],
-                        level = x$level, level.comb = x$level.comb,
-                        incr = if (length(x$incr) == 1) x$incr else x$incr[sel],
-                        allincr = x$allincr,
-                        addincr = x$addincr,
-                        hakn = x$hakn,
-                        method = x$method,
-                        method.tau = x$method.tau,
-                        tau.preset = tau.preset, TE.tau = x$TE.tau,
-                        warn = x$warn)
-    ##
-    if (cor)
-      meta1 <- metacor(x$cor[sel], x$n[sel],
-                       sm = x$sm,
-                       studlab = x$studlab[sel],
-                       level = x$level, level.comb = x$level.comb,
-                       hakn = x$hakn,
-                       method.tau = x$method.tau,
-                       tau.preset = tau.preset, TE.tau = x$TE.tau)
-    ##
-    if (inc)
+    else if (inc)
       meta1 <- metainc(x$event.e[sel], x$time.e[sel],
                        x$event.c[sel], x$time.c[sel],
                        studlab = x$studlab[sel],
+                       exclude = x$exclude[sel],
                        method = x$method,
                        sm = x$sm,
                        incr = if (length(x$incr) == 1) x$incr else x$incr[sel],
@@ -125,10 +117,37 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
                        TE.tau = x$TE.tau,
                        warn = x$warn)
     ##
-    if (rate)
+    else if (mean)
+      meta1 <- metamean(x$n[sel], x$mean[sel], x$sd[sel],
+                        sm = x$sm,
+                        studlab = x$studlab[sel],
+                        exclude = x$exclude[sel],
+                        level = x$level, level.comb = x$level.comb,
+                        hakn = x$hakn,
+                        method.tau = x$method.tau,
+                        tau.preset = tau.preset, TE.tau = x$TE.tau,
+                        warn = x$warn)
+    ##
+    else if (prop)
+      meta1 <- metaprop(x$event[sel], x$n[sel],
+                        sm = x$sm,
+                        studlab = x$studlab[sel],
+                        exclude = x$exclude[sel],
+                        level = x$level, level.comb = x$level.comb,
+                        incr = if (length(x$incr) == 1) x$incr else x$incr[sel],
+                        allincr = x$allincr,
+                        addincr = x$addincr,
+                        hakn = x$hakn,
+                        method = x$method,
+                        method.tau = x$method.tau,
+                        tau.preset = tau.preset, TE.tau = x$TE.tau,
+                        warn = x$warn)
+    ##
+    else if (rate)
       meta1 <- metarate(x$event[sel], x$time[sel],
                         sm = x$sm,
                         studlab = x$studlab[sel],
+                        exclude = x$exclude[sel],
                         level = x$level, level.comb = x$level.comb,
                         incr = if (length(x$incr) == 1) x$incr else x$incr[sel],
                         allincr = x$allincr,
@@ -218,9 +237,9 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
     if (prop) {
       mod <- as.call(~ byvar.glmm - 1)
       ##
-      glmm.fixed <- metafor::rma.glmm(xi = x$event, #[!x$exclude],
-                                      ni = x$n, #[!x$exclude],
-                                      mods = mod, #[!x$exclude],
+      glmm.fixed <- metafor::rma.glmm(xi = x$event,
+                                      ni = x$n,
+                                      mods = mod,
                                       method = "FE",
                                       test = ifelse(x$hakn, "t", "z"),
                                       level = 100 * x$level.comb,
@@ -228,9 +247,9 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
                                       intercept = FALSE,
                                       ...)
       ##
-      glmm.random <- metafor::rma.glmm(xi = x$event, #[!x$exclude],
-                                       ni = x$n, #[!x$exclude],
-                                       mods = mod, #[!x$exclude],
+      glmm.random <- metafor::rma.glmm(xi = x$event,
+                                       ni = x$n,
+                                       mods = mod,
                                        method = x$method.tau,
                                        test = ifelse(x$hakn, "t", "z"),
                                        level = 100 * x$level.comb,

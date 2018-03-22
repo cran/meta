@@ -58,7 +58,11 @@ print.summary.meta <- function(x,
   chknumeric(digits.H, min = 0, single = TRUE)
   chknumeric(digits.I2, min = 0, single = TRUE)
   chklogical(scientific.pval)
+  ##
+  if (is.untransformed(x$sm))
+    backtransf <- TRUE
   chklogical(backtransf)
+  ##
   chklogical(print.I2)
   chklogical(print.H)
   chklogical(print.Rb)
@@ -69,26 +73,29 @@ print.summary.meta <- function(x,
   is.prop <- is.prop(x$sm)
   is.rate <- is.rate(x$sm)
   ##
-  if (!is.prop)
+  if (!is.prop & x$sm != "RD")
     pscale <- 1
   if (!is.null(pscale))
     chknumeric(pscale, single = TRUE)
   else
     pscale <- 1
-  if (!backtransf & pscale != 1) {
+  if (!backtransf & pscale != 1 & !is.untransformed(x$sm)) {
     warning("Argument 'pscale' set to 1 as argument 'backtransf' is FALSE.")
     pscale <- 1
   }
-  if (!is.rate)
+  if (!is.rate & x$sm != "IRD")
     irscale <- 1
   if (!is.null(irscale))
     chknumeric(irscale, single = TRUE)
   else
     irscale <- 1
-  if (!backtransf & irscale != 1) {
+  if (!backtransf & irscale != 1 & !is.untransformed(x$sm)) {
     warning("Argument 'irscale' set to 1 as argument 'backtransf' is FALSE.")
     irscale <- 1
   }
+  if (!is.null(irunit) && !is.na(irunit))
+    chkchar(irunit)
+  ##
   chklogical(comb.fixed)
   chklogical(comb.random)
   chklogical(prediction)
@@ -120,7 +127,7 @@ print.summary.meta <- function(x,
   k <- x$k
   sm <- x$sm
   ##
-  bip <- inherits(x, c("metabin", "metainc", "metaprop"))
+  bip <- inherits(x, c("metabin", "metainc", "metaprop", "metarate"))
   null.given <- (inherits(x, c("metacor", "metagen", "metamean",
                                "metaprop", "metarate")) |
                  is.prop(sm) | is.rate(sm) | is.cor(sm) | is.mean(sm))
@@ -280,12 +287,13 @@ print.summary.meta <- function(x,
     }
   }
   ##
-  ## Apply argument 'pscale' to proportions and 'irscale' to rates
+  ## Apply argument 'pscale' to proportions / risk differences and
+  ## 'irscale' to rates / incidence rate differences
   ##
-  if (is.prop | is.rate) {
-    if (is.prop)
+  if (is.prop | sm == "RD" | is.rate | sm == "IRD") {
+    if (is.prop | sm == "RD")
       scale <- pscale
-    else if (is.rate)
+    else if (is.rate | sm == "IRD")
       scale <- irscale
     ##
     TE.fixed    <- scale * TE.fixed
@@ -395,12 +403,10 @@ print.summary.meta <- function(x,
     dimnames(res) <- list("", c(sm.lab, x$ci.lab, "z", "p-value"))
     prmatrix(res, quote = FALSE, right = TRUE, ...)
     ## Print information on summary method:
-    catmeth(method = x$method,
+    catmeth(class = class(x),
+            method = x$method,
             sm = sm,
             k.all = k.all,
-            metaprop = inherits(x, "metaprop"),
-            metabin = inherits(x, "metabin"),
-            metainc = inherits(x, "metainc"),
             sparse = ifelse(bip, x$sparse, FALSE),
             incr = if (bip) x$incr else FALSE,
             allincr = ifelse(bip, x$allincr, FALSE),
@@ -408,7 +414,6 @@ print.summary.meta <- function(x,
             allstudies = x$allstudies,
             doublezeros = x$doublezeros,
             method.ci = x$method.ci,
-            metacont = inherits(x, "metacont"),
             pooledvar = x$pooledvar,
             method.smd = x$method.smd,
             sd.glass = x$sd.glass,
@@ -749,17 +754,14 @@ print.summary.meta <- function(x,
     ##
     ## Print information on summary method:
     ##
-    catmeth(method = x$method,
+    catmeth(class = class(x),
+            method = x$method,
             method.tau = if (comb.random) x$method.tau else "",
             sm = sm,
             k.all = k.all,
             hakn = !is.null(x$hakn) && (x$hakn & comb.random),
             tau.common = by & x$tau.common,
             tau.preset = x$tau.preset,
-            trimfill = inherits(x, "trimfill"),
-            metaprop = inherits(x, "metaprop"),
-            metabin = inherits(x, "metabin"),
-            metainc = inherits(x, "metainc"),
             sparse = ifelse(bip, x$sparse, FALSE),
             incr = if (bip) x$incr else FALSE,
             allincr = ifelse(bip, x$allincr, FALSE),
@@ -768,7 +770,6 @@ print.summary.meta <- function(x,
             doublezeros = x$doublezeros,
             MH.exact = ifelse(inherits(x, "metabin"), x$MH.exact, FALSE),
             method.ci = x$method.ci,
-            metacont = inherits(x, "metacont"),
             pooledvar = x$pooledvar,
             method.smd = x$method.smd,
             sd.glass = x$sd.glass,

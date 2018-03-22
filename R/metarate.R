@@ -47,6 +47,8 @@ metarate <- function(event, time, studlab,
   ##
   ##
   chknull(sm)
+  sm <- setchar(sm, .settings$sm4rate)
+  ##
   chklevel(level)
   chklevel(level.comb)
   chklogical(comb.fixed)
@@ -66,11 +68,13 @@ metarate <- function(event, time, studlab,
                          c("rank", "linreg", "mm", "count", "score", "peters"))
   ##
   chklogical(backtransf)
+  ##
   chknumeric(irscale, single = TRUE)
-  if (!backtransf & irscale != 1) {
+  if (!backtransf & irscale != 1 & !is.untransformed(sm)) {
     warning("Argument 'irscale' set to 1 as argument 'backtransf' is FALSE.")
     irscale <- 1
   }
+  chkchar(irunit)
   ##
   chklogical(keepdata)
   ##
@@ -86,7 +90,6 @@ metarate <- function(event, time, studlab,
                          version = .settings$metafor)
   }
   ##
-  sm <- setchar(sm, .settings$sm4rate)
   chklogical(allincr)
   chklogical(addincr)
   chklogical(warn)
@@ -372,6 +375,8 @@ metarate <- function(event, time, studlab,
   ## (8) Do meta-analysis
   ##
   ##
+  k <- sum(!is.na(event[!exclude]) & !is.na(time[!exclude]))
+  ##
   if (method == "GLMM") {
     glmm.fixed <- metafor::rma.glmm(xi = event[!exclude], ti = time[!exclude],
                                     method = "FE",
@@ -438,10 +443,10 @@ metarate <- function(event, time, studlab,
   ##
   m$n.e <- NULL
   m$n.c <- NULL
-  m$label.e <- NULL
-  m$label.c <- NULL
-  m$label.left <- NULL
-  m$label.right <- NULL
+  m$label.e <- ""
+  m$label.c <- ""
+  m$label.left <- ""
+  m$label.right <- ""
   ##
   res <- c(res, m)
   res$null.effect <- null.effect
@@ -464,12 +469,19 @@ metarate <- function(event, time, studlab,
     res$zval.fixed <- ci.f$z
     res$pval.fixed <- ci.f$p
     ##
-    glmm.random <- metafor::rma.glmm(xi = event[!exclude], ti = time[!exclude],
-                                     method = method.tau,
-                                     test = ifelse(hakn, "t", "z"),
-                                     level = 100 * level.comb,
-                                     measure = "IRLN",
-                                     ...)
+    if (sum(!exclude) > 1)
+      glmm.random <- metafor::rma.glmm(xi = event[!exclude], ti = time[!exclude],
+                                       method = method.tau,
+                                       test = ifelse(hakn, "t", "z"),
+                                       level = 100 * level.comb,
+                                       measure = "IRLN",
+                                       ...)
+    else {
+      ##
+      ## Fallback to fixed effect model due to small number of studies
+      ##
+      glmm.random <- glmm.fixed
+    }
     ##
     TE.random   <- as.numeric(glmm.random$b)
     seTE.random <- as.numeric(glmm.random$se)
@@ -491,12 +503,17 @@ metarate <- function(event, time, studlab,
     res$seTE.predict <- NA
     res$lower.predict <- ci.p$cr.lb
     res$upper.predict <- ci.p$cr.ub
+    if (is.null(res$lower.predict))
+      res$lower.predict <- NA
+    if (is.null(res$upper.predict))
+      res$upper.predict <- NA
     ##
     res$Q <- glmm.random$QE.Wld
     res$df.Q <- glmm.random$QE.df
     res$Q.LRT <- glmm.random$QE.LRT
     ##
-    res$tau <- sqrt(glmm.random$tau2)
+    if (k > 1)
+      res$tau <- sqrt(glmm.random$tau2)
     ##
     res$H <- sqrt(glmm.random$H2)
     res$lower.H <- NA
@@ -515,7 +532,7 @@ metarate <- function(event, time, studlab,
   res$upper <- upper.study
   ##
   res$irscale <- irscale
-  res$irunit   <- irunit
+  res$irunit  <- irunit
   ##
   res$call <- match.call()
   ##

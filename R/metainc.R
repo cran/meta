@@ -29,6 +29,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                     n.e = NULL, n.c = NULL,
                     ##
                     backtransf = gs("backtransf"),
+                    irscale = 1, irunit = "person-years",
                     title = gs("title"), complab = gs("complab"),
                     outclab = "",
                     label.e = gs("label.e"), label.c = gs("label.c"),
@@ -50,6 +51,8 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   ##
   chknull(sm)
+  sm <- setchar(sm, c("IRR", "IRD"))
+  ##
   chklevel(level)
   chklevel(level.comb)
   chklogical(comb.fixed)
@@ -67,13 +70,20 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                          c("rank", "linreg", "mm", "count", "score", "peters"))
   ##
   chklogical(backtransf)
+  ##
+  chknumeric(irscale, single = TRUE)
+  chkchar(irunit)
+  ##
   chklogical(keepdata)
   ##
   ## Additional arguments / checks for metainc objects
   ##
   fun <- "metainc"
   ##
-  sm <- setchar(sm, c("IRR", "IRD"))
+  if (sm != "IRD" & irscale != 1) {
+    warning("Argument 'irscale' only considered for incidence rate differences.")
+    irscale <- 1
+  }
   ##
   method <- setchar(method, c("Inverse", "MH", "Cochran", "GLMM"))
   if (method == "GLMM") {
@@ -386,6 +396,9 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ## (8) Do meta-analysis
   ##
   ##
+  k <- sum(!is.na(event.e[!exclude]) & !is.na(event.c[!exclude]) &
+           !is.na(time.e[!exclude]) & !is.na(time.c[!exclude]))
+  ##
   if (method == "MH") {
     ##
     ## Greenland, Robins (1985)
@@ -520,6 +533,10 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   res$n.e <- n.e
   res$n.c <- n.c
   res$TE.tau <- TE.tau
+  ##
+  res$irscale <- irscale
+  res$irunit  <- irunit
+  ##
   res$call <- match.call()
   ##
   if (method %in% c("MH", "Cochran", "GLMM")) {
@@ -537,15 +554,22 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   if (method == "GLMM") {
     ##
-    glmm.random <- metafor::rma.glmm(x1i = event.e[!exclude],
-                                     t1i = time.e[!exclude],
-                                     x2i = event.c[!exclude],
-                                     t2i = time.c[!exclude],
-                                     method = method.tau,
-                                     test = ifelse(hakn, "t", "z"),
-                                     level = 100 * level.comb,
-                                     measure = "IRR", model = model.glmm,
-                                     ...)
+    if (sum(!exclude) > 1)
+      glmm.random <- metafor::rma.glmm(x1i = event.e[!exclude],
+                                       t1i = time.e[!exclude],
+                                       x2i = event.c[!exclude],
+                                       t2i = time.c[!exclude],
+                                       method = method.tau,
+                                       test = ifelse(hakn, "t", "z"),
+                                       level = 100 * level.comb,
+                                       measure = "IRR", model = model.glmm,
+                                       ...)
+    else {
+      ##
+      ## Fallback to fixed effect model due to small number of studies
+      ##
+      glmm.random <- glmm.fixed
+    }
     ##
     TE.random   <- as.numeric(glmm.random$b)
     seTE.random <- as.numeric(glmm.random$se)
@@ -566,6 +590,10 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$seTE.predict <- NA
     res$lower.predict <- ci.p$cr.lb
     res$upper.predict <- ci.p$cr.ub
+    if (is.null(res$lower.predict))
+      res$lower.predict <- NA
+    if (is.null(res$upper.predict))
+      res$upper.predict <- NA
     ##
     res$model.glmm <- model.glmm
     ##
@@ -573,7 +601,8 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$df.Q <- glmm.random$QE.df
     res$Q.LRT <- glmm.random$QE.LRT
     ##
-    res$tau <- sqrt(glmm.random$tau2)
+    if (k > 1)
+      res$tau <- sqrt(glmm.random$tau2)
     ##
     res$H <- sqrt(glmm.random$H2)
     res$lower.H <- NA

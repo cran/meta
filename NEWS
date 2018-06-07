@@ -1,3 +1,21 @@
+*** meta, version 4.9-2, 2018-06-06 ***
+
+ ** Major changes **
+
+  * All p-values of Q statistics are list elements of meta-analysis
+    objects
+
+ ** Bug fixes **
+
+  * metareg():
+    - consider argument 'intercept = FALSE' if argument 'formula' has
+      been provided
+    
+ ** Internal changes **
+
+  * New internal function replaceNULL()
+
+
 *** meta, version 4.9-1, 2018-03-21 ***
 
  ** Major changes **

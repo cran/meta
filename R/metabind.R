@@ -1,4 +1,4 @@
-metabind <- function(..., name, pooled, backtransf) {
+metabind <- function(..., name, pooled, backtransf, outclab) {
   
   
   replace.NULL <- function(x, val = NA) {
@@ -19,6 +19,12 @@ metabind <- function(..., name, pooled, backtransf) {
   
   
   args <- list(...)
+  ##
+  if (length(args) == 1 & inherits(args[[1]], "meta.rm5")) {
+    args <- args[[1]]
+    if (missing(name))
+      name <- unlist(lapply(args, "[[" , "outclab"))
+  }
   ##
   n.meta <- length(args)
   n.i <- seq_len(n.meta)
@@ -129,8 +135,8 @@ metabind <- function(..., name, pooled, backtransf) {
       Q.b.fixed.i <- m.i$Q.b.fixed
       Q.b.random.i <- m.i$Q.b.random
       df.Q.b.i <- m.i$df.Q.b
-      pval.Q.b.fixed.i <- 1 - pchisq(Q.b.fixed.i, df.Q.b.i)
-      pval.Q.b.random.i <- 1 - pchisq(Q.b.random.i, df.Q.b.i)
+      pval.Q.b.fixed.i  <- m.i$pval.Q.b.fixed
+      pval.Q.b.random.i <- m.i$pval.Q.b.random
       ##
       n.bylevs.i <- length(m.i$k.w) - 1
       ##
@@ -153,7 +159,7 @@ metabind <- function(..., name, pooled, backtransf) {
                            k.all = m.i$k.all.w,
                            Q = m.i$Q.w,
                            df.Q = m.i$df.Q.w,
-                           pval.Q = 1 - pchisq(m.i$Q.w, m.i$df.Q.w),
+                           pval.Q = pvalQ(m.i$Q.w, m.i$df.Q.w),
                            ##
                            tau = m.i$tau.w,
                            tau2 = m.i$tau.w^2,
@@ -187,7 +193,7 @@ metabind <- function(..., name, pooled, backtransf) {
                            k.all = length(m.i$TE),
                            Q = m.i$Q,
                            df.Q = m.i$df.Q,
-                           pval.Q = 1 - pchisq(m.i$Q, m.i$df.Q),
+                           pval.Q = pvalQ(m.i$Q, m.i$df.Q),
                            ##
                            tau = m.i$tau,
                            tau2 = m.i$tau^2,
@@ -278,7 +284,7 @@ metabind <- function(..., name, pooled, backtransf) {
                          ##
                          title = m.i$title,
                          complab = m.i$complab,
-                         outclab = m.i$outclab,
+                         outclab = if (missing(outclab)) m.i$outclab else outclab,
                          label.e = m.i$label.e,
                          label.c = m.i$label.c,
                          label.left = m.i$label.left,
@@ -392,6 +398,7 @@ metabind <- function(..., name, pooled, backtransf) {
         study.i$w.random <- 1
       }
     }
+    ##
     study.i$byvar <- name[i]
     ##
     if (i == 1)

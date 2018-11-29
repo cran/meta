@@ -1,3 +1,41 @@
+*** meta, version 4.9-3, 2018-12-29 ***
+
+ ** Major changes **
+
+  * New argument 'control' in meta-analysis functions which is passed
+    on to R function rma.uni() or rma.glmm() from R package metafor to
+    control the iterative process to estimate the between-study
+    variance tau^2
+
+ ** User-visible changes **
+
+  * metabin(), metacont(), metacor(), metagen(), metainc(),
+    metamean(), metaprop(), metarate(), update.meta():
+    - new argument 'control' (see major changes)
+
+  * forest.meta():
+    - new argument 'calcwidth.subgroup'
+
+ ** Bug fixes **
+
+  * bubble.metareg():
+    - ignore missing values in covariate to calculate limits on x-axis
+    - works if data set used to create meta-analysis object is a
+      tibble instead of a data frame
+
+ ** Internal changes **
+
+  * metabind():
+    - argument 'tau.common' only considered for subgroup analyses
+
+  * hetcalc():
+    - argument 'control' passed on to R function rma.uni() from R
+      package metafor
+
+  * metacum(), metainf(), subgroup():
+    - argument 'control' from meta-analysis objects considered
+
+
 *** meta, version 4.9-2, 2018-06-06 ***
 
  ** Major changes **

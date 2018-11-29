@@ -57,6 +57,8 @@ update.meta <- function(object,
                         n.iter.max = object$n.iter.max,
                         ##
                         warn = object$warn,
+                        ##
+                        control = object$control,
                         ...) {
   
   
@@ -319,24 +321,24 @@ update.meta <- function(object,
   if (missing.subset) {
     if (!is.null(object$subset))
       subset <- object$subset
-    else if (!is.null(object$data$.subset))
+    else if (isCol(object$data, ".subset"))
       subset <- object$data$.subset
   }
   ##
   if (missing.incr) {
-    if (!is.null(object$data$.incr))
+    if (isCol(object$data, ".incr"))
       incr <- object$data$.incr
     else
       incr <- gs("incr")
   }
   ##
-  if (missing.byvar & !is.null(object$data$.byvar))
+  if (missing.byvar & isCol(object$data, ".byvar"))
     byvar <- object$data$.byvar
   ##
-  if (missing.studlab & !is.null(object$data$.studlab))
+  if (missing.studlab & isCol(object$data, ".studlab"))
     studlab <- object$data$.studlab
   ##
-  if (missing.exclude & !is.null(object$data$.exclude))
+  if (missing.exclude & isCol(object$data, ".exclude"))
     exclude <- object$data$.exclude
   ##
   if (method == "GLMM")
@@ -410,6 +412,8 @@ update.meta <- function(object,
                  ##
                  keepdata = keepdata,
                  warn = warn,
+                 ##
+                 control = control,
                  ...)
   }
   ##
@@ -447,7 +451,9 @@ update.meta <- function(object,
                   byseparator = byseparator,
                   ##
                   keepdata = keepdata,
-                  warn = warn)
+                  warn = warn,
+                  ##
+                  control = control)
   ##
   if (metacor)
     m <- metacor(cor = object$data$.cor,
@@ -477,7 +483,9 @@ update.meta <- function(object,
                  byvar = byvar, bylab = bylab, print.byvar = print.byvar,
                  byseparator = byseparator,
                  ##
-                 keepdata = keepdata)
+                 keepdata = keepdata,
+                 ##
+                 control = control)
   ##
   if (metagen) {
     data.m <- data
@@ -524,7 +532,9 @@ update.meta <- function(object,
                  byseparator = byseparator,
                  ##
                  keepdata = keepdata,
-                 warn = warn)
+                 warn = warn,
+                 ##
+                 control = control)
     if (add.e)
       m$data$n.e <- data$n.e
     if (add.c)
@@ -585,6 +595,8 @@ update.meta <- function(object,
                  ##
                  keepdata = keepdata,
                  warn = warn,
+                 ##
+                 control = control,
                  ...)
     if (add.e)
       m$data$n.e <- data$n.e
@@ -625,7 +637,9 @@ update.meta <- function(object,
                   byseparator = byseparator,
                   ##
                   keepdata = keepdata,
-                  warn = warn)
+                  warn = warn,
+                  ##
+                  control = control)
   ##
   if (metaprop)
     m <- metaprop(event = object$data$.event,
@@ -660,6 +674,8 @@ update.meta <- function(object,
                   ##
                   keepdata = keepdata,
                   warn = warn,
+                  ##
+                  control = control,
                   ...)
   ##
   if (metarate)
@@ -694,6 +710,8 @@ update.meta <- function(object,
                   ##
                   keepdata = keepdata,
                   warn = warn,
+                  ##
+                  control = control,
                   ...)
   ##  
   m$call.object <- object$call

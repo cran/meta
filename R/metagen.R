@@ -35,7 +35,9 @@ metagen <- function(TE, seTE, studlab,
                     byseparator = gs("byseparator"),
                     ##
                     keepdata = gs("keepdata"),
-                    warn = gs("warn")
+                    warn = gs("warn"),
+                    ##
+                    control = NULL
                     ) {
   
   
@@ -337,11 +339,13 @@ metagen <- function(TE, seTE, studlab,
     if (k == 1 & hakn)
       hakn <- FALSE
     ## Estimate tau-squared
-    hc <- hetcalc(TE[!exclude], seTE[!exclude], method.tau, TE.tau)
+    hc <- hetcalc(TE[!exclude], seTE[!exclude], method.tau, TE.tau,
+                  control = control)
     ##
     if (!missing.byvar & tau.common) {
       ## Estimate common tau-squared across subgroups
-      hcc <- hetcalc(TE[!exclude], seTE[!exclude], method.tau, TE.tau, byvar)
+      hcc <- hetcalc(TE[!exclude], seTE[!exclude], method.tau, TE.tau, byvar,
+                     control = control)
     }
     ##
     if (is.null(tau.preset)) {
@@ -411,7 +415,7 @@ metagen <- function(TE, seTE, studlab,
     if (hakn) {
       seTE.random <- sqrt(1 / (k - 1) * sum(w.random * (TE - TE.random)^2 /
                                               sum(w.random), na.rm = TRUE))
-      df.hakn <- k-1
+      df.hakn <- k - 1
       ci.r <- ci(TE.random, seTE.random, level = level.comb, df = df.hakn,
                  null.effect = null.effect)
     }
@@ -522,6 +526,7 @@ metagen <- function(TE, seTE, studlab,
               backtransf = backtransf,
               pscale = pscale,
               irscale = irscale, irunit = irunit,
+              control = control,
               version = packageDescription("meta")$Version)
   ##
   class(res) <- c(fun, "meta")

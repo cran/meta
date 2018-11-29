@@ -175,6 +175,7 @@ forest.meta <- function(x,
                         calcwidth.predict = FALSE,
                         calcwidth.hetstat = FALSE,
                         calcwidth.tests  = FALSE,
+                        calcwidth.subgroup = FALSE,
                         ##
                         just = if (layout != "JAMA") "right" else "left",
                         just.studlab = "left",
@@ -241,7 +242,7 @@ forest.meta <- function(x,
     xd <- x$data
     sortvar <- eval(mf[[match("sortvar", names(mf))]],
                     xd, enclos = NULL)
-    if (!is.null(x$data$.subset))
+    if (isCol(x$data, ".subset"))
       sortvar <- sortvar[x$data$.subset]
   }
   sort <- !is.null(sortvar)
@@ -405,6 +406,7 @@ forest.meta <- function(x,
   chklogical(calcwidth.predict)
   chklogical(calcwidth.hetstat)
   chklogical(calcwidth.tests)
+  chklogical(calcwidth.subgroup)
   just.cols <- setchar(just, c("right", "center", "left"))
   just.studlab <- setchar(just.studlab, c("right", "center", "left"))
   just.addcols <- setchar(just.addcols, c("right", "center", "left"))
@@ -4510,8 +4512,9 @@ forest.meta <- function(x,
                      upp = uppTEs.exclude,
                      rows = yS[-1],
                      ##
-                     ## "square" means normal confidence interval, "diamond" means meta-analysis diamond,
-                     ## "predict" means prediction interval
+                     ## "square"  - normal confidence interval
+                     ## "diamond" - meta-analysis diamond
+                     ## "predict" - prediction interval
                      ##
                      type = c(type.pooled, type.study),
                      ##
@@ -4846,7 +4849,8 @@ forest.meta <- function(x,
                    if (!calcwidth.tests)              # tests
                      5:n.summaries,
                    ##
-                   n.summaries + 0 * n.by + 1:n.by,   # subgroup labels
+                   if (!calcwidth.subgroup)
+                     n.summaries + 0 * n.by + 1:n.by, # subgroup labels
                    if (!calcwidth.fixed)              # FE in subgroups
                      n.summaries + 1 * n.by + 1:n.by,
                    if (!calcwidth.random)             # RE in subgroups

@@ -1,3 +1,83 @@
+*** metasens, version 4.9-5, 2019-04-11 ***
+
+ ** Major changes **
+
+  * For the generic inverse variance method, treatment estimates and
+    standard errors of individual studies can be derived from
+    - p-value or confidence limits
+    - sample size, median, interquartile range and / or range
+      (Wan et al. (2014), BMC Med Res Meth, 14, 135)
+
+  * New functions for the conversion of effect measures:
+    - smd2or() - from standardised mean difference to log odds ratio
+    - or2smd() - from log odds ratio to standardised mean difference
+
+  * Harbord test for funnel plot asymmetry implemented for risk ratio
+    as effect measure
+
+  * Generalised linear mixed model is the new default method for
+    meta-analysis of single proportions using the logit transformation
+
+  * R packages metafor and lme4 moved from Suggests to Imports
+
+  * Suppress printing of Wald-type test of heterogeneity for
+    generalised linear mixed models (problem in R function rma.glmm()
+    from R package metafor, version 2.0-0)
+ 
+  * Use roxygen2 for development of R package meta
+
+ ** User-visible changes **
+
+  * metagen():
+    - new arguments 'pval', 'df', 'lower', 'upper', 'level.ci',
+      'median', 'q1', 'q3', 'min', 'max', 'approx.TE', 'approx.seTE'
+      to approximate treatment estimates and / or standard errors from
+      other information
+
+  * forest.meta():
+    - printing of leading zeros in p-values can be suppressed (new
+      argument 'zero.pval')
+    - rounding of values for additional numerical columns possible
+      (new arguments 'digits.addcols', 'digits.addcols.left', and
+      'digits.addcols.right')
+    - argument 'big.mark' is considered for additional columns
+    - new arguments 'type.subgroup.fixed', 'type.subgroup.random', and
+      'lab.NA.weight'
+
+  * settings.meta() and gs():
+    - argument names can be abbreviated
+
+  * Major update of help pages of metagen() and metaprop()
+
+ ** Bug fixes **
+
+  * metacum(), metainf():
+    - consider argument 'method' for meta-analysis objects created
+      with metaprop() or metarate()
+
+  * forest.meta():
+    - argument 'studlab' can be used with objects created with
+      metacum() or metainf()
+
+  * subgroup():
+    - return subgroup sample sizes for objects created with metagen()
+
+ ** Internal changes **
+
+  * New internal functions TE.seTE.ci(), TE.seTE.iqr(),
+    TE.seTE.iqr.range(), TE.seTE.range(), and seTE.ci.pval() to
+    approximate treatment estimates and / or standard errors from other
+    information
+
+  * setchar():
+    - new argument 'stop.at.error'
+
+  * metagen():
+    - list element 'data' contains the dataset of the meta-analysis
+      object (i.e., list element 'data') instead of the whole
+      meta-analysis object
+
+
 *** meta, version 4.9-4, 2019-01-02 ***
 
  ** Major changes **

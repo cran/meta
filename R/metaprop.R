@@ -125,12 +125,7 @@
 #' (Stijnen et al., 2010). This method - implicitly using the logit
 #' transformation - is available (argument \code{method = "GLMM"}) by
 #' calling the \code{\link[metafor]{rma.glmm}} function from R package
-#' \bold{metafor} internally. As a technical note, a warning
-#' "Cannot invert Hessian for saturated model" is printed using R
-#' package \bold{metafor}, version 2.0-0. This warning can be safely
-#' ignored as the inverted Hessian is only used in the calculation of
-#' a Wald-type test of heterogeneity which is not printed due to the
-#' estimation problem.
+#' \bold{metafor} internally.
 #'
 #' For the logit transformation, a random intercept logistic
 #' regression model is used by default, i.e., argument \code{method =
@@ -505,7 +500,7 @@
 #' \bold{92}, 3--10
 #' 
 #' @examples
-#' # Meta-analysis using generalised linear mixed models
+#' # Meta-analysis using generalised linear mixed model
 #' #
 #' metaprop(4:1, 10 * 1:4)
 #' 
@@ -732,7 +727,7 @@ metaprop <- function(event, n, studlab,
   chklevel(level.predict)
   ##
   if (!anyNA(null.effect) | length(null.effect) != 1)
-    chklevel(null.effect, name = "null.effect")
+    chknumeric(null.effect, min = 0, max = 1, single = TRUE)
   ##
   method.bias <- setchar(method.bias,
                          c("rank", "linreg", "mm", "count", "score", "peters"))

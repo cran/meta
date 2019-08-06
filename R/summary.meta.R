@@ -504,7 +504,7 @@ summary.meta <- function(object,
     res$H.w             <- ci.H
     res$I2.w            <- ci.I2
     res$Rb.w            <- ci.Rb
-    res$bylab           <- object$bylab
+    res$bylab           <- bylab
     res$tau.common      <- object$tau.common
     res$bylevs          <- object$bylevs
   }
@@ -639,6 +639,40 @@ summary.meta <- function(object,
     res$null.effect <- object$null.effect    
     ##
     class(res) <- c(class(res), "metabind")
+  }
+  ##
+  ## Function metamiss() from R package metasens
+  ##
+  if (inherits(object, "metamiss")) {
+    ##
+    res$event.e <- object$event.e
+    res$miss.e <- object$miss.e
+    res$n.e <- object$n.e + object$miss.e
+    ##
+    res$event.c <- object$event.c
+    res$miss.c <- object$miss.c
+    res$n.c <- object$n.c + object$miss.c
+    ##
+    res$IMOR.e <- object$IMOR.e
+    res$IMOR.c <- object$IMOR.c
+    ##
+    res$method.miss <- object$method.miss
+    res$small.values <- object$small.values
+    ##
+    res$incr <- object$incr
+    res$p.e <- object$p.e
+    res$p.c <- object$p.c
+    ##
+    res$pmiss.e <- object$pmiss.e
+    res$pmiss.c <- object$pmiss.c
+    ##
+    res$p.star.e <- object$p.star.e
+    res$p.star.c <- object$p.star.c
+    ##
+    res$var.p.star.e <- object$var.p.star.e
+    res$var.p.star.c <- object$var.p.star.c
+    ##
+    class(res) <- c(class(res), "metamiss")
   }
   ##
   res$complab <- object$complab
@@ -1064,8 +1098,12 @@ print.summary.meta <- function(x,
   ## (5) Print result for meta-analysis
   ##
   ##
-  if (header)
+  if (header) {
+    if (inherits(x, "metamiss"))
+      cat("Sensitivity analysis for missing binary data\n\n")
+    ##
     crtitle(x)
+  }
   ##
   if (is.na(k.all)) {
     ## Do nothing
@@ -1108,7 +1146,8 @@ print.summary.meta <- function(x,
             irunit = irunit,
             null.effect = if (null.given) null.effect else 0,
             big.mark = big.mark,
-            digits = digits, digits.tau2 = digits.tau2)
+            digits = digits, digits.tau2 = digits.tau2,
+            method.miss = x$method.miss, IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
   }
   else if (is.na(k)) {
     ## Do nothing
@@ -1269,10 +1308,6 @@ print.summary.meta <- function(x,
                          c("Wald-type", "Likelihood-Ratio"))
           dimnames(Qdata) <- list(rep("", 2),
                                   c("Q", "d.f.", "p-value", "Test"))
-          ##
-          ## No p-value for Wald-type test with metafor, version 2.0-0
-          ##
-          Qdata <- Qdata[-1, , drop = FALSE]
         }
         ##
         cat("\nTest of heterogeneity:\n")
@@ -1464,7 +1499,8 @@ print.summary.meta <- function(x,
               irunit = irunit,
               null.effect = if (null.given) null.effect else 0,
               big.mark = big.mark,
-              digits = digits, digits.tau2 = digits.tau2)
+              digits = digits, digits.tau2 = digits.tau2,
+              method.miss = x$method.miss, IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
   }
   
   

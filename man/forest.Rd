@@ -9,8 +9,9 @@
 forest(x, ...)
 
 \method{forest}{metabind}(x, leftcols, leftlabs, rightcols = c("effect",
-  "ci"), rightlabs, overall = FALSE, subgroup = FALSE,
-  overall.hetstat = FALSE, lab.NA = "", digits = gs("digits.forest"),
+  "ci"), rightlabs, overall = FALSE, subgroup = FALSE, hetstat = if
+  (any(x$is.subgroup)) FALSE else "study", overall.hetstat = FALSE,
+  lab.NA = "", digits = gs("digits.forest"),
   digits.se = gs("digits.se"), digits.zval = gs("digits.zval"),
   digits.pval = max(gs("digits.pval") - 2, 2),
   digits.pval.Q = max(gs("digits.pval.Q") - 2, 2),
@@ -21,9 +22,9 @@ forest(x, ...)
 
 \method{forest}{meta}(x, sortvar, studlab = TRUE,
   layout = gs("layout"), comb.fixed = x$comb.fixed,
-  comb.random = x$comb.random, overall = TRUE, text.fixed = NULL,
-  text.random = NULL, lty.fixed = 2, lty.random = 3,
-  col.fixed = "black", col.random = "black",
+  comb.random = x$comb.random, overall = comb.fixed | comb.random,
+  text.fixed = NULL, text.random = NULL, lty.fixed = 2,
+  lty.random = 3, col.fixed = "black", col.random = "black",
   prediction = x$prediction, text.predict = NULL, subgroup = TRUE,
   print.subgroup.labels = TRUE, bylab = x$bylab,
   print.byvar = x$print.byvar, byseparator = x$byseparator,
@@ -33,13 +34,15 @@ forest(x, ...)
   xlab = "", xlab.pos, smlab = NULL, smlab.pos, xlim = "symmetric",
   allstudies = TRUE, weight.study, weight.subgroup, pscale = x$pscale,
   irscale = x$irscale, irunit = x$irunit, ref = ifelse(backtransf &
-  is.relative.effect(x$sm), 1, 0), leftcols = NULL, rightcols = NULL,
-  leftlabs = NULL, rightlabs = NULL, lab.e = x$label.e,
-  lab.c = x$label.c, lab.e.attach.to.col = NULL,
-  lab.c.attach.to.col = NULL, label.right = x$label.right,
-  label.left = x$label.left, bottom.lr = TRUE, lab.NA = ".",
-  lab.NA.effect = "", lab.NA.weight = "--", lwd = 1, at = NULL,
-  label = TRUE, type.study = "square", type.fixed = "diamond",
+  is.relative.effect(x$sm), 1, 0), lower.equi = NA, upper.equi = NA,
+  lty.equi = 1, col.equi = "blue", fill.equi = "transparent",
+  leftcols = NULL, rightcols = NULL, leftlabs = NULL,
+  rightlabs = NULL, lab.e = x$label.e, lab.c = x$label.c,
+  lab.e.attach.to.col = NULL, lab.c.attach.to.col = NULL,
+  label.right = x$label.right, label.left = x$label.left,
+  bottom.lr = TRUE, lab.NA = ".", lab.NA.effect = "",
+  lab.NA.weight = "--", lwd = 1, at = NULL, label = TRUE,
+  type.study = "square", type.fixed = "diamond",
   type.random = type.fixed, type.subgroup = ifelse(study.results,
   "diamond", "square"), type.subgroup.fixed = type.subgroup,
   type.subgroup.random = type.subgroup, col.study = "black",
@@ -53,8 +56,9 @@ forest(x, ...)
   col.predict = "red", col.predict.lines = "black",
   col.by = "darkgray", col.label.right = "black",
   col.label.left = "black", hetstat = print.I2 | print.tau2 | print.Q |
-  print.pval.Q | print.Rb, overall.hetstat = overall & hetstat,
-  hetlab = "Heterogeneity: ", resid.hetstat = overall & hetstat,
+  print.pval.Q | print.Rb, overall.hetstat = overall &
+  (!is.character(hetstat) && hetstat), hetlab = "Heterogeneity: ",
+  resid.hetstat = overall & (is.character(hetstat) || hetstat),
   resid.hetlab = "Residual heterogeneity: ", print.I2 = comb.fixed |
   comb.random, print.I2.ci = FALSE, print.tau2 = comb.fixed |
   comb.random, print.Q = FALSE, print.pval.Q = comb.fixed |
@@ -68,7 +72,7 @@ forest(x, ...)
   label.test.subgroup.fixed, label.test.subgroup.random,
   test.effect.subgroup, test.effect.subgroup.fixed,
   test.effect.subgroup.random, label.test.effect.subgroup.fixed,
-  label.test.effect.subgroup.random, fontsize = 12,
+  label.test.effect.subgroup.random, fontsize = 12, fontfamily = NULL,
   fs.heading = fontsize, fs.fixed, fs.random, fs.predict,
   fs.fixed.labels, fs.random.labels, fs.predict.labels,
   fs.study = fontsize, fs.study.labels = fs.study, fs.hetstat,
@@ -135,6 +139,10 @@ level.}
 should be shown in forest plot. This argument is useful in a
 meta-analysis with subgroups if summaries should not be plotted
 on group level.}
+
+\item{hetstat}{Either a logical value indicating whether to print
+results for heterogeneity measures at all or a character string
+(see Details).}
 
 \item{overall.hetstat}{A logical value indicating whether to print
 heterogeneity measures for overall treatment comparisons. This
@@ -295,6 +303,20 @@ calculate rates, e.g., person-years.}
 a line in the forest plot. No reference line is plotted if
 argument \code{ref} is equal to \code{NA}.}
 
+\item{lower.equi}{A numerical giving the lower limit of equivalence
+to be plotted as a line in the forest plot. No line is plotted if
+argument \code{lower.equi} is equal to \code{NA}.}
+
+\item{upper.equi}{A numerical giving the upper limit of equivalence
+to be plotted as a line in the forest plot. No line is plotted if
+argument \code{upper.equi} is equal to \code{NA}.}
+
+\item{lty.equi}{Line type (limits of equivalence).}
+
+\item{col.equi}{Line colour (limits of equivalence).}
+
+\item{fill.equi}{Colour of area between limits of equivalence.}
+
 \item{lab.e}{Label to be used for experimental group in table
 heading.}
 
@@ -402,9 +424,6 @@ effect.}
 \item{col.label.left}{The colour for label on left side of null
 effect.}
 
-\item{hetstat}{A logical value indicating whether to print results
-for heterogeneity measures at all.}
-
 \item{hetlab}{Label printed in front of results for heterogeneity
 measures.}
 
@@ -504,6 +523,8 @@ model).}
 
 \item{fontsize}{The size of text (in points), see
 \code{\link{gpar}}.}
+
+\item{fontfamily}{The font family, see \code{\link{gpar}}.}
 
 \item{fs.heading}{The size of text for column headings, see
 \code{\link{gpar}}.}
@@ -977,6 +998,18 @@ et al., 2009) is given in the forest plot if arguments
 \code{prediction} and \code{comb.random} are \code{TRUE}. For
 graphical presentation of prediction intervals the approach by
 Guddat et al. (2012) is used.
+
+Argument \code{hetstat} can be a character string to specify where
+to print heterogeneity information:
+\itemize{
+\item row with results for fixed effect model (\code{hetstat =
+"fixed"}),
+\item row with results for random effects model (\code{hetstat =
+"random"}),
+\item rows with 'study' information (\code{hetstat = "study"}) -
+  only considered for \code{\link{metabind}} objects.
+}
+Otherwise, information on heterogeneity is printed in dedicated rows.
 
 Note, in R package \bold{meta}, version 3.0-0 the following
 arguments have been removed from R function forest.meta: byvar,

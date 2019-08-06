@@ -1,4 +1,54 @@
-*** metasens, version 4.9-5, 2019-04-11 ***
+*** meta, version 4.9-6, 2019-08-06 ***
+
+ ** Major changes **
+
+  * New functions to calculate the number needed to treat from the
+    results of a meta-analysis
+
+  * Equivalence limits can be added to forest plots
+
+  * Font family can be specified in forest plots
+
+  * Print Wald-type test of heterogeneity for generalised linear mixed
+    models (problem fixed in R package metafor, version 2.1-0)
+    
+ ** Bug fixes **
+
+  * forest.meta():
+    - (always) print correct length for reference line
+    - (always) print label on x-axis at the correct vertical position
+    - (always) print graph labels on the left and right side of the
+      forest plot at the correct vertical position
+    - no error if additional numeric variable is added to the right
+      side of the forest plot (argument 'rightcols')
+
+  * summary.meta():
+    - consider argument 'bylab'
+
+  * metaprop():
+    - allow values 0 and 1 for argument 'null.effect'
+
+ ** User-visible changes **
+
+  * forest.meta():
+    - new arguments 'lower.equi', 'upper.equi', 'lty.equi',
+      'col.equi', and 'fill.equi' to add equivalence limits
+    - new argument 'fontfamily' to specify the font family
+
+  * forest.metabind():
+    - information on heterogeneity printed for each meta-analysis
+
+ ** Internal changes **
+
+  * ciAgrestiCoull():
+    - set lower confidence limit to 0 for negative values
+    - set upper confidence limit to 1 for values above 1
+
+  * subgroup meta-analyses return new list element 'pval.Q.w'
+    (change in internal function subgroup())
+
+
+*** meta, version 4.9-5, 2019-04-11 ***
 
  ** Major changes **
 

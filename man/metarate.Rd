@@ -192,8 +192,7 @@ object is a list containing the following components:
 \item{df.Q.LRT}{Degrees of freedom for likelihood-ratio test}
 \item{pval.Q.LRT}{P-value of likelihood-ratio test.}
 \item{tau}{Square-root of between-study variance.}
-\item{se.tau}{Standard error of square-root of between-study
-  variance.}
+\item{se.tau2}{Standard error of between-study variance.}
 \item{C}{Scaling factor utilised internally to calculate common
   tau-squared across subgroups.}
 \item{method}{A character string indicating method used for
@@ -301,9 +300,16 @@ linear mixed model (GLMM) are available for pooling. For GLMMs, the
 \bold{metafor} (Viechtbauer 2010) is called internally.
 }
 \details{
-Fixed effect and random effects meta-analysis of single incidence
-rates to calculate an overall rate. The following transformations
-of incidence rates are implemented to calculate an overall rate:
+This function provides methods for fixed effect and random effects
+meta-analysis of single incidence rates to calculate an overall
+rate. Note, you should use R function \code{\link{metainc}} to
+compare incidence rates of pairwise comparisons instead of using
+\code{metarate} for each treatment arm separately which will break
+randomisation in randomised controlled trials.
+
+The following transformations of incidence rates are implemented to
+calculate an overall rate:
+
 \itemize{
 \item Log transformation (\code{sm = "IRLN"}, default)
 \item Square root transformation (\code{sm = "IRS"})
@@ -312,22 +318,106 @@ of incidence rates are implemented to calculate an overall rate:
 \item No transformation (\code{sm = "IR"})
 }
 
-Note, you should use R function \code{\link{metainc}} to compare
-incidence rates of pairwise comparisons instead of using
-\code{metarate} for each treatment arm separately which will break
-randomisation in randomised controlled trials.
+By default (argument \code{method = "Inverse"}), the inverse
+variance method (Borenstein et al., 2010) is used for pooling by
+calling \code{\link{metagen}} internally. A random intercept
+Poisson regression model (Stijnen et al., 2010) can be utilised
+instead with argument \code{method = "GLMM"} which calls the
+\code{\link[metafor]{rma.glmm}} function from R package
+\bold{metafor}.
 
-Argument \code{irscale} can be used to rescale rates, e.g.
-\code{irscale = 1000} means that rates are expressed as events per
-1000 time units, e.g. person-years. This is useful in situations
-with (very) low rates. Argument \code{irunit} can be used to
-specify the time unit used in individual studies (default:
-"person-years"). This information is printed in summaries and
-forest plots if argument \code{irscale} is not equal to 1.
+Default settings are utilised for several arguments (assignments
+using \code{\link{gs}} function). These defaults can be changed for
+the current R session using the \code{\link{settings.meta}}
+function.
 
-For several arguments defaults settings are utilised (assignments
-using \code{\link{gs}} function). These defaults can be changed
-using the \code{\link{settings.meta}} function.
+Furthermore, R function \code{\link{update.meta}} can be used to
+rerun a meta-analysis with different settings.
+
+\subsection{Continuity correction}{
+
+If the summary measure (argument \code{sm}) is equal to "IR" or
+"IRLN", a continuity correction is applied if any study has zero
+events, i.e., an incidence rate of 0.
+
+By default, 0.5 is used as continuity correction (argument
+\code{incr}). This continuity correction is used both to calculate
+individual study results with confidence limits and to conduct
+meta-analysis based on the inverse variance method.
+
+For the Freeman-Tukey (Freeman & Tukey, 1950) and square root
+transformation as well as GLMMs no continuity correction is used.
+}
+
+\subsection{Estimation of between-study variance}{
+
+The following methods to estimate the between-study variance
+\eqn{\tau^2} (argument \code{method.tau}) are available for the
+inverse variance method:
+\itemize{
+\item DerSimonian-Laird estimator (\code{method.tau = "DL"})
+\item Paule-Mandel estimator (\code{method.tau = "PM"})
+\item Restricted maximum-likelihood estimator (\code{method.tau =
+  "REML"})
+\item Maximum-likelihood estimator (\code{method.tau = "ML"})
+\item Hunter-Schmidt estimator (\code{method.tau = "HS"})
+\item Sidik-Jonkman estimator (\code{method.tau = "SJ"})
+\item Hedges estimator (\code{method.tau = "HE"})
+\item Empirical Bayes estimator (\code{method.tau = "EB"})
+}
+See \code{\link{metagen}} for more information on these
+estimators. Note, the maximum-likelihood method is utilized for
+GLMMs.
+}
+
+\subsection{Hartung-Knapp method}{
+
+Hartung and Knapp (2001a,b) proposed an alternative method for
+random effects meta-analysis based on a refined variance estimator
+for the treatment estimate. Simulation studies (Hartung and Knapp,
+2001a,b; IntHout et al., 2014; Langan et al., 2019) show improved
+coverage probabilities compared to the classic random effects
+method. However, in rare settings with very homogeneous treatment
+estimates, the Hartung-Knapp method can be anti-conservative
+(Wiksten et al., 2016). The Hartung-Knapp method is used if
+argument \code{hakn = TRUE}.
+}
+
+\subsection{Prediction interval}{
+
+A prediction interval for the proportion in a new study (Higgins et
+al., 2009) is calculated if arguments \code{prediction} and
+\code{comb.random} are \code{TRUE}. Note, the definition of
+prediction intervals varies in the literature. This function
+implements equation (12) of Higgins et al., (2009) which proposed a
+\emph{t} distribution with \emph{K-2} degrees of freedom where
+\emph{K} corresponds to the number of studies in the meta-analysis.
+}
+
+\subsection{Subgroup analysis}{
+
+Argument \code{byvar} can be used to conduct subgroup analysis for
+a categorical covariate. The \code{\link{metareg}} function can be
+used instead for more than one categorical covariate or continuous
+covariates.
+}
+
+\subsection{Specify the null hypothesis of test for an overall effect}{
+
+Argument \code{null.effect} can be used to specify the rate used
+under the null hypothesis in a test for an overall effect.
+
+By default (\code{null.effect = NA}), no hypothesis test is
+conducted as it is unclear which value is a sensible choice for the
+data at hand.  An overall rate of 2, for example, could be tested
+by setting argument \code{null.effect = 2}.
+
+Note, all tests for an overall effect are two-sided with the
+alternative hypothesis that the effect is unequal to
+\code{null.effect}.
+}
+
+\subsection{Presentation of meta-analysis results}{
 
 Internally, both fixed effect and random effects models are
 calculated regardless of values choosen for arguments
@@ -340,62 +430,14 @@ package \bold{meta} will adequately consider the values for
 \code{\link{print.meta}} will not print results for the random
 effects model if \code{comb.random = FALSE}.
 
-A random intercept Poisson regression model can be utilised for the
-meta-analysis of incidence rates (Stijnen et al., 2010). This
-method is available (argument \code{method = "GLMM"}) by calling
-the \code{\link[metafor]{rma.glmm}} function from R package
-\bold{metafor} internally.
-
-If the summary measure is equal to "IR" or "IRLN", a continuity
-correction is applied if any study has zero events, i.e., an
-incidence rate of 0. By default, 0.5 is used as continuity
-correction (argument \code{incr}). This continuity correction is
-used both to calculate individual study results with confidence
-limits and to conduct meta-analysis based on the inverse variance
-method. For Freeman-Tukey and square root transformation and GLMMs
-no continuity correction is used.
-
-Argument \code{byvar} can be used to conduct subgroup analysis for
-all methods but GLMMs. Instead use the \code{\link{metareg}}
-function for GLMMs which can also be used for continuous
-covariates.
-
-A prediction interval for the treatment effect of a new study is
-calculated (Higgins et al., 2009) if arguments \code{prediction}
-and \code{comb.random} are \code{TRUE}.
-
-R function \code{\link{update.meta}} can be used to redo the
-meta-analysis of an existing metarate object by only specifying
-arguments which should be changed.
-
-For the random effects, the method by Hartung and Knapp (2003) is
-used to adjust test statistics and confidence intervals if argument
-\code{hakn = TRUE}.
-
-The DerSimonian-Laird estimate (1986) is used in the random effects
-model if \code{method.tau = "DL"}. The iterative Paule-Mandel
-method (1982) to estimate the between-study variance is used if
-argument \code{method.tau = "PM"}.  Internally, R function
-\code{paulemandel} is called which is based on R function
-mpaule.default from R package \bold{metRology} from S.L.R. Ellison
-<s.ellison at lgc.co.uk>.
-
-If R package \bold{metafor} (Viechtbauer 2010) is installed, the
-following methods to estimate the between-study variance
-\eqn{\tau^2} (argument \code{method.tau}) are also available:
-\itemize{
-\item Restricted maximum-likelihood estimator (\code{method.tau =
-  "REML"})
-\item Maximum-likelihood estimator (\code{method.tau = "ML"})
-\item Hunter-Schmidt estimator (\code{method.tau = "HS"})
-\item Sidik-Jonkman estimator (\code{method.tau = "SJ"})
-\item Hedges estimator (\code{method.tau = "HE"})
-\item Empirical Bayes estimator (\code{method.tau = "EB"})
+Argument \code{irscale} can be used to rescale rates, e.g.
+\code{irscale = 1000} means that rates are expressed as events per
+1000 time units, e.g. person-years. This is useful in situations
+with (very) low rates. Argument \code{irunit} can be used to
+specify the time unit used in individual studies (default:
+"person-years"). This information is printed in summaries and
+forest plots if argument \code{irscale} is not equal to 1.
 }
-For these methods the R function \code{rma.uni} of R package
-\bold{metafor} is called internally. See help page of R function
-\code{rma.uni} for more details on these methods to estimate
-between-study variance.
 }
 \examples{
 # Apply various meta-analysis methods to estimate incidence rates
@@ -425,10 +467,11 @@ m5
 
 }
 \references{
-DerSimonian R & Laird N (1986):
-Meta-analysis in clinical trials.
-\emph{Controlled Clinical Trials},
-\bold{7}, 177--88
+Borenstein M, Hedges LV, Higgins JP, Rothstein HR (2010):
+A basic introduction to fixed-effect and random-effects models for
+meta-analysis.
+\emph{Research Synthesis Methods},
+\bold{1}, 97--111
 
 Freeman MF & Tukey JW (1950):
 Transformations related to the angular and the square root.
@@ -440,16 +483,31 @@ A re-evaluation of random-effects meta-analysis.
 \emph{Journal of the Royal Statistical Society: Series A},
 \bold{172}, 137--59
 
-Knapp G & Hartung J (2003):
-Improved tests for a random effects meta-regression with a single
-covariate.
+Hartung J, Knapp G (2001a):
+On tests of the overall treatment effect in meta-analysis with
+normally distributed responses.
 \emph{Statistics in Medicine},
-\bold{22}, 2693--710
+\bold{20}, 1771--82
 
-Paule RC & Mandel J (1982):
-Consensus values and weighting factors.
-\emph{Journal of Research of the National Bureau of Standards},
-\bold{87}, 377--85
+Hartung J, Knapp G (2001b):
+A refined method for the meta-analysis of controlled clinical
+trials with binary outcome.
+\emph{Statistics in Medicine},
+\bold{20}, 3875--89
+
+IntHout J, Ioannidis JPA, Borm GF (2014):
+The Hartung-Knapp-Sidik-Jonkman method for random effects
+meta-analysis is straightforward and considerably outperforms the
+standard DerSimonian-Laird method.
+\emph{BMC Medical Research Methodology},
+\bold{14}, 25
+
+Langan D, Higgins JPT, Jackson D, Bowden J, Veroniki AA,
+Kontopantelis E, et al. (2019):
+A comparison of heterogeneity variance estimators in simulated
+random-effects meta-analyses.
+\emph{Research Synthesis Methods},
+\bold{10}, 83--98
 
 Stijnen T, Hamza TH, Ozdemir P (2010):
 Random effects meta-analysis of event outcome in the framework of
@@ -462,6 +520,12 @@ Viechtbauer W (2010):
 Conducting Meta-Analyses in R with the Metafor Package.
 \emph{Journal of Statistical Software},
 \bold{36}, 1--48
+
+Wiksten A, Rücker G, Schwarzer G (2016):
+Hartung-Knapp method is not always conservative compared with
+fixed-effect meta-analysis.
+\emph{Statistics in Medicine},
+\bold{35}, 2503--15
 }
 \seealso{
 \code{\link{update.meta}}, \code{\link{metacont}},

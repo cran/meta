@@ -40,9 +40,8 @@ used for pooling of studies. One of \code{"Inverse"} and
 \code{"GLMM"}, can be abbreviated.}
 
 \item{sm}{A character string indicating which summary measure
-(\code{"PFT"}, \code{"PAS"}, \code{"PRAW"}, \code{"PLN"}, or
-\code{"PLOGIT"}) is to be used for pooling of studies, see
-Details.}
+(\code{"PLOGIT"}, \code{"PAS"}, \code{"PFT"}, \code{"PLN"}, or
+\code{"PRAW"}) is to be used for pooling of studies, see Details.}
 
 \item{incr}{A numeric which is added to event number and sample
 size of studies with zero or all events, i.e., studies with an
@@ -194,8 +193,7 @@ object is a list containing the following components:
 \item{df.Q.LRT}{Degrees of freedom for likelihood-ratio test}
 \item{pval.Q.LRT}{P-value of likelihood-ratio test.}
 \item{tau}{Square-root of between-study variance.}
-\item{se.tau}{Standard error of square-root of between-study
-  variance.}
+\item{se.tau2}{Standard error of between-study variance.}
 \item{C}{Scaling factor utilised internally to calculate common
   tau-squared across subgroups.}
 \item{method}{A character string indicating method used for
@@ -315,29 +313,37 @@ implemented to calculate an overall proportion:
 
 \itemize{
 \item Logit transformation (\code{sm = "PLOGIT"}, default)
-\item Log transformation (\code{sm = "PLN"})
-\item Freeman-Tukey Double arcsine transformation (\code{sm = "PFT"})
 \item Arcsine transformation (\code{sm = "PAS"})
+\item Freeman-Tukey Double arcsine transformation (\code{sm = "PFT"})
+\item Log transformation (\code{sm = "PLN"})
 \item Raw, i.e. untransformed, proportions (\code{sm = "PRAW"})
 }
 
-Classic meta-analysis (Borenstein et al., 2010) utilises the
-transformed proportions and corresponding standard errors in the
-generic inverse variance method. A distinctive and frequently
-overlooked advantage of binary data is that individual patient data
-can be extracted. Accordingly, a generalised linear mixed model
-(GLMM) - more specific, a random intercept logistic regression
-model - can be utilised for the meta-analysis of proportions
-(Stijnen et al., 2010). This method - implicitly using the logit
-transformation - is available (argument \code{method = "GLMM"}) by
-calling the \code{\link[metafor]{rma.glmm}} function from R package
-\bold{metafor} internally.
+A generalised linear mixed model (GLMM) - more specific, a random
+intercept logistic regression model - can be utilised for the
+meta-analysis of proportions (Stijnen et al., 2010). This is the
+default method for the logit transformation (argument \code{sm =
+"PLOGIT"}). Internally, the \code{\link[metafor]{rma.glmm}}
+function from R package \bold{metafor} is called to fit a GLMM.
 
-For the logit transformation, a random intercept logistic
-regression model is used by default, i.e., argument \code{method =
-"GLMM"}. The classic meta-analysis model based on the inverse
-variance method can be used instead by setting argument
-\code{method} equal to \code{"Inverse"}.
+Classic meta-analysis (Borenstein et al., 2010) utilising the
+(un)transformed proportions and corresponding standard errors in
+the inverse variance method is conducted by calling the
+\code{\link{metagen}} function internally. This is the only
+available method for all transformations but the logit
+transformation. The classic meta-analysis model with logit
+transformed proportions is used by setting argument \code{method =
+"Inverse"}.
+
+Default settings are utilised for several arguments (assignments
+using \code{\link{gs}} function). These defaults can be changed for
+the current R session using the \code{\link{settings.meta}}
+function.
+
+Furthermore, R function \code{\link{update.meta}} can be used to
+rerun a meta-analysis with different settings.
+
+\subsection{Choice of transformation / meta-analysis method}{
 
 Contradictory recommendations on the use of transformations of
 proportions have been published in the literature. For example,
@@ -345,20 +351,38 @@ Barendregt et al. (2013) recommend the use of the Freeman-Tukey
 double arcsine transformation instead of the logit transformation
 whereas Warton & Hui (2011) strongly advise to use generalised
 linear mixed models with the logit transformation instead of the
-arcsine transformation. Schwarzer et al. (2019) describe seriously
-misleading results in a meta-analysis with very different sample
-sizes due to problems with the back-transformation of the
-Freeman-Tukey transformation which requires a single sample
-size. Accordingly, Schwarzer et al. (2019) also recommend to use
-GLMMs for the meta-analysis of single proportions, however, admit
-that individual study weights are not available with this
-method. Meta-analysts which require individual study weights should
-consider the arcsine or logit transformation.
+arcsine transformation.
+
+Schwarzer et al. (2019) describe seriously misleading results in a
+meta-analysis with very different sample sizes due to problems with
+the back-transformation of the Freeman-Tukey transformation which
+requires a single sample size (Miller, 1978). Accordingly,
+Schwarzer et al. (2019) also recommend to use GLMMs for the
+meta-analysis of single proportions, however, admit that individual
+study weights are not available with this method. Meta-analysts
+which require individual study weights should consider the inverse
+variance method with the arcsine or logit transformation.
 
 In order to prevent misleading conclusions for the Freeman-Tukey
 double arcsine transformation, sensitivity analyses using other
 transformations or using a range of sample sizes should be
 conducted (Schwarzer et al., 2019).
+}
+
+\subsection{Continuity correction}{
+
+If the summary measure is equal to "PLOGIT", "PLN", or "PRAW", a
+continuity correction is applied if any study has either zero or
+all events, i.e., an event probability of either 0 or 1.
+
+By default, 0.5 is used as continuity correction (argument
+\code{incr}). This continuity correction is used both to calculate
+individual study results with confidence limits and to conduct
+meta-analysis based on the inverse variance method. For GLMMs no
+continuity correction is used.
+}
+
+\subsection{Confidence intervals for individual studies}{
 
 Various methods are available to calculate confidence intervals for
 individual study results (see Agresti & Coull 1998 and Newcombe
@@ -382,21 +406,85 @@ summary measure, i.e. \code{method.ci = "NAsm"}, the same
 confidence interval is calculated for individual studies for any
 summary measure (argument \code{sm}) as only number of events and
 observations are used in the calculation disregarding the chosen
-summary measure. Results will be presented for transformed
-proportions if argument \code{backtransf = FALSE} in the
-\code{\link{print.meta}}, \code{\link{print.summary.meta}}, or
-\code{\link{forest.meta}} function. In this case, argument
-\code{method.ci = "NAsm"} is used, i.e. confidence intervals based
-on the normal approximation based on the summary measure.
+transformation.
 
-Argument \code{pscale} can be used to rescale proportions, e.g.
-\code{pscale = 1000} means that proportions are expressed as events
-per 1000 observations. This is useful in situations with (very) low
-event probabilities.
+Results will be presented for transformed proportions if argument
+\code{backtransf = FALSE} in the \code{\link{print.meta}},
+\code{\link{print.summary.meta}}, or \code{\link{forest.meta}}
+function. In this case, argument \code{method.ci = "NAsm"} is used,
+i.e. confidence intervals based on the normal approximation based
+on the summary measure.
+}
 
-For several arguments defaults settings are utilised (assignments
-using \code{\link{gs}} function). These defaults can be changed
-using the \code{\link{settings.meta}} function.
+\subsection{Estimation of between-study variance}{
+
+The following methods to estimate the between-study variance
+\eqn{\tau^2} (argument \code{method.tau}) are available for the
+inverse variance method:
+\itemize{
+\item DerSimonian-Laird estimator (\code{method.tau = "DL"})
+\item Paule-Mandel estimator (\code{method.tau = "PM"})
+\item Restricted maximum-likelihood estimator (\code{method.tau =
+  "REML"})
+\item Maximum-likelihood estimator (\code{method.tau = "ML"})
+\item Hunter-Schmidt estimator (\code{method.tau = "HS"})
+\item Sidik-Jonkman estimator (\code{method.tau = "SJ"})
+\item Hedges estimator (\code{method.tau = "HE"})
+\item Empirical Bayes estimator (\code{method.tau = "EB"})
+}
+See \code{\link{metagen}} for more information on these
+estimators. Note, the maximum-likelihood method is utilized for
+GLMMs.
+}
+
+\subsection{Hartung-Knapp method}{
+
+Hartung and Knapp (2001a,b) proposed an alternative method for
+random effects meta-analysis based on a refined variance estimator
+for the treatment estimate. Simulation studies (Hartung and Knapp,
+2001a,b; IntHout et al., 2014; Langan et al., 2019) show improved
+coverage probabilities compared to the classic random effects
+method. However, in rare settings with very homogeneous treatment
+estimates, the Hartung-Knapp method can be anti-conservative
+(Wiksten et al., 2016). The Hartung-Knapp method is used if
+argument \code{hakn = TRUE}.
+}
+
+\subsection{Prediction interval}{
+
+A prediction interval for the proportion in a new study (Higgins et
+al., 2009) is calculated if arguments \code{prediction} and
+\code{comb.random} are \code{TRUE}. Note, the definition of
+prediction intervals varies in the literature. This function
+implements equation (12) of Higgins et al., (2009) which proposed a
+\emph{t} distribution with \emph{K-2} degrees of freedom where
+\emph{K} corresponds to the number of studies in the meta-analysis.
+}
+
+\subsection{Subgroup analysis}{
+
+Argument \code{byvar} can be used to conduct subgroup analysis for
+a categorical covariate. The \code{\link{metareg}} function can be
+used instead for more than one categorical covariate or continuous
+covariates.
+}
+
+\subsection{Specify the null hypothesis of test for an overall proportion}{
+
+Argument \code{null.effect} can be used to specify the proportion
+used under the null hypothesis in a test for an overall effect.
+
+By default (\code{null.effect = NA}), no hypothesis test is
+conducted as it is unclear which value is a sensible choice for the
+data at hand.  An overall proportion of 50\%, for example, could be
+tested by setting argument \code{null.effect = 0.5}.
+
+Note, all tests for an overall effect are two-sided with the
+alternative hypothesis that the effect is unequal to
+\code{null.effect}.
+}
+
+\subsection{Presentation of meta-analysis results}{
 
 Internally, both fixed effect and random effects models are
 calculated regardless of values choosen for arguments
@@ -409,56 +497,11 @@ package \bold{meta} will adequately consider the values for
 \code{\link{print.meta}} will not print results for the random
 effects model if \code{comb.random = FALSE}.
 
-If the summary measure is equal to "PRAW", "PLN", or "PLOGIT", a
-continuity correction is applied if any study has either zero or
-all events, i.e., an event probability of either 0 or 1. By
-default, 0.5 is used as continuity correction (argument
-\code{incr}). This continuity correction is used both to calculate
-individual study results with confidence limits and to conduct
-meta-analysis based on the inverse variance method. For GLMMs no
-continuity correction is used.
-
-Argument \code{byvar} can be used to conduct subgroup analysis for
-all methods but GLMMs. Instead use the \code{\link{metareg}}
-function for GLMMs which can also be used for continuous
-covariates.
-
-A prediction interval for the treatment effect of a new study is
-calculated (Higgins et al., 2009) if arguments \code{prediction}
-and \code{comb.random} are \code{TRUE}.
-
-R function \code{\link{update.meta}} can be used to redo the
-meta-analysis of an existing metaprop object by only specifying
-arguments which should be changed.
-
-For the random effects, the method by Hartung and Knapp (2003) is
-used to adjust test statistics and confidence intervals if argument
-\code{hakn = TRUE}.
-
-The DerSimonian-Laird estimate (1986) is used in the random effects
-model if \code{method.tau = "DL"}. The iterative Paule-Mandel
-method (1982) to estimate the between-study variance is used if
-argument \code{method.tau = "PM"}.  Internally, R function
-\code{paulemandel} is called which is based on R function
-mpaule.default from R package \bold{metRology} from S.L.R. Ellison
-<s.ellison at lgc.co.uk>.
-
-If R package \bold{metafor} (Viechtbauer 2010) is installed, the
-following methods to estimate the between-study variance
-\eqn{\tau^2} (argument \code{method.tau}) are also available:
-\itemize{
-\item Restricted maximum-likelihood estimator (\code{method.tau =
-  "REML"})
-\item Maximum-likelihood estimator (\code{method.tau = "ML"})
-\item Hunter-Schmidt estimator (\code{method.tau = "HS"})
-\item Sidik-Jonkman estimator (\code{method.tau = "SJ"})
-\item Hedges estimator (\code{method.tau = "HE"})
-\item Empirical Bayes estimator (\code{method.tau = "EB"})
+Argument \code{pscale} can be used to rescale proportions, e.g.
+\code{pscale = 1000} means that proportions are expressed as events
+per 1000 observations. This is useful in situations with (very) low
+event probabilities.
 }
-For these methods the R function \code{rma.uni} of R package
-\bold{metafor} is called internally. See help page of R function
-\code{rma.uni} for more details on these methods to estimate
-between-study variance.
 }
 \examples{
 # Meta-analysis using generalised linear mixed model
@@ -651,11 +694,31 @@ A re-evaluation of random-effects meta-analysis.
 \emph{Journal of the Royal Statistical Society: Series A},
 \bold{172}, 137--59
 
-Knapp G & Hartung J (2003):
-Improved tests for a random effects meta-regression with a single
-covariate.
+Hartung J, Knapp G (2001a):
+On tests of the overall treatment effect in meta-analysis with
+normally distributed responses.
 \emph{Statistics in Medicine},
-\bold{22}, 2693--710
+\bold{20}, 1771--82
+
+Hartung J, Knapp G (2001b):
+A refined method for the meta-analysis of controlled clinical
+trials with binary outcome.
+\emph{Statistics in Medicine},
+\bold{20}, 3875--89
+
+IntHout J, Ioannidis JPA, Borm GF (2014):
+The Hartung-Knapp-Sidik-Jonkman method for random effects
+meta-analysis is straightforward and considerably outperforms the
+standard DerSimonian-Laird method.
+\emph{BMC Medical Research Methodology},
+\bold{14}, 25
+
+Langan D, Higgins JPT, Jackson D, Bowden J, Veroniki AA,
+Kontopantelis E, et al. (2019):
+A comparison of heterogeneity variance estimators in simulated
+random-effects meta-analyses.
+\emph{Research Synthesis Methods},
+\bold{10}, 83--98
 
 Miller JJ (1978):
 The inverse of the Freeman-Tukey double arcsine transformation.
@@ -668,11 +731,6 @@ comparison of seven methods.
 \emph{Statistics in Medicine},
 \bold{17}, 857--72
 
-Paule RC & Mandel J (1982):
-Consensus values and weighting factors.
-\emph{Journal of Research of the National Bureau of Standards},
-\bold{87}, 377--85
-
 Pettigrew HM, Gart JJ, Thomas DG (1986):
 The bias and higher cumulants of the logarithm of a binomial
 variate.
@@ -682,8 +740,8 @@ variate.
 Schwarzer G, Chemaitelly H, Abu-Raddad LJ, Rücker G (2019):
 Seriously misleading results using inverse of Freeman-Tukey double
 arcsine transformation in meta-analysis of single proportions.
-\emph{Research Synthesis Methods}, 1--8.
-https://doi.org/10.1002/jrsm.1348
+\emph{Research Synthesis Methods},
+\bold{10}, 476--83
 
 Stijnen T, Hamza TH, Ozdemir P (2010):
 Random effects meta-analysis of event outcome in the framework of
@@ -701,6 +759,12 @@ Warton DI, Hui FKC (2011):
 The arcsine is asinine: the analysis of proportions in ecology.
 \emph{Ecology},
 \bold{92}, 3--10
+
+Wiksten A, Rücker G, Schwarzer G (2016):
+Hartung-Knapp method is not always conservative compared with
+fixed-effect meta-analysis.
+\emph{Statistics in Medicine},
+\bold{35}, 2503--15
 }
 \seealso{
 \code{\link{update.meta}}, \code{\link{metacont}},

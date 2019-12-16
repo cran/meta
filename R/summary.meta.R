@@ -55,6 +55,8 @@
 #'   heterogeneity statistic Q, see \code{print.default}.
 #' @param digits.tau2 Minimal number of significant digits for
 #'   between-study variance, see \code{print.default}.
+#' @param digits.tau Minimal number of significant digits for square
+#'   root of between-study variance, see \code{print.default}.
 #' @param digits.H Minimal number of significant digits for H
 #'   statistic, see \code{print.default}.
 #' @param digits.I2 Minimal number of significant digits for I-squared
@@ -63,8 +65,13 @@
 #'   be printed in scientific notation, e.g., 1.2345e-01 instead of
 #'   0.12345.
 #' @param big.mark A character used as thousands separator.
+#' @param zero.pval A logical specifying whether p-values should be
+#'   printed with a leading zero.
+#' @param JAMA.pval A logical specifying whether p-values for test of
+#'   overall effect should be printed according to JAMA reporting
+#'   standards.
 #' @param print.I2 A logical specifying whether heterogeneity
-#'   statistic I^2 should be printed.
+#'   statistic I\eqn{^2} should be printed.
 #' @param warn A logical indicating whether the use of
 #'   \code{summary.meta} in connection with \code{metacum} or
 #'   \code{metainf} should result in a warning.
@@ -74,12 +81,15 @@
 #' @param print.H A logical specifying whether heterogeneity statistic
 #'   H should be printed.
 #' @param print.Rb A logical specifying whether heterogeneity
-#'   statistic Rb should be printed.
+#'   statistic R\eqn{_b} should be printed.
 #' @param text.tau2 Text printed to identify between-study variance
-#'   tau^2.
+#'   \eqn{\tau^2}.
+#' @param text.tau Text printed to identify \eqn{\tau}, the square root
+#'   of the between-study variance \eqn{\tau^2}.
 #' @param text.I2 Text printed to identify heterogeneity statistic
-#'   I^2.
-#' @param text.Rb Text printed to identify heterogeneity statistic Rb.
+#'   I\eqn{^2}.
+#' @param text.Rb Text printed to identify heterogeneity statistic
+#'   R\eqn{_b}.
 #' @param \dots Additional arguments (ignored).
 #'
 #' @details
@@ -149,13 +159,11 @@
 #' \item{Q}{Heterogeneity statistic Q.}
 #' \item{tau}{Square-root of between-study variance.}
 #' \item{se.tau2}{Standard error of between-study variance.}
-#' \item{C}{Scaling factor utilised internally to calculate common
-#'   tau-squared across subgroups.}
 #' \item{H}{Heterogeneity statistic H (a list with elements TE, lower,
 #'   upper).}
-#' \item{I2}{Heterogeneity statistic I2 (a list with elements TE,
+#' \item{I2}{Heterogeneity statistic I\eqn{^2} (a list with elements TE,
 #'   lower, upper), see Higgins & Thompson (2002).}
-#' \item{Rb}{Heterogeneity statistic Rb (a list with elements TE,
+#' \item{Rb}{Heterogeneity statistic R\eqn{_b} (a list with elements TE,
 #'   lower, upper), see Crippa et al. (2016).}  # \item{k.all}{Total
 #'   number of studies.}
 #' \item{Q.CMH}{Cochran-Mantel-Haenszel test statistic for overall
@@ -192,19 +200,17 @@
 #'   on random effects model) - if \code{byvar} is not missing.}
 #' \item{tau.w}{Square-root of between-study variance within subgroups
 #'   - if \code{byvar} is not missing.}
-#' \item{C.w}{Scaling factor utilised internally to calculate common
-#'   tau-squared across subgroups.}
 #' \item{H.w}{Heterogeneity statistic H within subgroups (a list with
 #'   elements TE, lower, upper) - if \code{byvar} is not missing.}
-#' \item{I2.w}{Heterogeneity statistic I2 within subgroups (a list
+#' \item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups (a list
 #'   with elements TE, lower, upper) - if \code{byvar} is not
 #'   missing.}
-#' \item{Rb.w}{Heterogeneity statistic Rb within subgroups (a list
+#' \item{Rb.w}{Heterogeneity statistic R\eqn{_b} within subgroups (a list
 #'   with elements TE, lower, upper) - if \code{byvar} is not
 #'   missing.}
 #' \item{H.resid}{Statistic H for residual heterogeneity (a list with
 #'   elements TE, lower, upper) - if \code{byvar} is not missing.}
-#' \item{I2.resid}{Statistic I2 for residual heterogeneity (a list
+#' \item{I2.resid}{Statistic I\eqn{^2} for residual heterogeneity (a list
 #'   with elements TE, lower, upper) - if \code{byvar} is not
 #'   missing.}
 #' \item{bylevs}{Levels of grouping variable - if \code{byvar} is not
@@ -251,8 +257,9 @@
 #' forest(update(m1, byvar = c(1, 2, 1, 1, 2), bylab = "group"))
 #' 
 #' \dontrun{
-#' # Use unicode characters to print tau^2 and I^2
-#' print(summary(m1), text.tau2 = "\u03c4\u00b2", text.I2 = "I\u00b2")
+#' # Use unicode characters to print tau^2, tau, and I^2
+#' print(summary(m1),
+#'       text.tau2 = "\u03c4\u00b2", text.tau = "\u03c4", text.I2 = "I\u00b2")
 #' }
 #' 
 #' @rdname summary.meta
@@ -396,11 +403,20 @@ summary.meta <- function(object,
   else if (metarate)
     ci.r$harmonic.mean <- mean(1 / object$time)
   ##
-  ci.H <- list(TE = object$H, lower = object$lower.H, upper = object$upper.H)
+  ci.tau2 <- list(TE = object$tau2,
+                  lower = object$lower.tau2, upper = object$upper.tau2)
   ##
-  ci.I2 <- list(TE = object$I2, lower = object$lower.I2, upper = object$upper.I2)
+  ci.tau <- list(TE = object$tau,
+                 lower = object$lower.tau, upper = object$upper.tau)
   ##
-  ci.Rb <- list(TE = object$Rb, lower = object$lower.Rb, upper = object$upper.Rb)
+  ci.H <- list(TE = object$H,
+               lower = object$lower.H, upper = object$upper.H)
+  ##
+  ci.I2 <- list(TE = object$I2,
+                lower = object$lower.I2, upper = object$upper.I2)
+  ##
+  ci.Rb <- list(TE = object$Rb,
+                lower = object$lower.Rb, upper = object$upper.Rb)
   ##
   ci.H.resid <- list(TE = object$H.resid,
                      lower = object$lower.H.resid,
@@ -430,11 +446,25 @@ summary.meta <- function(object,
   res <- list(study = ci.study,
               fixed = ci.f, random = ci.r,
               predict = ci.p,
-              k = object$k, Q = object$Q, df.Q = object$df.Q,
-              Q.LRT = object$Q.LRT,
-              tau = object$tau, H = ci.H, I2 = ci.I2, Rb = ci.Rb,
-              H.resid = ci.H.resid, I2.resid = ci.I2.resid,
+              k = object$k,
+              Q = object$Q, df.Q = object$df.Q, Q.LRT = object$Q.LRT,
+              ##
+              tau = ci.tau,
+              tau2 = ci.tau2,
+              ##
+              method.tau = object$method.tau,
+              method.tau.ci = object$method.tau.ci,
+              sign.tau.ci = list(lower = object$sign.lower.tau,
+                                 upper = object$sign.upper.tau),
+              ##
+              TE.tau = object$TE.tau,
               tau.preset = object$tau.preset,
+              ##
+              hakn = object$hakn,
+              df.hakn = object$df.hakn,
+              ##
+              H = ci.H, I2 = ci.I2, Rb = ci.Rb,
+              H.resid = ci.H.resid, I2.resid = ci.I2.resid,
               k.all = length(object$TE),
               Q.CMH = object$Q.CMH,
               k.MH = object$k.MH,
@@ -445,13 +475,6 @@ summary.meta <- function(object,
               comb.random = comb.random,
               prediction = prediction)
   ##  
-  res$se.tau2    <- object$se.tau2
-  res$hakn       <- object$hakn
-  res$df.hakn    <- object$df.hakn
-  res$method.tau <- object$method.tau
-  res$TE.tau     <- object$TE.tau
-  res$C          <- object$C
-  ##
   ## Add results from subgroup analysis
   ##
   if (length(object$byvar) > 0) {
@@ -481,9 +504,12 @@ summary.meta <- function(object,
     if (metarate)
       ci.random.w$harmonic.mean <- object$t.harmonic.mean.w
     ##
-    ci.H <- list(TE = object$H.w, lower = object$lower.H.w, upper = object$upper.H.w)
-    ci.I2 <- list(TE = object$I2.w, lower = object$lower.I2.w, upper = object$upper.I2.w)
-    ci.Rb <- list(TE = object$Rb.w, lower = object$lower.Rb.w, upper = object$upper.Rb.w)
+    ci.H <- list(TE = object$H.w,
+                 lower = object$lower.H.w, upper = object$upper.H.w)
+    ci.I2 <- list(TE = object$I2.w,
+                  lower = object$lower.I2.w, upper = object$upper.I2.w)
+    ci.Rb <- list(TE = object$Rb.w,
+                  lower = object$lower.Rb.w, upper = object$upper.Rb.w)
     ## 
     res$within.fixed    <- ci.fixed.w
     res$within.random   <- ci.random.w
@@ -499,7 +525,6 @@ summary.meta <- function(object,
     res$pval.Q.b.fixed  <- object$pval.Q.b.fixed
     res$pval.Q.b.random <- object$pval.Q.b.random
     res$tau.w           <- object$tau.w
-    res$C.w             <- object$C.w
     res$H.w             <- ci.H
     res$I2.w            <- ci.I2
     res$Rb.w            <- ci.Rb
@@ -517,7 +542,10 @@ summary.meta <- function(object,
     res$addincr     <- object$addincr
     res$allstudies  <- object$allstudies
     res$doublezeros <- object$doublezeros
+    ##
     res$MH.exact    <- object$MH.exact
+    res$RR.Cochrane <- object$RR.Cochrane
+    res$Q.Cochrane  <- object$Q.Cochrane
     ##
     res$model.glmm   <- object$model.glmm
     res$.glmm.fixed  <- object$.glmm.fixed
@@ -723,22 +751,30 @@ print.summary.meta <- function(x,
                                irscale = x$irscale,
                                irunit = x$irunit,
                                bylab.nchar = 35,
+                               ##
                                digits = gs("digits"),
                                digits.zval = gs("digits.zval"),
                                digits.pval = max(gs("digits.pval"), 2),
                                digits.pval.Q = max(gs("digits.pval.Q"), 2),
                                digits.Q = gs("digits.Q"),
                                digits.tau2 = gs("digits.tau2"),
+                               digits.tau = gs("digits.tau"),
                                digits.H = gs("digits.H"),
                                digits.I2 = gs("digits.I2"),
+                               ##
                                scientific.pval = gs("scientific.pval"),
                                big.mark = gs("big.mark"),
+                               zero.pval = gs("zero.pval"),
+                               JAMA.pval = gs("JAMA.pval"),
                                print.I2 = gs("print.I2"),
                                print.H = gs("print.H"),
                                print.Rb = gs("print.Rb"),
+                               ##
                                text.tau2 = gs("text.tau2"),
+                               text.tau = gs("text.tau"),
                                text.I2 = gs("text.I2"),
                                text.Rb = gs("text.Rb"),
+                               ##
                                warn.backtransf = FALSE,
                                ...) {
   
@@ -763,6 +799,7 @@ print.summary.meta <- function(x,
   ##
   chknumeric(digits, min = 0, single = TRUE)
   chknumeric(digits.tau2, min = 0, single = TRUE)
+  chknumeric(digits.tau, min = 0, single = TRUE)
   chknumeric(digits.zval, min = 0, single = TRUE)
   chknumeric(digits.pval, min = 1, single = TRUE)
   chknumeric(digits.pval.Q, min = 1, single = TRUE)
@@ -770,6 +807,8 @@ print.summary.meta <- function(x,
   chknumeric(digits.H, min = 0, single = TRUE)
   chknumeric(digits.I2, min = 0, single = TRUE)
   chklogical(scientific.pval)
+  chklogical(zero.pval)
+  chklogical(JAMA.pval)
   ##
   if (is.untransformed(x$sm))
     backtransf <- TRUE
@@ -779,6 +818,7 @@ print.summary.meta <- function(x,
   chklogical(print.H)
   chklogical(print.Rb)
   chkchar(text.tau2)
+  chkchar(text.tau)
   chkchar(text.I2)
   chkchar(text.Rb)
   chklogical(warn.backtransf)
@@ -840,6 +880,7 @@ print.summary.meta <- function(x,
   sm <- x$sm
   ##
   bip <- inherits(x, c("metabin", "metainc", "metaprop", "metarate"))
+  metabin <- inherits(x, "metabin")
   null.given <- (inherits(x, c("metacor", "metagen", "metamean",
                                "metaprop", "metarate")) |
                  is.prop(sm) | is.rate(sm) | is.cor(sm) | is.mean(sm))
@@ -1077,13 +1118,13 @@ print.summary.meta <- function(x,
     I2 <- round(100 * x$I2$TE, digits.I2)
     lowI2 <- round(100 * x$I2$lower, digits.I2)
     uppI2 <- round(100 * x$I2$upper, digits.I2)
-    print.ci.I2 <- ((Q > k & k >= 2) | (Q <= k & k > 2)) &
+    print.I2.ci <- ((Q > k & k >= 2) | (Q <= k & k > 2)) &
       !(is.na(lowI2) | is.na(uppI2))
-    if (is.na(print.ci.I2))
-      print.ci.I2 <- FALSE
+    if (is.na(print.I2.ci))
+      print.I2.ci <- FALSE
   }
   else
-    print.ci.I2 <- FALSE
+    print.I2.ci <- FALSE
   ##
   if (print.Rb) {
     Rb <- round(100 * x$Rb$TE, digits.I2)
@@ -1120,7 +1161,8 @@ print.summary.meta <- function(x,
                                   big.mark = big.mark)),
                  formatN(zTE.fixed, digits.zval, big.mark = big.mark),
                  formatPT(pTE.fixed, digits = digits.pval,
-                          scientific = scientific.pval))
+                          scientific = scientific.pval,
+                          zero = zero.pval, JAMA = JAMA.pval))
     dimnames(res) <- list("", c(sm.lab, x$ci.lab, "z", "p-value"))
     prmatrix(res, quote = FALSE, right = TRUE, ...)
     ## Print information on summary method:
@@ -1145,7 +1187,8 @@ print.summary.meta <- function(x,
             irunit = irunit,
             null.effect = if (null.given) null.effect else 0,
             big.mark = big.mark,
-            digits = digits, digits.tau2 = digits.tau2,
+            digits = digits, digits.tau = digits.tau,
+            text.tau = text.tau, text.tau2 = text.tau2,
             method.miss = x$method.miss, IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
   }
   else if (is.na(k)) {
@@ -1199,7 +1242,8 @@ print.summary.meta <- function(x,
                               if (comb.random) pTE.random,
                               if (prediction) NA),
                             digits = digits.pval,
-                            scientific = scientific.pval))
+                            scientific = scientific.pval,
+                            zero = zero.pval, JAMA = JAMA.pval))
       if (prediction)
         res[dim(res)[1], c(1,3:4)] <- ""
       if (!is.null(x$hakn) && x$hakn) {
@@ -1219,13 +1263,14 @@ print.summary.meta <- function(x,
                             c(sm.lab, x$ci.lab, zlab, "p-value"))
       prmatrix(res, quote = FALSE, right = TRUE, ...)
       ##
-      if (inherits(x, "metabin") && print.CMH) {
+      if (metabin && print.CMH) {
         Qdata <- cbind(formatN(round(Q.CMH, digits.Q), digits.Q, "NA",
                                big.mark = big.mark),
                        df.Q.CMH,
                        formatPT(pval.Q.CMH,
                                 digits = digits.pval.Q,
-                                scientific = scientific.pval))
+                                scientific = scientific.pval,
+                                zero = zero.pval, JAMA = JAMA.pval))
         dimnames(Qdata) <- list("", c("Q", "d.f.", "p-value"))
         ##
         cat("\nCochran-Mantel-Haenszel (CMH) test for overall effect: \n")
@@ -1239,12 +1284,24 @@ print.summary.meta <- function(x,
     ##
     cat("\nQuantifying heterogeneity:\n")
     ##
-    cathet(k, 
-           TRUE, text.tau2, x$tau, digits.tau2, big.mark,
-           print.H, H, lowH, uppH, digits.H,
-           print.I2, print.ci.I2, text.I2,
-           I2, lowI2, uppI2, digits.I2,
-           print.Rb, text.Rb, Rb, lowRb, uppRb)
+    print.tau2 <- TRUE
+    print.tau2.ci <- print.tau2 & !(is.na(x$tau2$lower) | is.na(x$tau2$upper))
+    print.tau <- TRUE
+    print.tau.ci <- print.tau & !(is.na(x$tau$lower) | is.na(x$tau$upper))
+    ##
+    cathet(k,
+           x$tau2$TE, x$tau2$lower, x$tau2$upper,
+           print.tau2, print.tau2.ci, text.tau2, digits.tau2,
+           x$tau$TE, x$tau$lower, x$tau$upper,
+           print.tau, print.tau.ci, text.tau, digits.tau,
+           x$sign.tau.ci$lower, x$sign.tau.ci$upper,
+           I2, lowI2, uppI2,
+           print.I2, print.I2.ci, text.I2, digits.I2,
+           H, lowH, uppH,
+           print.H, digits.H,
+           Rb, lowRb, uppRb,
+           print.Rb, text.Rb,
+           big.mark)
     ##
     ## Print information on residual heterogeneity
     ##
@@ -1262,25 +1319,31 @@ print.summary.meta <- function(x,
         I2.resid <- round(100 * x$I2.resid$TE, digits.I2)
         lowI2.resid <- round(100 * x$I2.resid$lower, digits.I2)
         uppI2.resid <- round(100 * x$I2.resid$upper, digits.I2)
-        print.ci.I2 <-
+        print.I2.ci <-
           ((Q.resid  > k.resid & k.resid >= 2) |
            (Q.resid <= k.resid & k.resid > 2)) &
           !(is.na(lowI2.resid) | is.na(uppI2.resid))
         ##
-        if (is.na(print.ci.I2))
-          print.ci.I2 <- FALSE
+        if (is.na(print.I2.ci))
+          print.I2.ci <- FALSE
       }
       ##
       if (!is.na(I2.resid)) {
         cat("\nQuantifying residual heterogeneity:\n")
         ##
         cathet(k.resid, 
-               x$tau.common, text.tau2, unique(x$tau.w),
-               digits.tau2, big.mark,
-               print.H, H.resid, lowH.resid, uppH.resid, digits.H,
-               print.I2, print.ci.I2, text.I2,
-               I2.resid, lowI2.resid, uppI2.resid, digits.I2,
-               FALSE, text.Rb, NA, NA, NA)
+               unique(x$tau.w)^2, NA, NA,
+               x$tau.common, FALSE, text.tau2, digits.tau2,
+               unique(x$tau.w), NA, NA,
+               x$tau.common, FALSE, text.tau, digits.tau,
+               "", "",
+               I2.resid, lowI2.resid, uppI2.resid,
+               print.I2, print.I2.ci, text.I2, digits.I2,
+               H.resid, lowH.resid, uppH.resid,
+               print.H, digits.H,
+               NA, NA, NA,
+               FALSE, text.Rb,
+               big.mark)
       }
     }
     ##
@@ -1294,7 +1357,8 @@ print.summary.meta <- function(x,
                          format(df.Q, big.mark = big.mark),
                          formatPT(pval.Q,
                                   digits = digits.pval.Q,
-                                  scientific = scientific.pval))
+                                  scientific = scientific.pval,
+                                  zero = zero.pval, JAMA = JAMA.pval))
           dimnames(Qdata) <- list("", c("Q", "d.f.", "p-value"))
         }
         else {
@@ -1303,7 +1367,8 @@ print.summary.meta <- function(x,
                          format(c(df.Q, df.Q.LRT), big.mark = big.mark),
                          formatPT(c(pval.Q, pval.Q.LRT),
                                   digits = digits.pval.Q,
-                                  scientific = scientific.pval),
+                                  scientific = scientific.pval,
+                                  zero = zero.pval, JAMA = JAMA.pval),
                          c("Wald-type", "Likelihood-Ratio"))
           dimnames(Qdata) <- list(rep("", 2),
                                   c("Q", "d.f.", "p-value", "Test"))
@@ -1335,6 +1400,11 @@ print.summary.meta <- function(x,
                                          digits = digits.tau2,
                                          big.mark = big.mark,
                                          noblanks = TRUE)),
+                         ifelse(k.w == 1, "--",
+                                formatPT(x$tau.w,
+                                         digits = digits.tau,
+                                         big.mark = big.mark,
+                                         noblanks = TRUE)),
                          if (print.I2)
                            ifelse(is.na(I2.w),
                                   "--",
@@ -1352,7 +1422,7 @@ print.summary.meta <- function(x,
           ##
           dimnames(Tdata) <- list(bylab,
                                   c("  k", sm.lab, x$ci.lab,
-                                    "Q", text.tau2,
+                                    "Q", text.tau2, text.tau,
                                     if (print.I2) text.I2,
                                     if (print.Rb) text.Rb)
                                   )
@@ -1370,7 +1440,8 @@ print.summary.meta <- function(x,
                              format(df.Q.b, big.mark = big.mark),
                              formatPT(pval.Q.b.fixed,
                                       digits = digits.pval.Q,
-                                      scientific = scientific.pval))
+                                      scientific = scientific.pval,
+                                      zero = zero.pval, JAMA = JAMA.pval))
               dimnames(Qdata) <- list("Between groups  ",
                                       c("Q", "d.f.", "p-value"))
               prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
@@ -1384,7 +1455,8 @@ print.summary.meta <- function(x,
                              format(dfs, big.mark = big.mark),
                              formatPT(pvals,
                                       digits = digits.pval.Q,
-                                      scientific = scientific.pval))
+                                      scientific = scientific.pval,
+                                      zero = zero.pval, JAMA = JAMA.pval))
               dimnames(Qdata) <- list(c("Between groups", "Within groups"),
                                       c("Q", "d.f.", "p-value"))
               prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
@@ -1410,6 +1482,11 @@ print.summary.meta <- function(x,
                                          digits = digits.tau2,
                                          big.mark = big.mark,
                                          noblanks = TRUE)),
+                         ifelse(k.w == 1, "--",
+                                formatPT(x$tau.w,
+                                         digits = digits.tau,
+                                         big.mark = big.mark,
+                                         noblanks = TRUE)),
                          if (print.I2)
                            ifelse(is.na(I2.w),
                                   "--",
@@ -1428,14 +1505,16 @@ print.summary.meta <- function(x,
           ##
           dimnames(Tdata) <- list(bylab,
                                   c("  k", sm.lab, x$ci.lab,
-                                    "Q", text.tau2,
+                                    "Q", text.tau2, text.tau,
                                     if (print.I2) text.I2,
                                     if (print.Rb) text.Rb)
                                   )
+          ##
           if (inherits(x, "metabind"))
             cat("\nResults for meta-analyses (random effects model):\n")
           else
             cat("\nResults for subgroups (random effects model):\n")
+          ##
           prmatrix(Tdata, quote = FALSE, right = TRUE, ...)
           ##
           if (!inherits(x, "metabind")) {
@@ -1446,7 +1525,8 @@ print.summary.meta <- function(x,
                              format(df.Q.b, big.mark = big.mark),
                              formatPT(pval.Q.b.random,
                                       digits = digits.pval.Q,
-                                      scientific = scientific.pval))
+                                      scientific = scientific.pval,
+                                      zero = zero.pval, JAMA = JAMA.pval))
               dimnames(Qdata) <- list("Between groups  ",
                                       c("Q", "d.f.", "p-value"))
             }
@@ -1459,7 +1539,8 @@ print.summary.meta <- function(x,
                              format(dfs, big.mark = big.mark),
                              formatPT(pvals,
                                       digits = digits.pval.Q,
-                                      scientific = scientific.pval))
+                                      scientific = scientific.pval,
+                                      zero = zero.pval, JAMA = JAMA.pval))
               dimnames(Qdata) <- list(c("Between groups", "Within groups"),
                                       c("Q", "d.f.", "p-value"))
             }
@@ -1474,7 +1555,7 @@ print.summary.meta <- function(x,
     if (comb.fixed | comb.random | prediction)
       catmeth(class = class(x),
               method = x$method,
-              method.tau = if (comb.random) x$method.tau else "",
+              method.tau = x$method.tau,
               sm = sm,
               k.all = k.all,
               hakn = !is.null(x$hakn) && (x$hakn & comb.random),
@@ -1486,8 +1567,12 @@ print.summary.meta <- function(x,
               addincr = ifelse(bip, x$addincr, FALSE),
               allstudies = x$allstudies,
               doublezeros = x$doublezeros,
-              MH.exact = ifelse(inherits(x, "metabin"), x$MH.exact, FALSE),
+              MH.exact = ifelse(metabin, x$MH.exact, FALSE),
+              RR.Cochrane = ifelse(metabin, x$RR.Cochrane, FALSE),
+              Q.Cochrane = ifelse(metabin, x$Q.Cochrane, TRUE),
               method.ci = x$method.ci,
+              print.tau.ci = print.tau2.ci | print.tau.ci,
+              method.tau.ci = x$method.tau.ci,
               pooledvar = x$pooledvar,
               method.smd = x$method.smd,
               sd.glass = x$sd.glass,
@@ -1498,7 +1583,8 @@ print.summary.meta <- function(x,
               irunit = irunit,
               null.effect = if (null.given) null.effect else 0,
               big.mark = big.mark,
-              digits = digits, digits.tau2 = digits.tau2,
+              digits = digits, digits.tau = digits.tau,
+              text.tau = text.tau, text.tau2 = text.tau2,
               method.miss = x$method.miss, IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
   }
   

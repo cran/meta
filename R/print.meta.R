@@ -40,6 +40,8 @@
 #'   deviations and standard errors, see \code{print.default}.
 #' @param digits.tau2 Minimal number of significant digits for
 #'   between-study variance, see \code{print.default}.
+#' @param digits.tau Minimal number of significant digits for square
+#'   root of between-study variance, see \code{print.default}.
 #' @param digits.I2 Minimal number of significant digits for I-squared
 #'   and Rb statistic, see \code{print.default}.
 #' @param digits.prop Minimal number of significant digits for
@@ -47,11 +49,17 @@
 #' @param digits.weight Minimal number of significant digits for
 #'   weights, see \code{print.default}.
 #' @param big.mark A character used as thousands separator.
+#' @param text.tau2 Text printed to identify between-study variance
+#'   \eqn{\tau^2}.
+#' @param text.tau Text printed to identify \eqn{\tau}, the square
+#'   root of the between-study variance \eqn{\tau^2}.
+#' @param text.I2 Text printed to identify heterogeneity statistic
+#'   I\eqn{^2}.
 #' @param warn.backtransf A logical indicating whether a warning
 #'   should be printed if backtransformed proportions and rates are
 #'   below 0 and backtransformed proportions are above 1.
 #' @param \dots Additional arguments (passed on to
-#'   \code{print.summary.meta} called internally).
+#'   \code{\link{print.summary.meta}} called internally).
 #' @param bracket A character with bracket symbol to print lower
 #'   confidence interval: "[", "(", "\{", "".
 #' @param separator A character string with information on separator
@@ -106,8 +114,9 @@
 #' print(m1, digits = 2)
 #' 
 #' \dontrun{
-#' # Use unicode characters to print tau^2 and I^2 
-#' print(m1, text.tau2 = "\u03c4\u00b2", text.I2 = "I\u00b2")
+#' # Use unicode characters to print tau^2, tau, and I^2 
+#' print(m1,
+#'       text.tau2 = "\u03c4\u00b2", text.tau = "\u03c4", text.I2 = "I\u00b2")
 #' }
 #' 
 #' @rdname print.meta
@@ -126,13 +135,21 @@ print.meta <- function(x,
                        pscale = x$pscale,
                        irscale = x$irscale,
                        irunit = x$irunit,
+                       ##
                        digits = gs("digits"),
                        digits.se = gs("digits.se"),
                        digits.tau2 = gs("digits.tau2"),
+                       digits.tau = gs("digits.tau"),
                        digits.I2 = gs("digits.I2"),
                        digits.prop = gs("digits.prop"),
                        digits.weight = gs("digits.weight"),
+                       ##
                        big.mark = gs("big.mark"),
+                       ##
+                       text.tau2 = gs("text.tau2"),
+                       text.tau = gs("text.tau"),
+                       text.I2 = gs("text.I2"),
+                       ##
                        warn.backtransf = FALSE,
                        ...
                        ) {
@@ -168,7 +185,8 @@ print.meta <- function(x,
   }
   sort <- !is.null(sortvar)
   if (sort && (length(sortvar) != k.all))
-    stop("Number of studies in object 'x' and argument 'sortvar' have different length.")
+    stop("Number of studies in object 'x' and ",
+         "argument 'sortvar' have different length.")
   if (!sort)
     sortvar <- 1:k.all
   ##
@@ -208,8 +226,17 @@ print.meta <- function(x,
   chknumeric(digits, min = 0, single = TRUE)
   chknumeric(digits.se, min = 0, single = TRUE)
   chknumeric(digits.tau2, min = 0, single = TRUE)
+  chknumeric(digits.tau, min = 0, single = TRUE)
   chknumeric(digits.I2, min = 0, single = TRUE)
   chknumeric(digits.prop, min = 0, single = TRUE)
+  chknumeric(digits.weight, min = 0, single = TRUE)
+  ##
+  chkchar(text.tau2)
+  chkchar(text.tau)
+  chkchar(text.I2)
+  tt2 <- text.tau2
+  tt <- text.tau
+  ti <- text.I2
   ##
   ## Additional arguments / checks for metacont objects
   ##
@@ -234,7 +261,7 @@ print.meta <- function(x,
   ##
   ##
   metainf.metacum <- inherits(x, "metainf") | inherits(x, "metacum")
-  mb <- inherits(x, "metabind")
+  mb.glmm <- inherits(x, "metabind") | x$method == "GLMM"
   ##
   prediction <- prediction & x$k >= 3
   if (is.na(prediction))
@@ -413,31 +440,14 @@ print.meta <- function(x,
   ##
   ##
   if (k.all == 1 & !inherits(x, "metaprop")) {
-    if (inherits(x, "metabin") & x$method == "MH")
-      print(summary(metabin(x$event.e, x$n.e,
-                            x$event.c, x$n.c,
-                            sm = sm,
-                            method = "Inverse",
-                            studlab = x$studlab,
-                            incr = x$incr,
-                            allincr = x$allincr,
-                            doublezeros = x$doublezeros,
-                            MH.exact = x$MH.exact,
-                            warn = FALSE, level.comb = level.comb)),
-            header = FALSE,
-            digits = digits,
-            backtransf = backtransf, pscale = pscale,
-            irscale = irscale, irunit = irunit, big.mark = big.mark,
-            warn.backtransf = warn.backtransf,
-            ...)
-    else
-      print(summary(x),
-            header = FALSE,
-            digits = digits,
-            backtransf = backtransf, pscale = pscale,
-            irscale = irscale, irunit = irunit, big.mark = big.mark,
-            warn.backtransf = warn.backtransf,
-            ...)
+    print(summary(x),
+          header = FALSE,
+          digits = digits,
+          backtransf = backtransf, pscale = pscale,
+          irscale = irscale, irunit = irunit, big.mark = big.mark,
+          text.tau2 = text.tau2, text.tau = text.tau, text.I2 = text.I2,
+          warn.backtransf = warn.backtransf,
+          ...)
   }
   else {
     TE <- x$TE
@@ -513,13 +523,14 @@ print.meta <- function(x,
       ##
       I2 <- formatN(round(100 * x$I2, digits.I2), digits.I2, "")
       ##
-      sel <- is.na(x$p.value)
-      p.value <- formatPT(x$p.value)
-      p.value <- ifelse(sel, "", p.value)
+      sel <- is.na(x$pval)
+      pval <- formatPT(x$pval)
+      pval <- ifelse(sel, "", pval)
       ##
-      tau2 <- x$tau^2
-      tau2 <- formatN(round(tau2, digits.tau2), digits.tau2, "",
+      tau2 <- formatN(round(x$tau2, digits.tau2), digits.tau2, "",
                       big.mark = big.mark)
+      tau <- formatN(round(x$tau, digits.tau), digits.tau, "",
+                     big.mark = big.mark)
       ##
       res <- cbind(formatN(round(TE, digits), digits, "",
                            big.mark = big.mark),
@@ -527,12 +538,13 @@ print.meta <- function(x,
                                     big.mark = big.mark),
                             formatN(round(uppTE, digits), digits, "NA",
                                     big.mark = big.mark)),
-                   p.value,
+                   pval,
                    paste(" ", tau2, sep = ""),
+                   paste(" ", tau, sep = ""),
                    paste(" ", I2, ifelse(I2 == "", "", "%"), sep = ""))
       dimnames(res) <- list(paste(x$studlab, "  ", sep = ""),
                             c(sm.lab, ci.lab, "p-value",
-                              gs("text.tau2"), gs("text.I2")))
+                              text.tau2, text.tau, text.I2))
       ##
       if (inherits(x, "metainf")) {
         if (!is.random)
@@ -551,7 +563,7 @@ print.meta <- function(x,
       ## Print information on summary method:
       catmeth(class = class(x),
               method = x$method,
-              method.tau = if (is.random) x$method.tau else "",
+              method.tau = x$method.tau,
               sm = sm,
               k.all = k.all,
               hakn = is.random & x$hakn,
@@ -561,23 +573,24 @@ print.meta <- function(x,
               exact.smd = x$exact.smd,
               model.glmm = x$model.glmm,
               big.mark = big.mark,
-              digits = digits, digits.tau2 = digits.tau2,
-              text.tau2 = gs("text.tau2"),
+              digits = digits, digits.tau = digits.tau,
+              text.tau = text.tau, text.tau2 = text.tau2,
               method.miss = x$method.miss, IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
     }
     else {
-      res <- cbind(formatN(round(TE, digits), digits, "NA", big.mark = big.mark),
+      res <- cbind(formatN(round(TE, digits), digits, "NA",
+                           big.mark = big.mark),
                    formatCI(formatN(round(lowTE, digits), digits, "NA",
                                     big.mark = big.mark),
                             formatN(round(uppTE, digits), digits, "NA",
                                     big.mark = big.mark)),
-                   if (comb.fixed & !mb)
+                   if (comb.fixed & !mb.glmm)
                      formatN(w.fixed.p, digits.weight,
                              big.mark = big.mark),
-                   if (comb.random & !mb)
+                   if (comb.random & !mb.glmm)
                      formatN(w.random.p, digits.weight,
                              big.mark = big.mark),
-                   if (!is.null(x$byvar)) x$byvar,
+                   if (!is.null(x$byvar)) as.character(x$byvar),
                    if (!is.null(x$exclude))
                      ifelse(is.na(x$exclude), "",
                      ifelse(x$exclude, "*", "")))
@@ -586,24 +599,33 @@ print.meta <- function(x,
         ##
         if (!is.null(x$method.ci)) {
           if  (x$method.ci == "CP")
-            method.ci.details <- "Clopper-Pearson confidence interval:\n\n"
+            method.ci.details <-
+              "Clopper-Pearson confidence interval:\n\n"
           else if (x$method.ci == "WS")
-            method.ci.details <- "Wilson Score confidence interval:\n\n"
+            method.ci.details <-
+              "Wilson Score confidence interval:\n\n"
           else if (x$method.ci == "WSCC")
-            method.ci.details <- "Wilson Score confidence interval with continuity correction:\n\n"
+            method.ci.details <-
+              "Wilson Score confidence interval with continuity correction:\n\n"
           else if (x$method.ci == "AC")
-            method.ci.details <- "Agresti-Coull confidence interval:\n\n"
+            method.ci.details <-
+              "Agresti-Coull confidence interval:\n\n"
           else if (x$method.ci == "SA")
-            method.ci.details <- "Simple approximation confidence interval:\n\n"
+            method.ci.details <-
+              "Simple approximation confidence interval:\n\n"
           else if (x$method.ci == "SACC")
-            method.ci.details <- "Simple approximation confidence interval with continuity correction:\n\n"
+            method.ci.details <-
+              paste0("Simple approximation confidence interval with ",
+                     "continuity correction:\n\n")
           if (x$method.ci != "NAsm") {
             cat(method.ci.details)
-            dimnames(res) <- list("", c(sm.lab, ci.lab,
-                                        if (comb.fixed & !mb) "%W(fixed)",
-                                        if (comb.random & !mb) "%W(random)",
-                                        if (!is.null(x$byvar)) x$bylab,
-                                        if (!is.null(x$exclude)) "exclude"))
+            dimnames(res) <-
+              list("",
+                   c(sm.lab, ci.lab,
+                     if (comb.fixed & !mb.glmm) "%W(fixed)",
+                     if (comb.random & !mb.glmm) "%W(random)",
+                     if (!is.null(x$byvar)) x$bylab,
+                     if (!is.null(x$exclude)) "exclude"))
             prmatrix(res, quote = FALSE, right = TRUE)
             cat("\n\n")
           }
@@ -612,16 +634,17 @@ print.meta <- function(x,
       }
       else {
         dimnames(res) <-
-          list(x$studlab, c(sm.lab, ci.lab,
-                            if (comb.fixed & !mb) "%W(fixed)",
-                            if (comb.random & !mb) "%W(random)",
-                            if (!is.null(x$byvar)) x$bylab,
-                            if (!is.null(x$exclude)) "exclude"))
+          list(x$studlab,
+               c(sm.lab, ci.lab,
+                 if (comb.fixed & !mb.glmm) "%W(fixed)",
+                 if (comb.random & !mb.glmm) "%W(random)",
+                 if (!is.null(x$byvar)) x$bylab,
+                 if (!is.null(x$exclude)) "exclude"))
         prmatrix(res[order(sortvar),], quote = FALSE, right = TRUE)
       }
     }
-
-
+    
+    
     ##
     ##
     ## (6) Print result for meta-analysis
@@ -638,8 +661,9 @@ print.meta <- function(x,
             prediction = prediction,
             backtransf = backtransf, pscale = pscale,
             irscale = irscale, irunit = irunit,
-            digits.tau2 = digits.tau2, digits.I2 = digits.I2,
-            big.mark = big.mark,
+            digits.tau2 = digits.tau2, digits.tau = digits.tau,
+            digits.I2 = digits.I2, big.mark = big.mark,
+            text.tau2 = text.tau2, text.tau = text.tau, text.I2 = text.I2,
             warn.backtransf = warn.backtransf,
             ...)
     }
@@ -664,7 +688,8 @@ cilayout <- function(bracket = "[", separator = "; ") {
                         nomatch = NA)
   ##
   if (is.na(ibracket) | ibracket == 0)
-    stop("No valid bracket type specified. Admissible values: '[', '(', '{', '\"\"'")
+    stop("No valid bracket type specified. ",
+         "Admissible values: '[', '(', '{', '\"\"'")
   
   bracket <- c("[", "(", "{", "")[ibracket]
   

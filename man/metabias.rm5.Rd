@@ -4,9 +4,16 @@
 \alias{metabias.rm5}
 \title{Cochrane review: Test for funnel plot asymmetry}
 \usage{
-\method{metabias}{rm5}(x, comp.no, outcome.no, method.bias = "linreg",
-  method.bias.binary = method.bias, method.bias.or = "score",
-  k.min = 10, ...)
+\method{metabias}{rm5}(
+  x,
+  comp.no,
+  outcome.no,
+  method.bias = "linreg",
+  method.bias.binary = method.bias,
+  method.bias.or = "score",
+  k.min = 10,
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{rm5}.}
@@ -52,7 +59,7 @@ In RevMan 5, subgroup analyses can be defined and data from a
 Cochrane review can be imported to R using the function
 \code{read.rm5}.
 
-The R function \code{metacr} is called internally.
+The R function \code{\link{metacr}} is called internally.
 }
 \examples{
 # Locate export data file "Fleiss93_CR.csv" in sub-directory of

@@ -8,29 +8,80 @@
 \usage{
 funnel(x, ...)
 
-\method{funnel}{default}(x, y, xlim = NULL, ylim = NULL, xlab = NULL,
-  ylab = NULL, comb.fixed = FALSE, comb.random = FALSE,
-  axes = TRUE, pch = 21, text = NULL, cex = 1, lty.fixed = 2,
-  lty.random = 9, lwd = 1, lwd.fixed = lwd, lwd.random = lwd,
-  col = "black", bg = "darkgray", col.fixed = "black",
-  col.random = "black", log = "", yaxis = "se", sm = "",
-  contour.levels = NULL, col.contour, ref = ifelse(backtransf &
-  is.relative.effect(sm), 1, 0), level = NULL, studlab = FALSE,
-  cex.studlab = 0.8, pos.studlab = 2, backtransf = TRUE, ...)
+\method{funnel}{default}(
+  x,
+  y,
+  xlim = NULL,
+  ylim = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  comb.fixed = FALSE,
+  comb.random = FALSE,
+  axes = TRUE,
+  pch = 21,
+  text = NULL,
+  cex = 1,
+  lty.fixed = 2,
+  lty.random = 9,
+  lwd = 1,
+  lwd.fixed = lwd,
+  lwd.random = lwd,
+  col = "black",
+  bg = "darkgray",
+  col.fixed = "black",
+  col.random = "black",
+  log = "",
+  yaxis = "se",
+  sm = "",
+  contour.levels = NULL,
+  col.contour,
+  ref = ifelse(backtransf & is.relative.effect(sm), 1, 0),
+  level = NULL,
+  studlab = FALSE,
+  cex.studlab = 0.8,
+  pos.studlab = 2,
+  backtransf = TRUE,
+  ...
+)
 
-\method{funnel}{meta}(x, xlim = NULL, ylim = NULL, xlab = NULL,
-  ylab = NULL, comb.fixed = x$comb.fixed,
-  comb.random = x$comb.random, axes = TRUE, pch = if (!inherits(x,
-  "trimfill")) 21 else ifelse(x$trimfill, 1, 21), text = NULL, cex = 1,
-  lty.fixed = 2, lty.random = 9, lwd = 1, lwd.fixed = lwd,
-  lwd.random = lwd, col = "black", bg = "darkgray",
-  col.fixed = "black", col.random = "black", log = "",
-  yaxis = "se", contour.levels = NULL, col.contour,
+\method{funnel}{meta}(
+  x,
+  xlim = NULL,
+  ylim = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  comb.fixed = x$comb.fixed,
+  comb.random = x$comb.random,
+  axes = TRUE,
+  pch = if (!inherits(x, "trimfill")) 21 else ifelse(x$trimfill, 1, 21),
+  text = NULL,
+  cex = 1,
+  lty.fixed = 2,
+  lty.random = 9,
+  lwd = 1,
+  lwd.fixed = lwd,
+  lwd.random = lwd,
+  col = "black",
+  bg = "darkgray",
+  col.fixed = "black",
+  col.random = "black",
+  log = "",
+  yaxis = "se",
+  contour.levels = NULL,
+  col.contour,
   ref = ifelse(backtransf & is.relative.effect(x$sm), 1, 0),
-  level = x$level, studlab = FALSE, cex.studlab = 0.8,
-  pos.studlab = 2, ref.triangle = FALSE, lty.ref = 1,
-  lwd.ref = lwd, col.ref = "black", lty.ref.triangle = 5,
-  backtransf = x$backtransf, ...)
+  level = if (comb.fixed | comb.random) x$level else NULL,
+  studlab = FALSE,
+  cex.studlab = 0.8,
+  pos.studlab = 2,
+  ref.triangle = FALSE,
+  lty.ref = 1,
+  lwd.ref = lwd,
+  col.ref = "black",
+  lty.ref.triangle = 5,
+  backtransf = x$backtransf,
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{meta}, or estimated treatment
@@ -132,8 +183,9 @@ transformed in funnel plots. If \code{backtransf=TRUE}, results
 for \code{sm="OR"} are printed as odds ratios rather than log
 odds ratios, for example.}
 
-\item{ref.triangle}{A logical indicating whether reference value
-(null effect) should be printed.}
+\item{ref.triangle}{A logical indicating whether approximate
+confidence limits should be printed around reference value (null
+effect).}
 
 \item{lty.ref}{Line type (reference value).}
 
@@ -154,8 +206,13 @@ produced to assess causes of funnel plot asymmetry.
 \details{
 A funnel plot (Light & Pillemer, 1984) is drawn in the active
 graphics window. If \code{comb.fixed} is TRUE, the pooled estimate
-of the fixed effect model is plotted. If \code{level} is not NULL,
-the corresponding confidence limits are drawn.
+of the fixed effect model is plotted as a vertical line. Similarly,
+if \code{comb.random} is TRUE, the pooled estimate of the random
+effects model is plotted. If \code{level} is not NULL, the
+corresponding approximate confidence limits are drawn around the
+fixed effect estimate (if \code{comb.fixed} is TRUE) or the random
+effects estimate (if \code{comb.random} is TRUE and
+\code{comb.fixed} is FALSE).
 
 In the funnel plot, if \code{yaxis} is \code{"se"}, the standard
 error of the treatment estimates is plotted on the y-axis which is

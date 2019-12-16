@@ -4,12 +4,31 @@
 \alias{metacr}
 \title{Meta-analysis of outcome data from Cochrane review}
 \usage{
-metacr(x, comp.no = 1, outcome.no = 1, method, sm,
-  level = gs("level"), level.comb = gs("level.comb"), comb.fixed,
-  comb.random, hakn = FALSE, method.tau = "DL", tau.common = FALSE,
-  prediction = gs("prediction"), level.predict = gs("level.predict"),
-  swap.events, logscale, backtransf = gs("backtransf"), title, complab,
-  outclab, keepdata = gs("keepdata"), warn = FALSE)
+metacr(
+  x,
+  comp.no = 1,
+  outcome.no = 1,
+  method,
+  sm,
+  level = gs("level"),
+  level.comb = gs("level.comb"),
+  comb.fixed,
+  comb.random,
+  hakn = FALSE,
+  method.tau = "DL",
+  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  tau.common = FALSE,
+  prediction = gs("prediction"),
+  level.predict = gs("level.predict"),
+  swap.events,
+  logscale,
+  backtransf = gs("backtransf"),
+  title,
+  complab,
+  outclab,
+  keepdata = gs("keepdata"),
+  warn = FALSE
+)
 }
 \arguments{
 \item{x}{An object of class \code{rm5} created by R function
@@ -45,10 +64,15 @@ Knapp should be used to adjust test statistics and confidence
 intervals.}
 
 \item{method.tau}{A character string indicating which method is
-used to estimate the between-study variance \eqn{\tau^2}. Either
-\code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-\code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-abbreviated.}
+used to estimate the between-study variance \eqn{\tau^2} and its
+square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+\code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+\code{"HE"}, or \code{"EB"}, can be abbreviated.}
+
+\item{method.tau.ci}{A character string indicating which method is
+used to estimate the confidence interval of \eqn{\tau^2} and
+\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+\code{""}, can be abbreviated.}
 
 \item{tau.common}{A logical indicating whether tau-squared should
 be the same across subgroups.}
@@ -106,8 +130,9 @@ Reviews
 
 This wrapper function can be used to perform meta-analysis for a
 single outcome of a Cochrane Intervention review. Internally, R
-functions \code{metabin}, \code{metacont}, and \code{metagen} are
-called - depending on the definition of the outcome in RevMan 5.
+functions \code{\link{metabin}}, \code{\link{metacont}}, and
+\code{\link{metagen}} are called - depending on the definition of
+the outcome in RevMan 5.
 
 Note, it is recommended to choose the RevMan 5 settings before
 executing \code{metacr}, i.e., \code{settings.meta("revman5")}.

@@ -33,12 +33,15 @@
 #'   added to all cell frequencies for studies with a zero cell count
 #'   to calculate the pooled estimate based on the Mantel-Haenszel
 #'   method.
-#' @param RR.cochrane A logical indicating if 2*\code{incr} instead of
+#' @param RR.Cochrane A logical indicating if 2*\code{incr} instead of
 #'   1*\code{incr} is to be added to \code{n.e} and \code{n.c} in the
-#'   calculation of the risk ratio (i.e., \code{sm = "RR"}) for
-#'   studies with a zero cell. This is used in RevMan 5, the Cochrane
-#'   Collaboration's program for preparing and maintaining Cochrane
-#'   reviews.
+#'   calculation of the risk ratio (i.e., \code{sm="RR"}) for studies
+#'   with a zero cell. This is used in RevMan 5, the program for
+#'   preparing and maintaining Cochrane reviews.
+#' @param Q.Cochrane A logical indicating if the Mantel-Haenszel
+#'   estimate is used in the calculation of the heterogeneity
+#'   statistic Q which is implemented in RevMan 5, the program for
+#'   preparing and maintaining Cochrane reviews.
 #' @param model.glmm A character string indicating which GLMM model
 #'   should be used.
 #' @param level The level used to calculate confidence intervals for
@@ -53,11 +56,16 @@
 #'   Knapp should be used to adjust test statistics and confidence
 #'   intervals.
 #' @param method.tau A character string indicating which method is
-#'   used to estimate the between-study variance \eqn{\tau^2}. Either
-#'   \code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-#'   \code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-#'   abbreviated. See function \code{\link{metagen}}.
-#' @param tau.preset Prespecified value for the square-root of the
+#'   used to estimate the between-study variance \eqn{\tau^2} and its
+#'   square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+#'   \code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+#'   \code{"HE"}, or \code{"EB"}, can be abbreviated. See function
+#'   \code{\link{metagen}}.
+#' @param method.tau.ci A character string indicating which method is
+#'   used to estimate the confidence interval of \eqn{\tau^2} and
+#'   \eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, can
+#'   be abbreviated.
+#' @param tau.preset Prespecified value for the square root of the
 #'   between-study variance \eqn{\tau^2}.
 #' @param TE.tau Overall treatment effect used to estimate the
 #'   between-study variance \eqn{\tau^2}.
@@ -153,8 +161,8 @@
 #'   (e.g., if \code{incr} is added to studies with zero cell
 #'   frequencies).
 #' @param control An optional list to control the iterative process to
-#'   estimate the between-study variance tau^2. This argument is
-#'   passed on to \code{\link[metafor]{rma.uni}} or
+#'   estimate the between-study variance \eqn{\tau^2}. This argument
+#'   is passed on to \code{\link[metafor]{rma.uni}} or
 #'   \code{\link[metafor]{rma.glmm}}, respectively.
 #' @param \dots Additional arguments (ignored at the moment).
 #' 
@@ -219,7 +227,8 @@ update.meta <- function(object,
                         addincr = object$addincr,
                         allstudies = object$allstudies,
                         MH.exact = object$MH.exact,
-                        RR.cochrane = object$RR.cochrane,
+                        RR.Cochrane = object$RR.Cochrane,
+                        Q.Cochrane = object$Q.Cochrane,
                         model.glmm = object$model.glmm,
                         level = object$level,
                         level.comb = object$level.comb,
@@ -227,6 +236,7 @@ update.meta <- function(object,
                         comb.random = object$comb.random,
                         hakn = object$hakn,
                         method.tau = object$method.tau,
+                        method.tau.ci = object$method.tau.ci,
                         tau.preset = object$tau.preset,
                         TE.tau = object$TE.tau,
                         tau.common = object$tau.common,
@@ -265,7 +275,7 @@ update.meta <- function(object,
                         type = object$type,
                         n.iter.max = object$n.iter.max,
                         ##
-                        warn = object$warn,
+                        warn = FALSE,
                         ##
                         control = object$control,
                         ...) {
@@ -311,6 +321,11 @@ update.meta <- function(object,
   comb.fixed <- replacemiss(comb.fixed)
   comb.random <- replacemiss(comb.random)
   ##
+  RR.Cochrane <- replacemiss(RR.Cochrane, object$RR.cochrane)
+  Q.Cochrane <- replacemiss(Q.Cochrane, TRUE)
+  if (Q.Cochrane & method.tau != "DL")
+    Q.Cochrane <- FALSE
+  ##
   model.glmm <- replacemiss(model.glmm)
   ##
   level <- replacemiss(level)
@@ -318,6 +333,7 @@ update.meta <- function(object,
   ##
   hakn <- replacemiss(hakn)
   method.tau <- replacemiss(method.tau)
+  method.tau.ci <- replacemiss(method.tau.ci)
   tau.preset <- replacemiss(tau.preset, NULL)
   TE.tau <- replacemiss(TE.tau, NULL)
   null.effect <- replacemiss(null.effect, NA)
@@ -391,7 +407,7 @@ update.meta <- function(object,
                     level = level, level.comb = level.comb,
                     comb.fixed = comb.fixed, comb.random = comb.random,
                     hakn = hakn,
-                    method.tau = method.tau,
+                    method.tau = method.tau, method.tau.ci = method.tau.ci,
                     prediction = prediction, level.predict = level.predict,
                     silent = TRUE,
                     ...)
@@ -490,7 +506,8 @@ update.meta <- function(object,
   }
   ##
   if (is.null(object$data)) {
-    warning("Necessary data not available. Please, recreate meta-analysis object without option 'keepdata = FALSE'.")
+    warning("Necessary data not available. Please, recreate ",
+            "meta-analysis object without option 'keepdata = FALSE'.")
     return(invisible(NULL))
   }
   ##
@@ -519,6 +536,8 @@ update.meta <- function(object,
       byvar.name <- "byvar"
     ##
     bylab <- if (!missing(bylab) && !is.null(bylab)) bylab else byvar.name
+    ##
+    data$.byvar <- byvar
   }
   ##
   studlab <- eval(mf[[match("studlab", names(mf))]],
@@ -597,14 +616,17 @@ update.meta <- function(object,
                  sm = ifelse(method == "GLMM", "OR", sm),
                  incr = incr,
                  allincr = allincr, addincr = addincr, allstudies = allstudies,
-                 MH.exact = MH.exact, RR.cochrane = RR.cochrane,
-                 model.glmm = model.glmm,
+                 MH.exact = MH.exact, RR.Cochrane = RR.Cochrane,
+                 Q.Cochrane = Q.Cochrane, model.glmm = model.glmm,
                  ##
                  level = level, level.comb = level.comb,
                  comb.fixed = comb.fixed, comb.random = comb.random,
                  ##
-                 hakn = hakn, method.tau = ifelse(method == "GLMM", "ML", method.tau),
-                 tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                 hakn = hakn,
+                 method.tau = ifelse(method == "GLMM", "ML", method.tau),
+                 method.tau.ci = method.tau.ci,
+                 tau.preset = tau.preset, TE.tau = TE.tau,
+                 tau.common = tau.common,
                  ##
                  prediction = prediction, level.predict = level.predict,
                  ##
@@ -645,8 +667,10 @@ update.meta <- function(object,
                   level = level, level.comb = level.comb,
                   comb.fixed = comb.fixed, comb.random = comb.random,
                   ##
-                  hakn = hakn, method.tau = method.tau,
-                  tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                  hakn = hakn,
+                  method.tau = method.tau, method.tau.ci = method.tau.ci,
+                  tau.preset = tau.preset, TE.tau = TE.tau,
+                  tau.common = tau.common,
                   ##
                   prediction = prediction, level.predict = level.predict,
                   ##
@@ -678,8 +702,10 @@ update.meta <- function(object,
                  level = level, level.comb = level.comb,
                  comb.fixed = comb.fixed, comb.random = comb.random,
                  ##
-                 hakn = hakn, method.tau = method.tau,
-                 tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                 hakn = hakn,
+                 method.tau = method.tau, method.tau.ci = method.tau.ci,
+                 tau.preset = tau.preset, TE.tau = TE.tau,
+                 tau.common = tau.common,
                  ##
                  prediction = prediction, level.predict = level.predict,
                  ##
@@ -723,8 +749,10 @@ update.meta <- function(object,
                  level = level, level.comb = level.comb,
                  comb.fixed = comb.fixed, comb.random = comb.random,
                  ##
-                 hakn = hakn, method.tau = method.tau,
-                 tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                 hakn = hakn,
+                 method.tau = method.tau, method.tau.ci = method.tau.ci,
+                 tau.preset = tau.preset, TE.tau = TE.tau,
+                 tau.common = tau.common,
                  ##
                  prediction = prediction, level.predict = level.predict,
                  ##
@@ -785,8 +813,11 @@ update.meta <- function(object,
                  level = level, level.comb = level.comb,
                  comb.fixed = comb.fixed, comb.random = comb.random,
                  ##
-                 hakn = hakn, method.tau = ifelse(method == "GLMM", "ML", method.tau),
-                 tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                 hakn = hakn,
+                 method.tau = ifelse(method == "GLMM", "ML", method.tau),
+                 method.tau.ci = method.tau.ci,
+                 tau.preset = tau.preset, TE.tau = TE.tau,
+                 tau.common = tau.common,
                  ##
                  prediction = prediction, level.predict = level.predict,
                  ##
@@ -830,8 +861,10 @@ update.meta <- function(object,
                   level = level, level.comb = level.comb,
                   comb.fixed = comb.fixed, comb.random = comb.random,
                   ##
-                  hakn = hakn, method.tau = method.tau,
-                  tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                  hakn = hakn,
+                  method.tau = method.tau, method.tau.ci = method.tau.ci,
+                  tau.preset = tau.preset, TE.tau = TE.tau,
+                  tau.common = tau.common,
                   ##
                   prediction = prediction, level.predict = level.predict,
                   ##
@@ -867,8 +900,11 @@ update.meta <- function(object,
                   level = level, level.comb = level.comb,
                   comb.fixed = comb.fixed, comb.random = comb.random,
                   ##
-                  hakn = hakn, method.tau = ifelse(method == "GLMM", "ML", method.tau),
-                  tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                  hakn = hakn,
+                  method.tau = ifelse(method == "GLMM", "ML", method.tau),
+                  method.tau.ci = method.tau.ci,
+                  tau.preset = tau.preset, TE.tau = TE.tau,
+                  tau.common = tau.common,
                   ##
                   prediction = prediction, level.predict = level.predict,
                   ##
@@ -903,8 +939,11 @@ update.meta <- function(object,
                   level = level, level.comb = level.comb,
                   comb.fixed = comb.fixed, comb.random = comb.random,
                   ##
-                  hakn = hakn, method.tau = ifelse(method == "GLMM", "ML", method.tau),
-                  tau.preset = tau.preset, TE.tau = TE.tau, tau.common = tau.common,
+                  hakn = hakn,
+                  method.tau = ifelse(method == "GLMM", "ML", method.tau),
+                  method.tau.ci = method.tau.ci,
+                  tau.preset = tau.preset, TE.tau = TE.tau,
+                  tau.common = tau.common,
                   ##
                   prediction = prediction, level.predict = level.predict,
                   ##

@@ -4,23 +4,56 @@
 \alias{metainc}
 \title{Meta-analysis of incidence rates}
 \usage{
-metainc(event.e, time.e, event.c, time.c, studlab, data = NULL,
-  subset = NULL, exclude = NULL, method = "MH", sm = gs("sminc"),
-  incr = gs("incr"), allincr = gs("allincr"),
-  addincr = gs("addincr"), model.glmm = "UM.FS", level = gs("level"),
-  level.comb = gs("level.comb"), comb.fixed = gs("comb.fixed"),
-  comb.random = gs("comb.random"), hakn = gs("hakn"),
-  method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch =
-  NA)), "ML", gs("method.tau")), tau.preset = NULL, TE.tau = NULL,
-  tau.common = gs("tau.common"), prediction = gs("prediction"),
-  level.predict = gs("level.predict"), method.bias = gs("method.bias"),
-  n.e = NULL, n.c = NULL, backtransf = gs("backtransf"),
-  irscale = 1, irunit = "person-years", title = gs("title"),
-  complab = gs("complab"), outclab = "", label.e = gs("label.e"),
-  label.c = gs("label.c"), label.left = gs("label.left"),
-  label.right = gs("label.right"), byvar, bylab,
-  print.byvar = gs("print.byvar"), byseparator = gs("byseparator"),
-  keepdata = gs("keepdata"), warn = gs("warn"), control = NULL, ...)
+metainc(
+  event.e,
+  time.e,
+  event.c,
+  time.c,
+  studlab,
+  data = NULL,
+  subset = NULL,
+  exclude = NULL,
+  method = "MH",
+  sm = gs("sminc"),
+  incr = gs("incr"),
+  allincr = gs("allincr"),
+  addincr = gs("addincr"),
+  model.glmm = "UM.FS",
+  level = gs("level"),
+  level.comb = gs("level.comb"),
+  comb.fixed = gs("comb.fixed"),
+  comb.random = gs("comb.random"),
+  hakn = gs("hakn"),
+  method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch = NA)), "ML",
+    gs("method.tau")),
+  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  tau.preset = NULL,
+  TE.tau = NULL,
+  tau.common = gs("tau.common"),
+  prediction = gs("prediction"),
+  level.predict = gs("level.predict"),
+  method.bias = gs("method.bias"),
+  n.e = NULL,
+  n.c = NULL,
+  backtransf = gs("backtransf"),
+  irscale = 1,
+  irunit = "person-years",
+  title = gs("title"),
+  complab = gs("complab"),
+  outclab = "",
+  label.e = gs("label.e"),
+  label.c = gs("label.c"),
+  label.left = gs("label.left"),
+  label.right = gs("label.right"),
+  byvar,
+  bylab,
+  print.byvar = gs("print.byvar"),
+  byseparator = gs("byseparator"),
+  keepdata = gs("keepdata"),
+  warn = gs("warn"),
+  control = NULL,
+  ...
+)
 }
 \arguments{
 \item{event.e}{Number of events in experimental group.}
@@ -84,12 +117,17 @@ Knapp should be used to adjust test statistics and confidence
 intervals.}
 
 \item{method.tau}{A character string indicating which method is
-used to estimate the between-study variance \eqn{\tau^2}. Either
-\code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-\code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-abbreviated.}
+used to estimate the between-study variance \eqn{\tau^2} and its
+square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+\code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+\code{"HE"}, or \code{"EB"}, can be abbreviated.}
 
-\item{tau.preset}{Prespecified value for the square-root of the
+\item{method.tau.ci}{A character string indicating which method is
+used to estimate the confidence interval of \eqn{\tau^2} and
+\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+\code{""}, can be abbreviated.}
+
+\item{tau.preset}{Prespecified value for the square root of the
 between-study variance \eqn{\tau^2}.}
 
 \item{TE.tau}{Overall treatment effect used to estimate the
@@ -159,8 +197,8 @@ should be kept in meta object.}
 frequencies).}
 
 \item{control}{An optional list to control the iterative process to
-estimate the between-study variance tau^2. This argument is
-passed on to \code{\link[metafor]{rma.uni}} or
+estimate the between-study variance \eqn{\tau^2}. This argument
+is passed on to \code{\link[metafor]{rma.uni}} or
 \code{\link[metafor]{rma.glmm}}, respectively.}
 
 \item{\dots}{Additional arguments passed on to
@@ -176,8 +214,8 @@ object is a list containing the following components:
   defined above.}
 \item{level, level.comb, comb.fixed, comb.random,}{As defined
   above.}
-\item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{As
-  defined above.}
+\item{hakn, method.tau, method.tau.ci,}{As defined above.}
+\item{tau.preset, TE.tau, method.bias,}{As defined above.}
 \item{tau.common, title, complab, outclab,}{As defined above.}
 \item{label.e, label.c, label.left, label.right,}{As defined
   above.}
@@ -216,10 +254,22 @@ object is a list containing the following components:
   (only if \code{method = "GLMM"}).}
 \item{df.Q.LRT}{Degrees of freedom for likelihood-ratio test}
 \item{pval.Q.LRT}{P-value of likelihood-ratio test.}
-\item{tau}{Square-root of between-study variance.}
-\item{se.tau2}{Standard error of between-study variance.}
-\item{C}{Scaling factor utilised internally to calculate common
-  tau-squared across subgroups.}
+\item{tau2}{Between-study variance \eqn{\tau^2}.}
+\item{se.tau2}{Standard error of \eqn{\tau^2}.}
+\item{lower.tau2, upper.tau2}{Lower and upper limit of confidence
+  interval for \eqn{\tau^2}.}
+\item{tau}{Square-root of between-study variance \eqn{\tau}.}
+\item{lower.tau, upper.tau}{Lower and upper limit of confidence
+  interval for \eqn{\tau}.}
+\item{H}{Heterogeneity statistic H.}
+\item{lower.H, upper.H}{Lower and upper confidence limit for
+ heterogeneity statistic H.}
+\item{I2}{Heterogeneity statistic I\eqn{^2}.}
+\item{lower.I2, upper.I2}{Lower and upper confidence limit for
+  heterogeneity statistic I\eqn{^2}.}
+\item{Rb}{Heterogeneity statistic R\eqn{_b}.}
+\item{lower.Rb, upper.Rb}{Lower and upper confidence limit for
+  heterogeneity statistic R\eqn{_b}.}
 \item{sparse}{Logical flag indicating if any study included in
   meta-analysis has any zero cell frequencies.}
 \item{incr.event}{Increment added to number of events.}
@@ -297,17 +347,15 @@ object is a list containing the following components:
   not missing.}
 \item{tau.w}{Square-root of between-study variance within subgroups
   - if \code{byvar} is not missing.}
-\item{C.w}{Scaling factor utilised internally to calculate common
-  tau-squared across subgroups - if \code{byvar} is not missing.}
 \item{H.w}{Heterogeneity statistic H within subgroups - if
   \code{byvar} is not missing.}
-\item{lower.H.w, upper.H.w}{Lower and upper confidence limti for
+\item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
   heterogeneity statistic H within subgroups - if \code{byvar} is
   not missing.}
-\item{I2.w}{Heterogeneity statistic I2 within subgroups - if
+\item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
   \code{byvar} is not missing.}
-\item{lower.I2.w, upper.I2.w}{Lower and upper confidence limti for
-  heterogeneity statistic I2 within subgroups - if \code{byvar} is
+\item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
+  heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
   not missing.}
 \item{keepdata}{As defined above.}
 \item{data}{Original data (set) used in function call (if
@@ -435,8 +483,7 @@ used to adjust test statistics and confidence intervals if argument
 \code{hakn = TRUE}.
 
 The following methods to estimate the between-study variance
-\eqn{\tau^2} (argument \code{method.tau}) are available for the
-inverse variance method:
+\eqn{\tau^2} are available:
 \itemize{
 \item DerSimonian-Laird estimator (\code{method.tau = "DL"})
 \item Paule-Mandel estimator (\code{method.tau = "PM"})
@@ -448,9 +495,19 @@ inverse variance method:
 \item Hedges estimator (\code{method.tau = "HE"})
 \item Empirical Bayes estimator (\code{method.tau = "EB"})
 }
-See \code{\link{metagen}} for more information on these
-estimators. Note, the maximum-likelihood method is utilized for
-GLMMs.
+Confidence intervals for \eqn{\tau^2} and \eqn{\tau} are also
+available:
+\itemize{
+\item Jackson method (\code{method.tau.ci = "J"})
+\item Biggerstaff and Jackson method (\code{method.tau.ci = "BJ"})
+\item Q-profile method (\code{method.tau.ci = "QP"})
+}
+See \code{\link{metagen}} for more information on these estimators
+and confidence intervals. For GLMMs, the maximum-likelihood method
+is utilized and no confidence intervals for \eqn{\tau^2} and
+\eqn{\tau} are calculated. In general, no confidence intervals for
+\eqn{\tau^2} and \eqn{\tau} are calculated if \code{method.tau.ci =
+""}.
 }
 \examples{
 data(smoking)

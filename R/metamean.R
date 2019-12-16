@@ -34,11 +34,15 @@
 #'   Knapp should be used to adjust test statistics and confidence
 #'   intervals.
 #' @param method.tau A character string indicating which method is
-#'   used to estimate the between-study variance \eqn{\tau^2}. Either
-#'   \code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-#'   \code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-#'   abbreviated.
-#' @param tau.preset Prespecified value for the square-root of the
+#'   used to estimate the between-study variance \eqn{\tau^2} and its
+#'   square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+#'   \code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+#'   \code{"HE"}, or \code{"EB"}, can be abbreviated.
+#' @param method.tau.ci A character string indicating which method is
+#'   used to estimate the confidence interval of \eqn{\tau^2} and
+#'   \eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+#'   \code{""}, can be abbreviated.
+#' @param tau.preset Prespecified value for the square root of the
 #'   between-study variance \eqn{\tau^2}.
 #' @param TE.tau Overall treatment effect used to estimate the
 #'   between-study variance tau-squared.
@@ -71,8 +75,8 @@
 #'   (e.g., if studies are excluded from meta-analysis due to zero
 #'   standard deviations).
 #' @param control An optional list to control the iterative process to
-#'   estimate the between-study variance tau^2. This argument is
-#'   passed on to \code{\link[metafor]{rma.uni}}.
+#'   estimate the between-study variance \eqn{\tau^2}. This argument
+#'   is passed on to \code{\link[metafor]{rma.uni}}.
 #' 
 #' @details
 #' Fixed effect and random effects meta-analysis of single means to
@@ -95,48 +99,21 @@
 #' plots these values are back transformed if argument
 #' \code{backtransf = TRUE}.
 #' 
-#' For several arguments defaults settings are utilised (assignments
-#' using \code{\link{gs}} function). These defaults can be changed
-#' using the \code{\link{settings.meta}} function.
+#' Default settings are utilised for several arguments (assignments
+#' using \code{\link{gs}} function). These defaults can be changed for
+#' the current R session using the \code{\link{settings.meta}}
+#' function.
 #' 
-#' Internally, both fixed effect and random effects models are
-#' calculated regardless of values choosen for arguments
-#' \code{comb.fixed} and \code{comb.random}. Accordingly, the estimate
-#' for the random effects model can be extracted from component
-#' \code{TE.random} of an object of class \code{"meta"} even if
-#' argument \code{comb.random = FALSE}. However, all functions in R
-#' package \bold{meta} will adequately consider the values for
-#' \code{comb.fixed} and \code{comb.random}. E.g. function
-#' \code{\link{print.meta}} will not print results for the random
-#' effects model if \code{comb.random = FALSE}.
+#' Furthermore, R function \code{\link{update.meta}} can be used to
+#' rerun a meta-analysis with different settings.
 #' 
-#' The function \code{metagen} is called internally to calculate
-#' individual and overall treatment estimates and standard errors.
+#' \subsection{Estimation of between-study variance}{
 #' 
-#' A prediction interval for the treatment effect of a new study is
-#' calculated (Higgins et al., 2009) if arguments \code{prediction}
-#' and \code{comb.random} are \code{TRUE}.
-#' 
-#' R function \code{\link{update.meta}} can be used to redo the
-#' meta-analysis of an existing metamean object by only specifying
-#' arguments which should be changed.
-#' 
-#' For the random effects, the method by Hartung and Knapp (2001) /
-#' Knapp and Hartung (2003) is used to adjust test statistics and
-#' confidence intervals if argument \code{hakn = TRUE}.
-#' 
-#' The DerSimonian-Laird estimate (1986) is used in the random effects
-#' model if \code{method.tau = "DL"}. The iterative Paule-Mandel
-#' method (1982) to estimate the between-study variance is used if
-#' argument \code{method.tau = "PM"}.  Internally, R function
-#' \code{paulemandel} is called which is based on R function
-#' \code{mpaule.default} from R package \bold{metRology} from S.L.R.
-#' Ellison <s.ellison at lgc.co.uk>.
-#' 
-#' If R package \bold{metafor} (Viechtbauer 2010) is installed, the
-#' following methods to estimate the between-study variance
-#' \eqn{\tau^2} (argument \code{method.tau}) are also available:
+#' The following methods to estimate the between-study variance
+#' \eqn{\tau^2} are available:
 #' \itemize{
+#' \item DerSimonian-Laird estimator (\code{method.tau = "DL"})
+#' \item Paule-Mandel estimator (\code{method.tau = "PM"})
 #' \item Restricted maximum-likelihood estimator (\code{method.tau =
 #'   "REML"})
 #' \item Maximum-likelihood estimator (\code{method.tau = "ML"})
@@ -145,10 +122,76 @@
 #' \item Hedges estimator (\code{method.tau = "HE"})
 #' \item Empirical Bayes estimator (\code{method.tau = "EB"})
 #' }
-#' For these methods the R function \code{rma.uni} of R package
-#' \bold{metafor} is called internally. See help page of R function
-#' \code{rma.uni} for more details on these methods to estimate
-#' between-study variance.
+#' See \code{\link{metagen}} for more information on these
+#' estimators.
+#' }
+#' 
+#' \subsection{Confidence interval for the between-study variance}{
+#'
+#' The following methods to calculate a confidence interval for
+#' \eqn{\tau^2} and \eqn{\tau} are available.
+#' \tabular{ll}{
+#' \bold{Argument}\tab \bold{Method} \cr 
+#' \code{method.tau.ci = "J"}\tab Method by Jackson \cr
+#' \code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson \cr
+#' \code{method.tau.ci = "QP"}\tab Q-Profile method
+#' }
+#' See \code{\link{metagen}} for more information on these methods. No
+#' confidence intervals for \eqn{\tau^2} and \eqn{\tau} are calculated
+#' if \code{method.tau.ci = ""}.
+#' }
+#' 
+#' \subsection{Hartung-Knapp method}{
+#' 
+#' Hartung and Knapp (2001) proposed an alternative method for random
+#' effects meta-analysis based on a refined variance estimator for the
+#' treatment estimate. Simulation studies (Hartung and Knapp, 2001;
+#' IntHout et al., 2014; Langan et al., 2019) show improved coverage
+#' probabilities compared to the classic random effects
+#' method. However, in rare settings with very homogeneous treatment
+#' estimates, the Hartung-Knapp method can be anti-conservative
+#' (Wiksten et al., 2016). The Hartung-Knapp method is used if
+#' argument \code{hakn = TRUE}.
+#' }
+#' 
+#' \subsection{Prediction interval}{
+#' 
+#' A prediction interval for the proportion in a new study (Higgins et
+#' al., 2009) is calculated if arguments \code{prediction} and
+#' \code{comb.random} are \code{TRUE}. Note, the definition of
+#' prediction intervals varies in the literature. This function
+#' implements equation (12) of Higgins et al., (2009) which proposed a
+#' \emph{t} distribution with \emph{K-2} degrees of freedom where
+#' \emph{K} corresponds to the number of studies in the meta-analysis.
+#' }
+#'
+#' \subsection{Subgroup analysis}{
+#' 
+#' Argument \code{byvar} can be used to conduct subgroup analysis for
+#' a categorical covariate. The \code{\link{metareg}} function can be
+#' used instead for more than one categorical covariate or continuous
+#' covariates.
+#' }
+#' 
+#' \subsection{Presentation of meta-analysis results}{
+#' 
+#' Internally, both fixed effect and random effects models are
+#' calculated regardless of values choosen for arguments
+#' \code{comb.fixed} and \code{comb.random}. Accordingly, the estimate
+#' for the random effects model can be extracted from component
+#' \code{TE.random} of an object of class \code{"meta"} even if
+#' argument \code{comb.random = FALSE}. However, all functions in R
+#' package \bold{meta} will adequately consider the values for
+#' \code{comb.fixed} and \code{comb.random}. E.g. functions
+#' \code{\link{print.meta}} and \code{\link{forest.meta}} will not
+#' print results for the random effects model if \code{comb.random =
+#' FALSE}.
+#' }
+#' 
+#' @note
+#' The function \code{\link{metagen}} is called internally to
+#' calculate individual and overall treatment estimates and standard
+#' errors.
 #' 
 #' @return
 #' An object of class \code{c("metamean", "meta")} with corresponding
@@ -157,8 +200,8 @@
 #' \item{n, mean, sd,}{As defined above.}
 #' \item{studlab, exclude, sm, level, level.comb,}{As defined above.}
 #' \item{comb.fixed, comb.random,}{As defined above.}
-#' \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{As
-#'   defined above.}
+#' \item{hakn, method.tau, method.tau.ci,}{As defined above.}
+#' \item{tau.preset, TE.tau, method.bias,}{As defined above.}
 #' \item{tau.common, title, complab, outclab,}{As defined above.}
 #' \item{byvar, bylab, print.byvar, byseparator, warn}{As defined
 #'   above.}
@@ -190,10 +233,22 @@
 #'   prediction interval.}
 #' \item{k}{Number of studies combined in meta-analysis.}
 #' \item{Q}{Heterogeneity statistic.}
-#' \item{tau}{Square-root of between-study variance.}
-#' \item{se.tau2}{Standard error of between-study variance.}
-#' \item{C}{Scaling factor utilised internally to calculate common
-#'   tau-squared across subgroups.}
+#' \item{tau2}{Between-study variance \eqn{\tau^2}.}
+#' \item{se.tau2}{Standard error of \eqn{\tau^2}.}
+#' \item{lower.tau2, upper.tau2}{Lower and upper limit of confidence
+#'   interval for \eqn{\tau^2}.}
+#' \item{tau}{Square-root of between-study variance \eqn{\tau}.}
+#' \item{lower.tau, upper.tau}{Lower and upper limit of confidence
+#'   interval for \eqn{\tau}.}
+#' \item{H}{Heterogeneity statistic H.}
+#' \item{lower.H, upper.H}{Lower and upper confidence limit for
+#'  heterogeneity statistic H.}
+#' \item{I2}{Heterogeneity statistic I\eqn{^2}.}
+#' \item{lower.I2, upper.I2}{Lower and upper confidence limit for
+#'   heterogeneity statistic I\eqn{^2}.}
+#' \item{Rb}{Heterogeneity statistic R\eqn{_b}.}
+#' \item{lower.Rb, upper.Rb}{Lower and upper confidence limit for
+#'   heterogeneity statistic R\eqn{_b}.}
 #' \item{method}{Pooling method: \code{"Inverse"}.}
 #' \item{df.hakn}{Degrees of freedom for test of treatment effect for
 #'   Hartung-Knapp method (only if \code{hakn = TRUE}).}
@@ -259,17 +314,15 @@
 #'   not missing.}
 #' \item{tau.w}{Square-root of between-study variance within subgroups
 #'   - if \code{byvar} is not missing.}
-#' \item{C.w}{Scaling factor utilised internally to calculate common
-#'   tau-squared across subgroups - if \code{byvar} is not missing.}
 #' \item{H.w}{Heterogeneity statistic H within subgroups - if
 #'   \code{byvar} is not missing.}
-#' \item{lower.H.w, upper.H.w}{Lower and upper confidence limti for
+#' \item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
 #'   heterogeneity statistic H within subgroups - if \code{byvar} is
 #'   not missing.}
-#' \item{I2.w}{Heterogeneity statistic I2 within subgroups - if
+#' \item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
 #'   \code{byvar} is not missing.}
-#' \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limti for
-#'   heterogeneity statistic I2 within subgroups - if \code{byvar} is
+#' \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
+#'   heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
 #'   not missing.}
 #' \item{keepdata}{As defined above.}
 #' \item{data}{Original data (set) used in function call (if
@@ -301,22 +354,31 @@
 #' A re-evaluation of random-effects meta-analysis.
 #' \emph{Journal of the Royal Statistical Society: Series A},
 #' \bold{172}, 137--59
-#' 
-#' Knapp G & Hartung J (2003):
-#' Improved tests for a random effects meta-regression with a single
-#' covariate.
-#' \emph{Statistics in Medicine},
-#' \bold{22}, 2693--710
-#' 
-#' Paule RC & Mandel J (1982):
-#' Consensus values and weighting factors.
-#' \emph{Journal of Research of the National Bureau of Standards},
-#' \bold{87}, 377--85
+#'
+#' IntHout J, Ioannidis JPA, Borm GF (2014):
+#' The Hartung-Knapp-Sidik-Jonkman method for random effects
+#' meta-analysis is straightforward and considerably outperforms the
+#' standard DerSimonian-Laird method.
+#' \emph{BMC Medical Research Methodology},
+#' \bold{14}, 25
+#'
+#' Langan D, Higgins JPT, Jackson D, Bowden J, Veroniki AA,
+#' Kontopantelis E, et al. (2019):
+#' A comparison of heterogeneity variance estimators in simulated
+#' random-effects meta-analyses.
+#' \emph{Research Synthesis Methods},
+#' \bold{10}, 83--98
 #' 
 #' Viechtbauer W (2010):
 #' Conducting Meta-Analyses in R with the Metafor Package.
 #' \emph{Journal of Statistical Software},
 #' \bold{36}, 1--48
+#' 
+#' Wiksten A, Rücker G, Schwarzer G (2016):
+#' Hartung-Knapp method is not always conservative compared with
+#' fixed-effect meta-analysis.
+#' \emph{Statistics in Medicine},
+#' \bold{35}, 2503--15
 #' 
 #' @examples
 #' m1 <- metamean(rep(100, 3), 1:3, rep(1, 3))
@@ -352,6 +414,7 @@ metamean <- function(n, mean, sd, studlab,
                      ##
                      hakn = gs("hakn"),
                      method.tau = gs("method.tau"),
+                     method.tau.ci = if (method.tau == "DL") "J" else "QP",
                      tau.preset = NULL, TE.tau = NULL,
                      tau.common = gs("tau.common"),
                      ##
@@ -388,8 +451,8 @@ metamean <- function(n, mean, sd, studlab,
   chklogical(comb.random)
   ##
   chklogical(hakn)
-  method.tau <- setchar(method.tau,
-                        c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"))
+  method.tau <- setchar(method.tau, .settings$meth4tau)
+  method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
   chklogical(tau.common)
   ##
   chklogical(prediction)
@@ -646,7 +709,7 @@ metamean <- function(n, mean, sd, studlab,
                comb.random = comb.random,
                ##
                hakn = hakn,
-               method.tau = method.tau,
+               method.tau = method.tau, method.tau.ci = method.tau.ci,
                tau.preset = tau.preset,
                TE.tau = TE.tau,
                tau.common = FALSE,
@@ -668,8 +731,8 @@ metamean <- function(n, mean, sd, studlab,
   ##
   if (by & tau.common) {
     ## Estimate common tau-squared across subgroups
-    hcc <- hetcalc(TE, seTE, method.tau, TE.tau,
-                   level.comb, byvar, control)
+    hcc <- hetcalc(TE, seTE, method.tau, "",
+                   TE.tau, level.comb, byvar, control)
   }
   
   
@@ -716,17 +779,26 @@ metamean <- function(n, mean, sd, studlab,
     ##
     if (!tau.common) {
       res <- c(res, subgroup(res))
-      res$tau.resid <- NA
+      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
     }
     else if (!is.null(tau.preset)) {
       res <- c(res, subgroup(res, tau.preset))
-      res$tau.resid <- NA
+      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
     }
     else {
       res <- c(res, subgroup(res, hcc$tau))
       res$Q.w.random <- hcc$Q
       res$df.Q.w.random <- hcc$df.Q
+      res$tau2.resid <- hcc$tau2
+      res$lower.tau2.resid <- hcc$lower.tau2
+      res$upper.tau2.resid <- hcc$upper.tau2
       res$tau.resid <- hcc$tau
+      res$lower.tau.resid <- hcc$lower.tau
+      res$upper.tau.resid <- hcc$upper.tau
+      res$sign.lower.tau.resid <- hcc$sign.lower.tau
+      res$sign.upper.tau.resid <- hcc$sign.upper.tau
     }
     ##
     if (!tau.common || method.tau == "DL") {

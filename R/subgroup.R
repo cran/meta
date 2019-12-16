@@ -34,7 +34,8 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
       sum(x, na.rm = TRUE)
   
   
-  res.w <- matrix(NA, ncol = 30, nrow = n.bylevs)
+  res.w <- matrix(NA, ncol = 34, nrow = n.bylevs)
+  add.w <- matrix(NA, ncol =  2, nrow = n.bylevs)
   j <- 0
   ##
   for (i in bylevs) {
@@ -57,7 +58,8 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
                        addincr = x$addincr,
                        allstudies = x$allstudies,
                        MH.exact = x$MH.exact,
-                       RR.cochrane = x$RR.cochrane,
+                       RR.Cochrane = x$RR.Cochrane,
+                       Q.Cochrane = x$Q.Cochrane,
                        level = x$level, level.comb = x$level.comb,
                        hakn = x$hakn,
                        method.tau = x$method.tau,
@@ -179,24 +181,32 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
                    meta1$I2,                                  # 11
                    meta1$lower.I2,                            # 12
                    meta1$upper.I2,                            # 13
-                   meta1$tau,                                 # 14
-                   meta1$C,                                   # 15
-                   1 / mean(1 / x$n[sel]),                    # 16
-                   sum(x$w.fixed[sel]),                       # 17
-                   sum(x$w.random[sel]),                      # 18
-                   if (bin.inc) sumNA(meta1$event.e) else NA, # 19
-                   if (bin.cont.gen) sumNA(meta1$n.e) else NA,# 20
-                   if (bin.inc) sumNA(meta1$event.c) else NA, # 21
-                   if (bin.cont.gen) sumNA(meta1$n.c) else NA,# 22
-                   if (prop) sumNA(meta1$event) else NA,      # 23
-                   if (cor.prop.mean) sumNA(meta1$n) else NA, # 24
-                   if (inc) sumNA(meta1$time.e) else NA,      # 25
-                   if (inc) sumNA(meta1$time.c) else NA,      # 26
-                   1 / mean(1 / x$time[sel]),                 # 27
-                   meta1$Rb,                                  # 28
-                   meta1$lower.Rb,                            # 29
-                   meta1$upper.Rb                             # 30
+                   meta1$tau2,                                # 14
+                   meta1$lower.tau2,                          # 15
+                   meta1$upper.tau2,                          # 16
+                   meta1$tau,                                 # 17
+                   meta1$lower.tau,                           # 18
+                   meta1$upper.tau,                           # 19
+                   1 / mean(1 / x$n[sel]),                    # 20
+                   sum(x$w.fixed[sel]),                       # 21
+                   sum(x$w.random[sel]),                      # 22
+                   if (bin.inc) sumNA(meta1$event.e) else NA, # 23
+                   if (bin.cont.gen) sumNA(meta1$n.e) else NA,# 24
+                   if (bin.inc) sumNA(meta1$event.c) else NA, # 25
+                   if (bin.cont.gen) sumNA(meta1$n.c) else NA,# 26
+                   if (prop) sumNA(meta1$event) else NA,      # 27
+                   if (cor.prop.mean) sumNA(meta1$n) else NA, # 28
+                   if (inc) sumNA(meta1$time.e) else NA,      # 29
+                   if (inc) sumNA(meta1$time.c) else NA,      # 30
+                   1 / mean(1 / x$time[sel]),                 # 31
+                   meta1$Rb,                                  # 32
+                   meta1$lower.Rb,                            # 33
+                   meta1$upper.Rb                             # 34
                    )
+    ##
+    add.w[j, ] <- c(meta1$sign.lower.tau, # 1
+                    meta1$sign.upper.tau  # 2
+                    )
   }
   ##
   TE.fixed.w    <- res.w[, 1]
@@ -215,29 +225,35 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
   I2.w.low <- res.w[, 12]
   I2.w.upp <- res.w[, 13]
   ##
-  tau.w <- res.w[, 14]
+  tau2.w <- res.w[, 14]
+  lower.tau2.w <- res.w[, 15]
+  upper.tau2.w <- res.w[, 16]
+  tau.w <- res.w[, 17]
+  lower.tau.w <- res.w[, 18]
+  upper.tau.w <- res.w[, 19]
   ##
-  C.w <- res.w[, 15]
+  sign.lower.tau.w <- add.w[, 1]
+  sign.upper.tau.w <- add.w[, 2]
   ##
-  n.harmonic.mean.w <- res.w[, 16]
+  n.harmonic.mean.w <- res.w[, 20]
   ##
-  w.fixed.w  <- res.w[, 17]
-  w.random.w <- res.w[, 18]
+  w.fixed.w  <- res.w[, 21]
+  w.random.w <- res.w[, 22]
   ##
-  event.e.w <- res.w[, 19]
-  n.e.w     <- res.w[, 20]
-  event.c.w <- res.w[, 21]
-  n.c.w     <- res.w[, 22]
-  event.w   <- res.w[, 23]
-  n.w       <- res.w[, 24]
+  event.e.w <- res.w[, 23]
+  n.e.w     <- res.w[, 24]
+  event.c.w <- res.w[, 25]
+  n.c.w     <- res.w[, 26]
+  event.w   <- res.w[, 27]
+  n.w       <- res.w[, 28]
   ##
-  time.e.w <- res.w[, 25]
-  time.c.w <- res.w[, 26]
-  t.harmonic.mean.w <- res.w[, 27]
+  time.e.w <- res.w[, 29]
+  time.c.w <- res.w[, 30]
+  t.harmonic.mean.w <- res.w[, 31]
   ##
-  Rb.w     <- res.w[, 28]
-  Rb.w.low <- res.w[, 29]
-  Rb.w.upp <- res.w[, 30]
+  Rb.w     <- res.w[, 32]
+  Rb.w.low <- res.w[, 33]
+  Rb.w.upp <- res.w[, 34]
   ##
   ## GLMM with common tau-squared
   ##
@@ -331,7 +347,11 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
     TE.random.w   <- as.numeric(glmm.random$b)
     seTE.random.w <- as.numeric(glmm.random$se)
     ##
+    tau2.w <- rep_len(glmm.random$tau2, n.bylevs)
+    lower.tau2.w <- upper.tau2.w <- rep_len(NA, n.bylevs)
     tau.w <- rep_len(sqrt(glmm.random$tau2), n.bylevs)
+    lower.tau.w <- upper.tau.w <- rep_len(NA, n.bylevs)
+    sign.lower.tau.w <- sign.upper.tau.w <- rep_len("", n.bylevs)
     ##
     Rb.w     <- rep_len(NA, n.bylevs)
     Rb.w.low <- rep_len(NA, n.bylevs)
@@ -411,8 +431,14 @@ subgroup <- function(x, tau.preset = NULL, byvar.glmm, ...) {
               Q.w = Q.w,
               pval.Q.w = pvalQ(Q.w, k.w - 1),
               ##
+              tau2.w = tau2.w,
+              lower.tau2.w = lower.tau2.w,
+              upper.tau2.w = upper.tau2.w,
               tau.w = tau.w,
-              C.w = C.w,
+              lower.tau.w = lower.tau.w,
+              upper.tau.w = upper.tau.w,
+              sign.lower.tau.w = sign.lower.tau.w,
+              sign.upper.tau.w = sign.upper.tau.w,
               ##
               H.w = H.w,
               lower.H.w = H.w.low,

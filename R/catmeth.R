@@ -13,7 +13,11 @@ catmeth <- function(method,
                     allstudies = FALSE,
                     doublezeros = FALSE,
                     MH.exact = FALSE,
+                    RR.Cochrane = FALSE,
+                    Q.Cochrane = TRUE,
                     method.ci = NULL,
+                    print.tau.ci = FALSE,
+                    method.tau.ci = "",
                     pooledvar = FALSE,
                     method.smd,
                     sd.glass,
@@ -25,7 +29,8 @@ catmeth <- function(method,
                     null.effect = NA,
                     big.mark = "",
                     digits = gs("digits"),
-                    digits.tau2 = gs("digits.tau2"),
+                    digits.tau = gs("digits.tau"),
+                    text.tau = gs("text.tau"),
                     text.tau2 = gs("text.tau2"),
                     method.miss, IMOR.e, IMOR.c
                     ) {
@@ -213,33 +218,56 @@ catmeth <- function(method,
     lab.method.tau <- ""
   else {
     if (!is.null(tau.preset)) {
-      tau2 <- tau.preset^2
-      tau2 <- formatPT(tau2, lab = TRUE, labval = text.tau2,
-                       digits = digits.tau2,
-                       lab.NA = "NA",
-                       big.mark = big.mark)
+      tau.preset <- formatPT(tau.preset, lab = TRUE, labval = text.tau,
+                             digits = digits.tau,
+                             lab.NA = "NA",
+                             big.mark = big.mark)
       ##
-      lab.method.tau <- paste("\n- Preset between-study variance: ",
-                              tau2, sep = "")
+      lab.method.tau <- paste("\n- Preset square root of between-study variance: ",
+                              tau.preset, sep = "")
       ##
       lab.method.details <- lab.method.tau
     }
     else {
-      i.lab.method.tau <- charmatch(method.tau,
-                                    c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"),
-                                    nomatch = NA)
+      i.lab.method.tau <-
+        charmatch(method.tau, .settings$meth4tau, nomatch = NA)
       ##
-      lab.method.tau <- c("\n- DerSimonian-Laird estimator for tau^2",
-                          "\n- Paule-Mandel estimator for tau^2",
-                          "\n- Restricted maximum-likelihood estimator for tau^2",
-                          "\n- Maximum-likelihood estimator for tau^2",
-                          "\n- Hunter-Schmidt estimator for tau^2",
-                          "\n- Sidik-Jonkman estimator for tau^2",
-                          "\n- Hedges estimator for tau^2",
-                          "\n- Empirical Bayes estimator for tau^2")[i.lab.method.tau]
+      lab.method.tau <-
+        c("\n- DerSimonian-Laird estimator",
+          "\n- Paule-Mandel estimator",
+          "\n- Restricted maximum-likelihood estimator",
+          "\n- Maximum-likelihood estimator",
+          "\n- Hunter-Schmidt estimator",
+          "\n- Sidik-Jonkman estimator",
+          "\n- Hedges estimator",
+          "\n- Empirical Bayes estimator")[i.lab.method.tau]
+      lab.method.tau <- paste(lab.method.tau, "for", text.tau2)
       ##
       if (tau.common)
-        lab.method.tau <- paste(lab.method.tau, " (assuming common tau^2 in subgroups)", sep = "")
+        lab.method.tau <- paste0(lab.method.tau,
+                                 " (assuming common ", text.tau2,
+                                 " in subgroups)")
+      ##
+      if (metabin & Q.Cochrane)
+        lab.method.tau <-
+          paste0(lab.method.tau,
+                 "\n- Mantel-Haenszel estimator used in ",
+                 "calculation of Q and ", text.tau2, " (like RevMan 5)")
+      ##
+      if (print.tau.ci & method.tau.ci %in% c("QP", "BJ", "J")) {
+        i.lab.tau.ci <-
+          charmatch(method.tau.ci, c("QP", "BJ", "J"), nomatch = NA)
+        ##
+        lab.tau.ci <-
+          paste("\n-",
+                 c("Q-profile method",
+                   "Biggerstaff and Jackson method",
+                   "Jackson method")[i.lab.tau.ci],
+                 "for confidence interval of",
+                 text.tau2, "and", text.tau)
+        ##
+        lab.method.tau <- paste0(lab.method.tau, lab.tau.ci)
+      }
       ##
       if (hakn)
         lab.hakn <- "\n- Hartung-Knapp adjustment for random effects model"

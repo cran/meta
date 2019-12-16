@@ -4,21 +4,47 @@
 \alias{metarate}
 \title{Meta-analysis of single incidence rates}
 \usage{
-metarate(event, time, studlab, data = NULL, subset = NULL,
-  exclude = NULL, method = "Inverse", sm = gs("smrate"),
-  incr = gs("incr"), allincr = gs("allincr"),
-  addincr = gs("addincr"), level = gs("level"),
-  level.comb = gs("level.comb"), comb.fixed = gs("comb.fixed"),
-  comb.random = gs("comb.random"), hakn = gs("hakn"),
-  method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch =
-  NA)), "ML", gs("method.tau")), tau.preset = NULL, TE.tau = NULL,
-  tau.common = gs("tau.common"), prediction = gs("prediction"),
-  level.predict = gs("level.predict"), null.effect = NA,
-  method.bias = gs("method.bias"), backtransf = gs("backtransf"),
-  irscale = 1, irunit = "person-years", title = gs("title"),
-  complab = gs("complab"), outclab = "", byvar, bylab,
-  print.byvar = gs("print.byvar"), byseparator = gs("byseparator"),
-  keepdata = gs("keepdata"), warn = gs("warn"), control = NULL, ...)
+metarate(
+  event,
+  time,
+  studlab,
+  data = NULL,
+  subset = NULL,
+  exclude = NULL,
+  method = "Inverse",
+  sm = gs("smrate"),
+  incr = gs("incr"),
+  allincr = gs("allincr"),
+  addincr = gs("addincr"),
+  level = gs("level"),
+  level.comb = gs("level.comb"),
+  comb.fixed = gs("comb.fixed"),
+  comb.random = gs("comb.random"),
+  hakn = gs("hakn"),
+  method.tau,
+  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  tau.preset = NULL,
+  TE.tau = NULL,
+  tau.common = gs("tau.common"),
+  prediction = gs("prediction"),
+  level.predict = gs("level.predict"),
+  null.effect = NA,
+  method.bias = gs("method.bias"),
+  backtransf = gs("backtransf"),
+  irscale = 1,
+  irunit = "person-years",
+  title = gs("title"),
+  complab = gs("complab"),
+  outclab = "",
+  byvar,
+  bylab,
+  print.byvar = gs("print.byvar"),
+  byseparator = gs("byseparator"),
+  keepdata = gs("keepdata"),
+  warn = gs("warn"),
+  control = NULL,
+  ...
+)
 }
 \arguments{
 \item{event}{Number of events.}
@@ -73,10 +99,17 @@ Knapp should be used to adjust test statistics and confidence
 intervals.}
 
 \item{method.tau}{A character string indicating which method is
-used to estimate the between-study variance \eqn{\tau^2}, see
-Details.}
+used to estimate the between-study variance \eqn{\tau^2} and its
+square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+\code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+\code{"HE"}, or \code{"EB"}, can be abbreviated.}
 
-\item{tau.preset}{Prespecified value for the square-root of the
+\item{method.tau.ci}{A character string indicating which method is
+used to estimate the confidence interval of \eqn{\tau^2} and
+\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+\code{""}, can be abbreviated.}
+
+\item{tau.preset}{Prespecified value for the square root of the
 between-study variance \eqn{\tau^2}.}
 
 \item{TE.tau}{Overall treatment effect used to estimate the
@@ -136,8 +169,8 @@ should be kept in meta object.}
 warning.}
 
 \item{control}{An optional list to control the iterative process to
-estimate the between-study variance tau^2. This argument is
-passed on to \code{\link[metafor]{rma.uni}} or
+estimate the between-study variance \eqn{\tau^2}. This argument
+is passed on to \code{\link[metafor]{rma.uni}} or
 \code{\link[metafor]{rma.glmm}}, respectively.}
 
 \item{\dots}{Additional arguments passed on to
@@ -151,8 +184,8 @@ object is a list containing the following components:
 \item{sm, incr, allincr, addincr, method.ci,}{As defined above.}
 \item{level, level.comb,}{As defined above.}
 \item{comb.fixed, comb.random,}{As defined above.}
-\item{hakn, method.tau, tau.preset, TE.tau, null.effect,}{As
-  defined above.}
+\item{hakn, method.tau, method.tau.ci,}{As defined above.}
+\item{tau.preset, TE.tau, null.hypothesis,}{As defined above.}
 \item{method.bias, tau.common, title, complab, outclab,}{As defined
   above.}
 \item{byvar, bylab, print.byvar, byseparator, warn}{As defined
@@ -191,10 +224,22 @@ object is a list containing the following components:
   (only if \code{method = "GLMM"}).}
 \item{df.Q.LRT}{Degrees of freedom for likelihood-ratio test}
 \item{pval.Q.LRT}{P-value of likelihood-ratio test.}
-\item{tau}{Square-root of between-study variance.}
-\item{se.tau2}{Standard error of between-study variance.}
-\item{C}{Scaling factor utilised internally to calculate common
-  tau-squared across subgroups.}
+\item{tau2}{Between-study variance \eqn{\tau^2}.}
+\item{se.tau2}{Standard error of \eqn{\tau^2}.}
+\item{lower.tau2, upper.tau2}{Lower and upper limit of confidence
+  interval for \eqn{\tau^2}.}
+\item{tau}{Square-root of between-study variance \eqn{\tau}.}
+\item{lower.tau, upper.tau}{Lower and upper limit of confidence
+  interval for \eqn{\tau}.}
+\item{H}{Heterogeneity statistic H.}
+\item{lower.H, upper.H}{Lower and upper confidence limit for
+ heterogeneity statistic H.}
+\item{I2}{Heterogeneity statistic I\eqn{^2}.}
+\item{lower.I2, upper.I2}{Lower and upper confidence limit for
+  heterogeneity statistic I\eqn{^2}.}
+\item{Rb}{Heterogeneity statistic R\eqn{_b}.}
+\item{lower.Rb, upper.Rb}{Lower and upper confidence limit for
+  heterogeneity statistic R\eqn{_b}.}
 \item{method}{A character string indicating method used for
   pooling: \code{"Inverse"}}
 \item{df.hakn}{Degrees of freedom for test of treatment effect for
@@ -264,17 +309,15 @@ object is a list containing the following components:
   not missing.}
 \item{tau.w}{Square-root of between-study variance within subgroups
   - if \code{byvar} is not missing.}
-\item{C.w}{Scaling factor utilised internally to calculate common
-  tau-squared across subgroups - if \code{byvar} is not missing.}
 \item{H.w}{Heterogeneity statistic H within subgroups - if
   \code{byvar} is not missing.}
-\item{lower.H.w, upper.H.w}{Lower and upper confidence limti for
+\item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
   heterogeneity statistic H within subgroups - if \code{byvar} is
   not missing.}
-\item{I2.w}{Heterogeneity statistic I2 within subgroups - if
+\item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
   \code{byvar} is not missing.}
-\item{lower.I2.w, upper.I2.w}{Lower and upper confidence limti for
-  heterogeneity statistic I2 within subgroups - if \code{byvar} is
+\item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
+  heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
   not missing.}
 \item{incr.event}{Increment added to number of events.}
 \item{keepdata}{As defined above.}
@@ -352,8 +395,7 @@ transformation as well as GLMMs no continuity correction is used.
 \subsection{Estimation of between-study variance}{
 
 The following methods to estimate the between-study variance
-\eqn{\tau^2} (argument \code{method.tau}) are available for the
-inverse variance method:
+\eqn{\tau^2} are available for the inverse variance method:
 \itemize{
 \item DerSimonian-Laird estimator (\code{method.tau = "DL"})
 \item Paule-Mandel estimator (\code{method.tau = "PM"})
@@ -368,6 +410,23 @@ inverse variance method:
 See \code{\link{metagen}} for more information on these
 estimators. Note, the maximum-likelihood method is utilized for
 GLMMs.
+}
+
+\subsection{Confidence interval for the between-study variance}{
+
+The following methods to calculate a confidence interval for
+\eqn{\tau^2} and \eqn{\tau} are available.
+\tabular{ll}{
+\bold{Argument}\tab \bold{Method} \cr 
+\code{method.tau.ci = "J"}\tab Method by Jackson \cr
+\code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson \cr
+\code{method.tau.ci = "QP"}\tab Q-Profile method
+}
+See \code{\link{metagen}} for more information on these
+methods. For GLMMs, no confidence intervals for \eqn{\tau^2} and
+\eqn{\tau} are calculated. Likewise, no confidence intervals for
+\eqn{\tau^2} and \eqn{\tau} are calculated if \code{method.tau.ci =
+""}. 
 }
 
 \subsection{Hartung-Knapp method}{

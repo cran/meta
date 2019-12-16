@@ -62,11 +62,15 @@
 #'   Knapp should be used to adjust test statistics and confidence
 #'   intervals.
 #' @param method.tau A character string indicating which method is
-#'   used to estimate the between-study variance \eqn{\tau^2}. Either
-#'   \code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-#'   \code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-#'   abbreviated.
-#' @param tau.preset Prespecified value for the square-root of the
+#'   used to estimate the between-study variance \eqn{\tau^2} and its
+#'   square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+#'   \code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+#'   \code{"HE"}, or \code{"EB"}, can be abbreviated.
+#' @param method.tau.ci A character string indicating which method is
+#'   used to estimate the confidence interval of \eqn{\tau^2} and
+#'   \eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+#'   \code{""}, can be abbreviated.
+#' @param tau.preset Prespecified value for the square root of the
 #'   between-study variance \eqn{\tau^2}.
 #' @param TE.tau Overall treatment effect used to estimate the
 #'   between-study variance tau-squared.
@@ -112,8 +116,8 @@
 #'   (e.g., if studies are excluded from meta-analysis due to zero
 #'   standard errors).
 #' @param control An optional list to control the iterative process to
-#'   estimate the between-study variance tau^2. This argument is
-#'   passed on to \code{\link[metafor]{rma.uni}}.
+#'   estimate the between-study variance \eqn{\tau^2}. This argument
+#'   is passed on to \code{\link[metafor]{rma.uni}}.
 #' 
 #' @details
 #' This function provides the \emph{generic inverse variance method}
@@ -240,11 +244,24 @@
 #' 2016). Accordingly, the following R command can be used to use the
 #' Paule-Mandel estimator in all meta-analyses of the R session:
 #' \code{settings.meta(method.tau = "PM")}
-#' 
-#' The DerSimonian-Laird and Paule-Mandel estimators are implemented
-#' in R package \pkg{meta}. R function \code{\link[metafor]{rma.uni}}
-#' from R package \pkg{metafor} (Viechtbauer 2010) is called
-#' internally for the other estimators.
+#' }
+#'
+#' \subsection{Confidence interval for the between-study variance}{
+#'
+#' The following methods to calculate a confidence interval for
+#' \eqn{\tau^2} and \eqn{\tau} are available.
+#' \tabular{ll}{
+#' \bold{Argument}\tab \bold{Method} \cr 
+#' \code{method.tau.ci = "J"}\tab Method by Jackson (2013) \cr
+#' \code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson (2008) \cr
+#' \code{method.tau.ci = "QP"}\tab Q-Profile method (Viechtbauer, 2007)
+#' }
+#' These methods have been recommended by Veroniki et al. (2016). By
+#' default, the Jackson method is used for the DerSimonian-Laird
+#' estimator of \eqn{\tau^2} and the Q-profile method for all other
+#' estimators of \eqn{\tau^2}. No confidence intervals for
+#' \eqn{\tau^2} and \eqn{\tau} are calculated if \code{method.tau.ci =
+#' ""}.
 #' }
 #' 
 #' \subsection{Hartung-Knapp method}{
@@ -337,6 +354,12 @@
 #' arguments can be set for the whole R session using
 #' \code{\link{settings.meta}}.
 #' }
+#'
+#' @note
+#' R function \code{\link[metafor]{rma.uni}} from R package
+#' \pkg{metafor} (Viechtbauer 2010) is called internally to estimate
+#' the between-study variance \eqn{\tau^2}.
+#' 
 #' 
 #' @return
 #' An object of class \code{c("metagen", "meta")} with corresponding
@@ -345,8 +368,8 @@
 #' \item{TE, seTE, studlab, exclude, n.e, n.c}{As defined above.}
 #' \item{sm, level, level.comb,}{As defined above.}
 #' \item{comb.fixed, comb.random,}{As defined above.}
-#' \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{As
-#'   defined above.}
+#' \item{hakn, method.tau, method.tau.ci,}{As defined above.}
+#' \item{tau.preset, TE.tau, method.bias,}{As defined above.}
 #' \item{tau.common, title, complab, outclab,}{As defined above.}
 #' \item{label.e, label.c, label.left, label.right,}{As defined
 #'   above.}
@@ -381,10 +404,23 @@
 #' \item{Q}{Heterogeneity statistic.}
 #' \item{df.Q}{Degrees of freedom for heterogeneity statistic.}
 #' \item{pval.Q}{P-value of heterogeneity test.}
-#' \item{tau}{Square-root of between-study variance.}
-#' \item{se.tau2}{Standard error of between-study variance.}
-#' \item{C}{Scaling factor utilised internally to
-#'   calculate common tau-squared across subgroups.}
+#' \item{tau2}{Between-study variance \eqn{\tau^2}.}
+#' \item{se.tau2}{Standard error of \eqn{\tau^2}.}
+#' \item{lower.tau2, upper.tau2}{Lower and upper limit of confidence
+#'   interval for \eqn{\tau^2}.}
+#' \item{tau}{Square-root of between-study variance \eqn{\tau}.}
+#' \item{lower.tau, upper.tau}{Lower and upper limit of confidence
+#'   interval for \eqn{\tau}.}
+#' \item{H}{Heterogeneity statistic H.}
+#' \item{lower.H, upper.H}{Lower and upper confidence limit for
+#'  heterogeneity statistic H.}
+#' \item{I2}{Heterogeneity statistic I\eqn{^2}.}
+#' \item{lower.I2, upper.I2}{Lower and upper confidence limit for
+#'   heterogeneity statistic I\eqn{^2}.}
+#' \item{Rb}{Heterogeneity statistic R\eqn{_b}.}
+#' \item{lower.Rb, upper.Rb}{Lower and upper confidence limit for
+#'   heterogeneity statistic R\eqn{_b}.}
+#' \item{approx.TE, approx.seTE}{As defined above.}
 #' \item{method}{Pooling method: \code{"Inverse"}.}
 #' \item{df.hakn}{Degrees of freedom for test of treatment effect for
 #'   Hartung-Knapp method (only if \code{hakn = TRUE}).}
@@ -451,17 +487,16 @@
 #'   subgroups heterogeneity statistic Q (based on random effects
 #'   model) - if \code{byvar} is not missing.}
 #' \item{tau.w}{Square-root of between-study variance within subgroups
-#'   - if \code{byvar} is not missing.}  \item{C.w}{Scaling factor
-#'   utilised internally to calculate common tau-squared across
-#'   subgroups - if \code{byvar} is not missing.}
-#'   \item{H.w}{Heterogeneity statistic H within subgroups - if
+#'   - if \code{byvar} is not missing.}
+#' \item{H.w}{Heterogeneity statistic H within subgroups - if
 #'   \code{byvar} is not missing.}
-#' \item{lower.H.w, upper.H.w}{Lower and upper confidence limti for
+#' \item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
 #'   heterogeneity statistic H within subgroups - if \code{byvar} is
-#'   not missing.}  \item{I2.w}{Heterogeneity statistic I2 within
-#'   subgroups - if \code{byvar} is not missing.}
-#' \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limti for
-#'   heterogeneity statistic I2 within subgroups - if \code{byvar} is
+#'   not missing.}
+#' \item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
+#'   \code{byvar} is not missing.}
+#' \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
+#'   heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
 #'   not missing.}
 #' \item{keepdata}{As defined above.}
 #' \item{data}{Original data (set) used in function call (if
@@ -479,6 +514,12 @@
 #'   \code{\link{settings.meta}}
 #' 
 #' @references
+#' Biggerstaff BJ, Jackson D (2008):
+#' The exact distribution of Cochran’s heterogeneity statistic in
+#' one-way random effects meta-analysis.
+#' \emph{Statistics in Medicine},
+#' \bold{27}, 6093--110
+#'
 #' Borenstein M, Hedges LV, Higgins JP, Rothstein HR (2010):
 #' A basic introduction to fixed-effect and random-effects models for
 #' meta-analysis.
@@ -527,6 +568,13 @@
 #' \emph{BMC Medical Research Methodology},
 #' \bold{14}, 25
 #'
+#' Jackson D (2013):
+#' Confidence intervals for the between-study variance in random
+#' effects meta-analysis using generalised Cochran heterogeneity
+#' statistics.
+#' \emph{Research Synthesis Methods},
+#' \bold{4}, 220--229
+#' 
 #' Langan D, Higgins JPT, Jackson D, Bowden J, Veroniki AA,
 #' Kontopantelis E, et al. (2019):
 #' A comparison of heterogeneity variance estimators in simulated
@@ -565,6 +613,12 @@
 #' random-effects model.
 #' \emph{Journal of Educational and Behavioral Statistics},
 #' \bold{30}, 261--93
+#' 
+#' Viechtbauer W (2007):
+#' Confidence intervals for the amount of heterogeneity in
+#' meta-analysis.
+#' \emph{Statistics in Medicine},
+#' \bold{26}, 37--52
 #' 
 #' Viechtbauer W (2010):
 #' Conducting Meta-Analyses in R with the metafor Package.
@@ -645,6 +699,7 @@ metagen <- function(TE, seTE, studlab,
                     ##
                     hakn = gs("hakn"),
                     method.tau = gs("method.tau"),
+                    method.tau.ci = if (method.tau == "DL") "J" else "QP",
                     tau.preset = NULL, TE.tau = NULL,
                     tau.common = gs("tau.common"),
                     ##
@@ -693,8 +748,8 @@ metagen <- function(TE, seTE, studlab,
   chklogical(comb.random)
   ##
   chklogical(hakn)
-  method.tau <- setchar(method.tau,
-                        c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"))
+  method.tau <- setchar(method.tau, .settings$meth4tau)
+  method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
   chklogical(tau.common)
   ##
   chklogical(prediction)
@@ -727,17 +782,6 @@ metagen <- function(TE, seTE, studlab,
   ##
   fun <- "metagen"
   chklogical(warn)
-  ##
-  if (tau.common & method.tau == "PM") {
-    warning("Argument 'method.tau' set to \"DL\" as argument tau.common = TRUE.")
-    method.tau <- "DL"
-  }
-  ##
-  if (!is.null(tau.preset) & method.tau == "PM") {
-    warning("Argument 'tau.preset' not considered as",
-            "argument method.tau = \"PM\".")
-    tau.preset <- NULL
-  }
   
   
   ##
@@ -1383,8 +1427,6 @@ metagen <- function(TE, seTE, studlab,
   ##
   k <- sum(!is.na(seTE[!exclude]))
   ##
-  tau2 <- NA
-  ##
   if (k == 0) {
     TE.fixed <- NA
     seTE.fixed <- NA
@@ -1402,46 +1444,47 @@ metagen <- function(TE, seTE, studlab,
     upper.random <- NA
     w.random <- rep(0, k.all)
     ##
-    Q <- NA
-    df.Q <- NA
-    se.tau2 <- NA
-    ##
     if (hakn)
       df.hakn <- NA
     ##
-    Cval <- NA
-    ##
-    hc <- list(H = NA, lower.H = NA, upper.H = NA,
-               I2 = NA, lower.I2 = NA, upper.I2 = NA)
+    hc <- list(tau2 = NA, se.tau2 = NA, lower.tau2 = NA, upper.tau2 = NA,
+               tau = NA, lower.tau = NA, upper.tau = NA,
+               method.tau.ci = "", sign.lower.tau = "", sign.upper.tau = "",
+               Q = NA, df.Q = NA, pval.Q = NA,
+               H = NA, lower.H = NA, upper.H = NA,
+               I2 = NA, lower.I2 = NA, upper.I2 = NA,
+               H.resid = NA, lower.H.resid = NA, upper.H.resid = NA,
+               I2.resid = NA, lower.I2.resid = NA, upper.I2.resid = NA)
   }
   else {
     ## At least two studies to perform Hartung-Knapp method
     if (k == 1 & hakn)
       hakn <- FALSE
     ## Estimate tau-squared
-    hc <- hetcalc(TE[!exclude], seTE[!exclude], method.tau, TE.tau,
-                  level.comb, control = control)
+    hc <- hetcalc(TE[!exclude], seTE[!exclude],
+                  method.tau, method.tau.ci,
+                  TE.tau, level.comb, control = control)
     ##
     if (by & tau.common) {
       ## Estimate common tau-squared across subgroups
-      hcc <- hetcalc(TE[!exclude], seTE[!exclude], method.tau, TE.tau,
-                     level.comb, byvar, control)
+      hcc <- hetcalc(TE[!exclude], seTE[!exclude],
+                     method.tau, method.tau.ci,
+                     TE.tau, level.comb, byvar, control)
     }
     ##
-    if (is.null(tau.preset)) {
-      if (k > 1)
-        tau2 <- hc$tau^2
-      tau2.calc <- if (is.na(tau2)) 0 else tau2
-      se.tau2 <- hc$se.tau2
-    }
+    if (is.null(tau.preset))
+      tau2.calc <- if (is.na(hc$tau2)) 0 else hc$tau2
     else {
-      tau2 <- tau2.calc <- tau.preset^2
-      se.tau2 <- NULL
+      tau2.calc <- tau.preset^2
+      ##
+      hc$tau2 <- tau.preset^2
+      hc$se.tau2 <- hc$lower.tau2 <- hc$upper.tau2 <- NA
+      hc$tau <- tau.preset
+      hc$lower.tau <- hc$upper.tau <- NA
+      hc$method.tau.ci <- ""
+      hc$sign.lower.tau <- ""
+      hc$sign.upper.tau <- ""
     }
-    ##
-    Q    <- hc$Q
-    df.Q <- hc$df.Q
-    Cval <- hc$Cval
     ##
     ## Fixed effect estimate (Cooper & Hedges, 1994, p. 265-6)
     ##
@@ -1458,37 +1501,13 @@ metagen <- function(TE, seTE, studlab,
     lower.fixed <- ci.f$lower
     upper.fixed <- ci.f$upper
     ##
-    ## Random effects estimate
+    ## Random effects estimate (Cooper & Hedges, 1994, p. 265, 274-5
     ##
-    if (method.tau == "PM") {
-      if (Q < k - 1) {
-        TE.random <- TE.fixed
-        seTE.random <- seTE.fixed
-        w.random <- w.fixed
-        ##
-        if (k > 1)
-          tau2 <- 0
-        tau2.calc <- 0
-      }
-      else {
-        pm <- paulemandel(TE[!exclude], seTE[!exclude])
-        TE.random <- pm$TE.random
-        seTE.random <- pm$seTE.random
-        w.random <- pm$w.random
-        ##
-        tau2 <- tau2.calc <- pm$tau^2
-      }
-    }
-    else {
-      ##
-      ## Cooper & Hedges (1994), p. 265, 274-5
-      ##
-      w.random <- 1 / (seTE^2 + tau2.calc)
-      w.random[is.na(w.random) | is.na(TE) | exclude] <- 0
-      ##
-      TE.random   <- weighted.mean(TE, w.random, na.rm = TRUE)
-      seTE.random <- sqrt(1 / sum(w.random, na.rm = TRUE))
-    }
+    w.random <- 1 / (seTE^2 + tau2.calc)
+    w.random[is.na(w.random) | is.na(TE) | exclude] <- 0
+    ##
+    TE.random   <- weighted.mean(TE, w.random, na.rm = TRUE)
+    seTE.random <- sqrt(1 / sum(w.random, na.rm = TRUE))
     ##
     ## Hartung-Knapp adjustment
     ##
@@ -1529,7 +1548,8 @@ metagen <- function(TE, seTE, studlab,
   ##
   ## Calculate Rb
   ##
-  Rbres <- Rb(seTE[!is.na(seTE)], seTE.random, tau2.calc, Q, df.Q, level.comb)
+  Rbres <- Rb(seTE[!is.na(seTE)], seTE.random,
+              tau2.calc, hc$Q, hc$df.Q, level.comb)
   
   
   ##
@@ -1558,21 +1578,19 @@ metagen <- function(TE, seTE, studlab,
               lower.predict = p.lower, upper.predict = p.upper,
               level.predict = level.predict,
               ##
-              k = k, Q = Q, df.Q = df.Q, pval.Q = pvalQ(Q, df.Q),
-              tau = sqrt(tau2), se.tau2 = se.tau2,
-              C = Cval,
+              k = k, Q = hc$Q, df.Q = hc$df.Q, pval.Q = hc$pval.Q,
+              tau2 = hc$tau2, se.tau2 = hc$se.tau2,
+              lower.tau2 = hc$lower.tau2, upper.tau2 = hc$upper.tau2,
+              tau = hc$tau, lower.tau = hc$lower.tau, upper.tau = hc$upper.tau,
+              method.tau.ci = hc$method.tau.ci,
+              sign.lower.tau = hc$sign.lower.tau,
+              sign.upper.tau = hc$sign.upper.tau,
               ##
-              H = hc$H,
-              lower.H = hc$lower.H,
-              upper.H = hc$upper.H,
+              H = hc$H, lower.H = hc$lower.H, upper.H = hc$upper.H,
               ##
-              I2 = hc$I2,
-              lower.I2 = hc$lower.I2,
-              upper.I2 = hc$upper.I2,
+              I2 = hc$I2, lower.I2 = hc$lower.I2, upper.I2 = hc$upper.I2,
               ##
-              Rb = Rbres$TE,
-              lower.Rb = Rbres$lower,
-              upper.Rb = Rbres$upper,
+              Rb = Rbres$TE, lower.Rb = Rbres$lower, upper.Rb = Rbres$upper,
               ##
               approx.TE = approx.TE,
               approx.seTE = approx.seTE,
@@ -1584,7 +1602,7 @@ metagen <- function(TE, seTE, studlab,
               comb.random = comb.random,
               hakn = hakn,
               df.hakn = if (hakn) df.hakn else NULL,
-              method.tau = method.tau,
+              method.tau = method.tau, method.tau.ci = method.tau.ci,
               tau.preset = tau.preset,
               TE.tau = if (!missing(TE.tau) & method.tau == "DL") TE.tau else NULL,
               tau.common = tau.common,
@@ -1620,17 +1638,26 @@ metagen <- function(TE, seTE, studlab,
     ##
     if (!tau.common) {
       res <- c(res, subgroup(res))
-      res$tau.resid <- NA
+      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
     }
     else if (!is.null(tau.preset)) {
       res <- c(res, subgroup(res, tau.preset))
-      res$tau.resid <- NA
+      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
     }
     else {
       res <- c(res, subgroup(res, hcc$tau))
       res$Q.w.random <- hcc$Q
       res$df.Q.w.random <- hcc$df.Q
+      res$tau2.resid <- hcc$tau2
+      res$lower.tau2.resid <- hcc$lower.tau2
+      res$upper.tau2.resid <- hcc$upper.tau2
       res$tau.resid <- hcc$tau
+      res$lower.tau.resid <- hcc$lower.tau
+      res$upper.tau.resid <- hcc$upper.tau
+      res$sign.lower.tau.resid <- hcc$sign.lower.tau
+      res$sign.upper.tau.resid <- hcc$sign.upper.tau
     }
     ##
     if (!tau.common || method.tau == "DL") {

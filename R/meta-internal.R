@@ -79,6 +79,28 @@ setVar <- function(var = NULL, arg = NULL) {
 }
 
 
+pasteCI <- function(lower, upper, digits, big.mark,
+                    sign.lower = "", sign.upper = "", text.NA = "NA",
+                    unit = "")
+  paste0(" ",
+         formatCI(paste0(sign.lower,
+                         formatN(lower, digits, big.mark = big.mark,
+                                 text.NA = text.NA), unit),
+                  paste0(sign.upper,
+                         formatN(upper, digits, big.mark = big.mark,
+                                 text.NA = text.NA), unit)))
+
+
+is.wholenumber <- function(x, tol = .Machine$double.eps^0.5) {
+  if (is.numeric(x))
+    res <- abs(x - round(x)) < tol
+  else
+    res <- NA
+  ##
+  res
+}
+
+
 .settings <- list()
 ##
 ## Set defaults (for internal options)
@@ -95,6 +117,9 @@ setOption("sm4rate", c("IR", "IRLN", "IRS", "IRFT"))
 ##
 setOption("ci4prop", c("CP", "WS", "WSCC", "AC", "SA", "SACC", "NAsm"))
 ##
+setOption("meth4tau", c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"))
+setOption("meth4tau.ci", c("QP", "BJ", "J", ""))
+##
 ## List of arguments that can be changed by user
 ##
 argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
@@ -106,18 +131,18 @@ argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
               "smbin", "smcont", "smcor", "sminc", "smmean", "smprop", "smrate",
               "incr", "allincr", "addincr",
               "method", "allstudies", "MH.exact",
-              "RR.cochrane", "model.glmm", "print.CMH",
+              "RR.Cochrane", "Q.Cochrane", "model.glmm", "print.CMH",
               "pooledvar", "method.smd", "sd.glass", "exact.smd", "method.ci",
               "label.e", "label.c", "label.left", "label.right",
               "layout",
               "test.overall", "test.subgroup", "test.effect.subgroup",
               "digits", "digits.se", "digits.zval",
-              "digits.Q", "digits.tau2", "digits.H", "digits.I2",
+              "digits.Q", "digits.tau2", "digits.tau", "digits.H", "digits.I2",
               "digits.prop", "digits.weight",
               "digits.pval", "digits.pval.Q", "digits.forest",
-              "scientific.pval", "big.mark",
+              "scientific.pval", "big.mark", "zero.pval", "JAMA.pval",
               "print.I2", "print.H", "print.Rb",
-              "text.tau2", "text.I2", "text.Rb"
+              "text.tau2", "text.tau", "text.I2", "text.Rb"
               )
 ##
 setOption("argslist", argslist)
@@ -148,6 +173,7 @@ setOption("digits.se", 4)
 setOption("digits.zval", 2)
 setOption("digits.Q", 2)
 setOption("digits.tau2", 4)
+setOption("digits.tau", 4)
 setOption("digits.H", 2)
 setOption("digits.I2", 1)
 setOption("digits.prop", 4)
@@ -156,10 +182,13 @@ setOption("digits.pval", 4)
 setOption("digits.pval.Q", 4)
 setOption("scientific.pval", FALSE)
 setOption("big.mark", "")
+setOption("zero.pval", TRUE)
+setOption("JAMA.pval", FALSE)
 setOption("print.I2", TRUE)
 setOption("print.H", TRUE)
 setOption("print.Rb", FALSE)
 setOption("text.tau2", "tau^2")
+setOption("text.tau", "tau")
 setOption("text.I2", "I^2")
 setOption("text.Rb", "Rb")
 ##
@@ -184,7 +213,8 @@ setOption("addincr", FALSE)
 setOption("method", "MH")
 setOption("allstudies", FALSE)
 setOption("MH.exact", FALSE)
-setOption("RR.cochrane", FALSE)
+setOption("RR.Cochrane", FALSE)
+setOption("Q.Cochrane", TRUE)
 setOption("model.glmm", "UM.FS")
 setOption("print.CMH", FALSE)
 ##

@@ -8,21 +8,54 @@
 \usage{
 trimfill(x, ...)
 
-\method{trimfill}{default}(x, seTE, left = NULL, ma.fixed = TRUE,
-  type = "L", n.iter.max = 50, sm = "", studlab = NULL,
-  level = 0.95, level.comb = level, comb.fixed = FALSE,
-  comb.random = TRUE, hakn = FALSE, method.tau = "DL",
-  prediction = FALSE, level.predict = level, backtransf = TRUE,
-  pscale = 1, irscale = 1, irunit = "person-years", silent = TRUE,
-  ...)
+\method{trimfill}{default}(
+  x,
+  seTE,
+  left = NULL,
+  ma.fixed = TRUE,
+  type = "L",
+  n.iter.max = 50,
+  sm = "",
+  studlab = NULL,
+  level = 0.95,
+  level.comb = level,
+  comb.fixed = FALSE,
+  comb.random = TRUE,
+  hakn = FALSE,
+  method.tau = "DL",
+  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  prediction = FALSE,
+  level.predict = level,
+  backtransf = TRUE,
+  pscale = 1,
+  irscale = 1,
+  irunit = "person-years",
+  silent = TRUE,
+  ...
+)
 
-\method{trimfill}{meta}(x, left = NULL, ma.fixed = TRUE, type = "L",
-  n.iter.max = 50, level = x$level, level.comb = x$level.comb,
-  comb.fixed = FALSE, comb.random = TRUE, hakn = x$hakn,
-  method.tau = x$method.tau, prediction = x$prediction,
-  level.predict = x$level.predict, backtransf = x$backtransf,
-  pscale = x$pscale, irscale = x$irscale, irunit = x$irunit,
-  silent = TRUE, ...)
+\method{trimfill}{meta}(
+  x,
+  left = NULL,
+  ma.fixed = TRUE,
+  type = "L",
+  n.iter.max = 50,
+  level = x$level,
+  level.comb = x$level.comb,
+  comb.fixed = FALSE,
+  comb.random = TRUE,
+  hakn = x$hakn,
+  method.tau = x$method.tau,
+  method.tau.ci = x$method.tau.ci,
+  prediction = x$prediction,
+  level.predict = x$level.predict,
+  backtransf = x$backtransf,
+  pscale = x$pscale,
+  irscale = x$irscale,
+  irunit = x$irunit,
+  silent = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{meta}, or estimated treatment
@@ -75,10 +108,15 @@ Knapp should be used to adjust test statistics and confidence
 intervals.}
 
 \item{method.tau}{A character string indicating which method is
-used to estimate the between-study variance \eqn{\tau^2}. Either
-\code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-\code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-abbreviated.}
+used to estimate the between-study variance \eqn{\tau^2} and its
+square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+\code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+\code{"HE"}, or \code{"EB"}, can be abbreviated.}
+
+\item{method.tau.ci}{A character string indicating which method is
+used to estimate the confidence interval of \eqn{\tau^2} and
+\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+\code{""}, can be abbreviated.}
 
 \item{prediction}{A logical indicating whether a prediction
 interval should be printed.}
@@ -115,8 +153,8 @@ object is a list containing the following components:
 \item{studlab, sm, left, ma.fixed, type, n.iter.max}{As defined
   above.}
 \item{level, level.comb, level.predict}{As defined above.}
-\item{comb.fixed, comb.random, prediction, hakn, method.tau}{As
-  defined above.}
+\item{comb.fixed, comb.random, prediction}{As defined above.}
+\item{hakn, method.tau, method.tau.ci,}{As defined above.}
 \item{TE, seTE}{Estimated treatment effect and standard error of
   individual studies.}
 \item{lower, upper}{Lower and upper confidence interval limits for

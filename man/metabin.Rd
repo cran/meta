@@ -4,27 +4,59 @@
 \alias{metabin}
 \title{Meta-analysis of binary outcome data}
 \usage{
-metabin(event.e, n.e, event.c, n.c, studlab, data = NULL,
-  subset = NULL, exclude = NULL, method = ifelse(tau.common,
-  "Inverse", gs("method")), sm = ifelse(!is.na(charmatch(tolower(method),
-  c("peto", "glmm"), nomatch = NA)), "OR", gs("smbin")),
-  incr = gs("incr"), allincr = gs("allincr"),
-  addincr = gs("addincr"), allstudies = gs("allstudies"),
-  MH.exact = gs("MH.exact"), RR.cochrane = gs("RR.cochrane"),
-  model.glmm = "UM.FS", level = gs("level"),
-  level.comb = gs("level.comb"), comb.fixed = gs("comb.fixed"),
-  comb.random = gs("comb.random"), hakn = gs("hakn"),
-  method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch =
-  NA)), "ML", gs("method.tau")), tau.preset = NULL, TE.tau = NULL,
-  tau.common = gs("tau.common"), prediction = gs("prediction"),
-  level.predict = gs("level.predict"), method.bias = ifelse(sm == "OR",
-  "score", gs("method.bias")), backtransf = gs("backtransf"),
-  pscale = 1, title = gs("title"), complab = gs("complab"),
-  outclab = "", label.e = gs("label.e"), label.c = gs("label.c"),
-  label.left = gs("label.left"), label.right = gs("label.right"),
-  byvar, bylab, print.byvar = gs("print.byvar"),
-  byseparator = gs("byseparator"), print.CMH = gs("print.CMH"),
-  keepdata = gs("keepdata"), warn = gs("warn"), control = NULL, ...)
+metabin(
+  event.e,
+  n.e,
+  event.c,
+  n.c,
+  studlab,
+  data = NULL,
+  subset = NULL,
+  exclude = NULL,
+  method = ifelse(tau.common, "Inverse", gs("method")),
+  sm = ifelse(!is.na(charmatch(tolower(method), c("peto", "glmm"), nomatch = NA)), "OR",
+    gs("smbin")),
+  incr = gs("incr"),
+  allincr = gs("allincr"),
+  addincr = gs("addincr"),
+  allstudies = gs("allstudies"),
+  MH.exact = gs("MH.exact"),
+  RR.Cochrane = gs("RR.Cochrane"),
+  Q.Cochrane = gs("Q.Cochrane") & method == "MH" & method.tau == "DL",
+  model.glmm = "UM.FS",
+  level = gs("level"),
+  level.comb = gs("level.comb"),
+  comb.fixed = gs("comb.fixed"),
+  comb.random = gs("comb.random"),
+  hakn = gs("hakn"),
+  method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch = NA)), "ML",
+    gs("method.tau")),
+  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  tau.preset = NULL,
+  TE.tau = NULL,
+  tau.common = gs("tau.common"),
+  prediction = gs("prediction"),
+  level.predict = gs("level.predict"),
+  method.bias = ifelse(sm == "OR", "score", gs("method.bias")),
+  backtransf = gs("backtransf"),
+  pscale = 1,
+  title = gs("title"),
+  complab = gs("complab"),
+  outclab = "",
+  label.e = gs("label.e"),
+  label.c = gs("label.c"),
+  label.left = gs("label.left"),
+  label.right = gs("label.right"),
+  byvar,
+  bylab,
+  print.byvar = gs("print.byvar"),
+  byseparator = gs("byseparator"),
+  print.CMH = gs("print.CMH"),
+  keepdata = gs("keepdata"),
+  warn = gs("warn"),
+  control = NULL,
+  ...
+)
 }
 \arguments{
 \item{event.e}{Number of events in experimental group.}
@@ -78,12 +110,16 @@ added to all cell frequencies for studies with a zero cell count
 to calculate the pooled estimate based on the Mantel-Haenszel
 method.}
 
-\item{RR.cochrane}{A logical indicating if 2*\code{incr} instead of
+\item{RR.Cochrane}{A logical indicating if 2*\code{incr} instead of
 1*\code{incr} is to be added to \code{n.e} and \code{n.c} in the
 calculation of the risk ratio (i.e., \code{sm="RR"}) for studies
-with a zero cell. This is used in RevMan 5, the Cochrane
-Collaboration's program for preparing and maintaining Cochrane
-reviews.}
+with a zero cell. This is used in RevMan 5, the program for
+preparing and maintaining Cochrane reviews.}
+
+\item{Q.Cochrane}{A logical indicating if the Mantel-Haenszel
+estimate is used in the calculation of the heterogeneity
+statistic Q which is implemented in RevMan 5, the program for
+preparing and maintaining Cochrane reviews.}
 
 \item{model.glmm}{A character string indicating which GLMM should
 be used.  One of \code{"UM.FS"}, \code{"UM.RS"}, \code{"CM.EL"},
@@ -106,12 +142,17 @@ Knapp should be used to adjust test statistics and confidence
 intervals.}
 
 \item{method.tau}{A character string indicating which method is
-used to estimate the between-study variance \eqn{\tau^2}. Either
-\code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-\code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-abbreviated.}
+used to estimate the between-study variance \eqn{\tau^2} and its
+square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+\code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+\code{"HE"}, or \code{"EB"}, can be abbreviated.}
 
-\item{tau.preset}{Prespecified value for the square-root of the
+\item{method.tau.ci}{A character string indicating which method is
+used to estimate the confidence interval of \eqn{\tau^2} and
+\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+\code{""}, can be abbreviated.}
+
+\item{tau.preset}{Prespecified value for the square root of the
 between-study variance \eqn{\tau^2}.}
 
 \item{TE.tau}{Overall treatment effect used to estimate the
@@ -179,7 +220,7 @@ should be kept in meta object.}
 frequencies).}
 
 \item{control}{An optional list to control the iterative process to
-estimate the between-study variance tau^2. This argument is
+estimate the between-study variance \eqn{\tau^2}. This argument is
 passed on to \code{\link[metafor]{rma.uni}} or
 \code{\link[metafor]{rma.glmm}}, respectively.}
 
@@ -194,12 +235,12 @@ object is a list containing the following components:
 \item{event.e, n.e, event.c, n.c, studlab, exclude,}{As defined
   above.}
 \item{sm, method, incr, allincr, addincr,}{As defined above.}
-\item{allstudies, MH.exact, RR.cochrane, model.glmm, warn,}{As
+\item{allstudies, MH.exact, RR.Cochrane, Q.Cochrane, model.glmm,}{As
   defined above.}
-\item{level, level.comb, comb.fixed, comb.random,}{As defined
+\item{warn, level, level.comb, comb.fixed, comb.random,}{As defined
   above.}
-\item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{As
-  defined above.}
+\item{hakn, method.tau, method.tau.ci,}{As defined above.}
+\item{tau.preset, TE.tau, method.bias,}{As defined above.}
 \item{tau.common, title, complab, outclab,}{As defined above.}
 \item{label.e, label.c, label.left, label.right,}{As defined
   above.}
@@ -240,10 +281,22 @@ object is a list containing the following components:
   (only if \code{method = "GLMM"}).}
 \item{df.Q.LRT}{Degrees of freedom for likelihood-ratio test}
 \item{pval.Q.LRT}{P-value of likelihood-ratio test.}
-\item{tau}{Square-root of between-study variance.}
-\item{se.tau2}{Standard error of between-study variance.}
-\item{C}{Scaling factor utilised internally to calculate common
-  tau-squared across subgroups.}
+\item{tau2}{Between-study variance \eqn{\tau^2}.}
+\item{se.tau2}{Standard error of \eqn{\tau^2}.}
+\item{lower.tau2, upper.tau2}{Lower and upper limit of confidence
+  interval for \eqn{\tau^2}.}
+\item{tau}{Square-root of between-study variance \eqn{\tau}.}
+\item{lower.tau, upper.tau}{Lower and upper limit of confidence
+  interval for \eqn{\tau}.}
+\item{H}{Heterogeneity statistic H.}
+\item{lower.H, upper.H}{Lower and upper confidence limit for
+ heterogeneity statistic H.}
+\item{I2}{Heterogeneity statistic I\eqn{^2}.}
+\item{lower.I2, upper.I2}{Lower and upper confidence limit for
+  heterogeneity statistic I\eqn{^2}.}
+\item{Rb}{Heterogeneity statistic R\eqn{_b}.}
+\item{lower.Rb, upper.Rb}{Lower and upper confidence limit for
+  heterogeneity statistic R\eqn{_b}.}
 \item{Q.CMH}{Cochran-Mantel-Haenszel test statistic for overall
   effect.}
 \item{df.Q.CMH}{Degrees of freedom for Cochran-Mantel-Haenszel test
@@ -324,17 +377,15 @@ object is a list containing the following components:
   not missing.}
 \item{tau.w}{Square-root of between-study variance within subgroups
   - if \code{byvar} is not missing.}
-\item{C.w}{Scaling factor utilised internally to calculate common
-  tau-squared across subgroups - if \code{byvar} is not missing.}
-  \item{H.w}{Heterogeneity statistic H within subgroups - if
+\item{H.w}{Heterogeneity statistic H within subgroups - if
   \code{byvar} is not missing.}
-\item{lower.H.w, upper.H.w}{Lower and upper confidence limti for
+\item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
   heterogeneity statistic H within subgroups - if \code{byvar} is
   not missing.}
-\item{I2.w}{Heterogeneity statistic I2 within subgroups - if
+\item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
   \code{byvar} is not missing.}
 \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
-  heterogeneity statistic I2 within subgroups - if \code{byvar} is
+  heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
   not missing.}
 \item{keepdata}{As defined above.}
 \item{data}{Original data (set) used in function call (if
@@ -502,8 +553,7 @@ Hartung (2003) is implemented, see description of argument
 \code{tdist} in \code{\link[metafor]{rma.glmm}}.
 
 The following methods to estimate the between-study variance
-\eqn{\tau^2} (argument \code{method.tau}) are available for the
-inverse variance method:
+\eqn{\tau^2} are available:
 \itemize{
 \item DerSimonian-Laird estimator (\code{method.tau = "DL"})
 \item Paule-Mandel estimator (\code{method.tau = "PM"})
@@ -515,9 +565,23 @@ inverse variance method:
 \item Hedges estimator (\code{method.tau = "HE"})
 \item Empirical Bayes estimator (\code{method.tau = "EB"})
 }
-See \code{\link{metagen}} for more information on these
-estimators. Note, the maximum-likelihood method is utilized for
-GLMMs.
+Confidence intervals for \eqn{\tau^2} and \eqn{\tau} are also
+available:
+\itemize{
+\item Jackson method (\code{method.tau.ci = "J"})
+\item Biggerstaff and Jackson method (\code{method.tau.ci = "BJ"})
+\item Q-profile method (\code{method.tau.ci = "QP"})
+}
+See \code{\link{metagen}} for more information on these estimators
+and confidence intervals. For GLMMs, the maximum-likelihood method
+is utilized and no confidence intervals for \eqn{\tau^2} and
+\eqn{\tau} are calculated. For the Mantel-Haenszel method, no
+confidence intervals for \eqn{\tau^2} and \eqn{\tau} are calculated
+for the DerSimonian-Laird method if argument \code{Q.Cochrane} is
+\code{TRUE} (this is the random effects method implemented in
+RevMan 5 for the Mantel-Haenszel method). In general, no confidence
+intervals for \eqn{\tau^2} and \eqn{\tau} are calculated if
+\code{method.tau.ci = ""}.
 }
 \examples{
 # Calculate odds ratio and confidence interval for a single study

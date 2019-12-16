@@ -4,22 +4,61 @@
 \alias{metagen}
 \title{Generic inverse variance meta-analysis}
 \usage{
-metagen(TE, seTE, studlab, data = NULL, subset = NULL,
-  exclude = NULL, sm = "", level = gs("level"),
-  level.comb = gs("level.comb"), comb.fixed = gs("comb.fixed"),
-  comb.random = gs("comb.random"), hakn = gs("hakn"),
-  method.tau = gs("method.tau"), tau.preset = NULL, TE.tau = NULL,
-  tau.common = gs("tau.common"), prediction = gs("prediction"),
-  level.predict = gs("level.predict"), null.effect = 0,
-  method.bias = gs("method.bias"), n.e = NULL, n.c = NULL, pval, df,
-  lower, upper, level.ci = 0.95, median, q1, q3, min, max, approx.TE,
-  approx.seTE, backtransf = gs("backtransf"), pscale = 1,
-  irscale = 1, irunit = "person-years", title = gs("title"),
-  complab = gs("complab"), outclab = "", label.e = gs("label.e"),
-  label.c = gs("label.c"), label.left = gs("label.left"),
-  label.right = gs("label.right"), byvar, bylab,
-  print.byvar = gs("print.byvar"), byseparator = gs("byseparator"),
-  keepdata = gs("keepdata"), warn = gs("warn"), control = NULL)
+metagen(
+  TE,
+  seTE,
+  studlab,
+  data = NULL,
+  subset = NULL,
+  exclude = NULL,
+  sm = "",
+  level = gs("level"),
+  level.comb = gs("level.comb"),
+  comb.fixed = gs("comb.fixed"),
+  comb.random = gs("comb.random"),
+  hakn = gs("hakn"),
+  method.tau = gs("method.tau"),
+  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  tau.preset = NULL,
+  TE.tau = NULL,
+  tau.common = gs("tau.common"),
+  prediction = gs("prediction"),
+  level.predict = gs("level.predict"),
+  null.effect = 0,
+  method.bias = gs("method.bias"),
+  n.e = NULL,
+  n.c = NULL,
+  pval,
+  df,
+  lower,
+  upper,
+  level.ci = 0.95,
+  median,
+  q1,
+  q3,
+  min,
+  max,
+  approx.TE,
+  approx.seTE,
+  backtransf = gs("backtransf"),
+  pscale = 1,
+  irscale = 1,
+  irunit = "person-years",
+  title = gs("title"),
+  complab = gs("complab"),
+  outclab = "",
+  label.e = gs("label.e"),
+  label.c = gs("label.c"),
+  label.left = gs("label.left"),
+  label.right = gs("label.right"),
+  byvar,
+  bylab,
+  print.byvar = gs("print.byvar"),
+  byseparator = gs("byseparator"),
+  keepdata = gs("keepdata"),
+  warn = gs("warn"),
+  control = NULL
+)
 }
 \arguments{
 \item{TE}{Estimate of treatment effect, e.g., log hazard ratio or
@@ -60,12 +99,17 @@ Knapp should be used to adjust test statistics and confidence
 intervals.}
 
 \item{method.tau}{A character string indicating which method is
-used to estimate the between-study variance \eqn{\tau^2}. Either
-\code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-\code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-abbreviated.}
+used to estimate the between-study variance \eqn{\tau^2} and its
+square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+\code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+\code{"HE"}, or \code{"EB"}, can be abbreviated.}
 
-\item{tau.preset}{Prespecified value for the square-root of the
+\item{method.tau.ci}{A character string indicating which method is
+used to estimate the confidence interval of \eqn{\tau^2} and
+\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+\code{""}, can be abbreviated.}
+
+\item{tau.preset}{Prespecified value for the square root of the
 between-study variance \eqn{\tau^2}.}
 
 \item{TE.tau}{Overall treatment effect used to estimate the
@@ -179,8 +223,8 @@ should be kept in meta object.}
 standard errors).}
 
 \item{control}{An optional list to control the iterative process to
-estimate the between-study variance tau^2. This argument is
-passed on to \code{\link[metafor]{rma.uni}}.}
+estimate the between-study variance \eqn{\tau^2}. This argument
+is passed on to \code{\link[metafor]{rma.uni}}.}
 }
 \value{
 An object of class \code{c("metagen", "meta")} with corresponding
@@ -189,8 +233,8 @@ object is a list containing the following components:
 \item{TE, seTE, studlab, exclude, n.e, n.c}{As defined above.}
 \item{sm, level, level.comb,}{As defined above.}
 \item{comb.fixed, comb.random,}{As defined above.}
-\item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{As
-  defined above.}
+\item{hakn, method.tau, method.tau.ci,}{As defined above.}
+\item{tau.preset, TE.tau, method.bias,}{As defined above.}
 \item{tau.common, title, complab, outclab,}{As defined above.}
 \item{label.e, label.c, label.left, label.right,}{As defined
   above.}
@@ -225,10 +269,23 @@ object is a list containing the following components:
 \item{Q}{Heterogeneity statistic.}
 \item{df.Q}{Degrees of freedom for heterogeneity statistic.}
 \item{pval.Q}{P-value of heterogeneity test.}
-\item{tau}{Square-root of between-study variance.}
-\item{se.tau2}{Standard error of between-study variance.}
-\item{C}{Scaling factor utilised internally to
-  calculate common tau-squared across subgroups.}
+\item{tau2}{Between-study variance \eqn{\tau^2}.}
+\item{se.tau2}{Standard error of \eqn{\tau^2}.}
+\item{lower.tau2, upper.tau2}{Lower and upper limit of confidence
+  interval for \eqn{\tau^2}.}
+\item{tau}{Square-root of between-study variance \eqn{\tau}.}
+\item{lower.tau, upper.tau}{Lower and upper limit of confidence
+  interval for \eqn{\tau}.}
+\item{H}{Heterogeneity statistic H.}
+\item{lower.H, upper.H}{Lower and upper confidence limit for
+ heterogeneity statistic H.}
+\item{I2}{Heterogeneity statistic I\eqn{^2}.}
+\item{lower.I2, upper.I2}{Lower and upper confidence limit for
+  heterogeneity statistic I\eqn{^2}.}
+\item{Rb}{Heterogeneity statistic R\eqn{_b}.}
+\item{lower.Rb, upper.Rb}{Lower and upper confidence limit for
+  heterogeneity statistic R\eqn{_b}.}
+\item{approx.TE, approx.seTE}{As defined above.}
 \item{method}{Pooling method: \code{"Inverse"}.}
 \item{df.hakn}{Degrees of freedom for test of treatment effect for
   Hartung-Knapp method (only if \code{hakn = TRUE}).}
@@ -295,17 +352,16 @@ object is a list containing the following components:
   subgroups heterogeneity statistic Q (based on random effects
   model) - if \code{byvar} is not missing.}
 \item{tau.w}{Square-root of between-study variance within subgroups
-  - if \code{byvar} is not missing.}  \item{C.w}{Scaling factor
-  utilised internally to calculate common tau-squared across
-  subgroups - if \code{byvar} is not missing.}
-  \item{H.w}{Heterogeneity statistic H within subgroups - if
+  - if \code{byvar} is not missing.}
+\item{H.w}{Heterogeneity statistic H within subgroups - if
   \code{byvar} is not missing.}
-\item{lower.H.w, upper.H.w}{Lower and upper confidence limti for
+\item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
   heterogeneity statistic H within subgroups - if \code{byvar} is
-  not missing.}  \item{I2.w}{Heterogeneity statistic I2 within
-  subgroups - if \code{byvar} is not missing.}
-\item{lower.I2.w, upper.I2.w}{Lower and upper confidence limti for
-  heterogeneity statistic I2 within subgroups - if \code{byvar} is
+  not missing.}
+\item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
+  \code{byvar} is not missing.}
+\item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
+  heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
   not missing.}
 \item{keepdata}{As defined above.}
 \item{data}{Original data (set) used in function call (if
@@ -446,11 +502,24 @@ estimators have been recommended (Veroniki et al.,
 2016). Accordingly, the following R command can be used to use the
 Paule-Mandel estimator in all meta-analyses of the R session:
 \code{settings.meta(method.tau = "PM")}
+}
 
-The DerSimonian-Laird and Paule-Mandel estimators are implemented
-in R package \pkg{meta}. R function \code{\link[metafor]{rma.uni}}
-from R package \pkg{metafor} (Viechtbauer 2010) is called
-internally for the other estimators.
+\subsection{Confidence interval for the between-study variance}{
+
+The following methods to calculate a confidence interval for
+\eqn{\tau^2} and \eqn{\tau} are available.
+\tabular{ll}{
+\bold{Argument}\tab \bold{Method} \cr 
+\code{method.tau.ci = "J"}\tab Method by Jackson (2013) \cr
+\code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson (2008) \cr
+\code{method.tau.ci = "QP"}\tab Q-Profile method (Viechtbauer, 2007)
+}
+These methods have been recommended by Veroniki et al. (2016). By
+default, the Jackson method is used for the DerSimonian-Laird
+estimator of \eqn{\tau^2} and the Q-profile method for all other
+estimators of \eqn{\tau^2}. No confidence intervals for
+\eqn{\tau^2} and \eqn{\tau} are calculated if \code{method.tau.ci =
+""}.
 }
 
 \subsection{Hartung-Knapp method}{
@@ -544,6 +613,11 @@ arguments can be set for the whole R session using
 \code{\link{settings.meta}}.
 }
 }
+\note{
+R function \code{\link[metafor]{rma.uni}} from R package
+\pkg{metafor} (Viechtbauer 2010) is called internally to estimate
+the between-study variance \eqn{\tau^2}.
+}
 \examples{
 data(Fleiss93)
 m1 <- metabin(event.e, n.e, event.c, n.c,
@@ -593,6 +667,12 @@ metagen(log(HR), lower = log(lower.HR), upper = log(upper.HR),
 
 }
 \references{
+Biggerstaff BJ, Jackson D (2008):
+The exact distribution of Cochran’s heterogeneity statistic in
+one-way random effects meta-analysis.
+\emph{Statistics in Medicine},
+\bold{27}, 6093--110
+
 Borenstein M, Hedges LV, Higgins JP, Rothstein HR (2010):
 A basic introduction to fixed-effect and random-effects models for
 meta-analysis.
@@ -641,6 +721,13 @@ standard DerSimonian-Laird method.
 \emph{BMC Medical Research Methodology},
 \bold{14}, 25
 
+Jackson D (2013):
+Confidence intervals for the between-study variance in random
+effects meta-analysis using generalised Cochran heterogeneity
+statistics.
+\emph{Research Synthesis Methods},
+\bold{4}, 220--229
+
 Langan D, Higgins JPT, Jackson D, Bowden J, Veroniki AA,
 Kontopantelis E, et al. (2019):
 A comparison of heterogeneity variance estimators in simulated
@@ -679,6 +766,12 @@ Bias and efficiency of meta-analytic variance estimators in the
 random-effects model.
 \emph{Journal of Educational and Behavioral Statistics},
 \bold{30}, 261--93
+
+Viechtbauer W (2007):
+Confidence intervals for the amount of heterogeneity in
+meta-analysis.
+\emph{Statistics in Medicine},
+\bold{26}, 37--52
 
 Viechtbauer W (2010):
 Conducting Meta-Analyses in R with the metafor Package.

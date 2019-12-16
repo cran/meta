@@ -55,11 +55,15 @@
 #'   Knapp should be used to adjust test statistics and confidence
 #'   intervals.
 #' @param method.tau A character string indicating which method is
-#'   used to estimate the between-study variance \eqn{\tau^2}. Either
-#'   \code{"DL"}, \code{"PM"}, \code{"REML"}, \code{"ML"},
-#'   \code{"HS"}, \code{"SJ"}, \code{"HE"}, or \code{"EB"}, can be
-#'   abbreviated.
-#' @param tau.preset Prespecified value for the square-root of the
+#'   used to estimate the between-study variance \eqn{\tau^2} and its
+#'   square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
+#'   \code{"REML"}, \code{"ML"}, \code{"HS"}, \code{"SJ"},
+#'   \code{"HE"}, or \code{"EB"}, can be abbreviated.
+#' @param method.tau.ci A character string indicating which method is
+#'   used to estimate the confidence interval of \eqn{\tau^2} and
+#'   \eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
+#'   \code{""}, can be abbreviated.
+#' @param tau.preset Prespecified value for the square root of the
 #'   between-study variance \eqn{\tau^2}.
 #' @param TE.tau Overall treatment effect used to estimate the
 #'   between-study variance \eqn{\tau^2}.
@@ -101,8 +105,8 @@
 #'   (e.g., if \code{incr} is added to studies with zero cell
 #'   frequencies).
 #' @param control An optional list to control the iterative process to
-#'   estimate the between-study variance tau^2. This argument is
-#'   passed on to \code{\link[metafor]{rma.uni}} or
+#'   estimate the between-study variance \eqn{\tau^2}. This argument
+#'   is passed on to \code{\link[metafor]{rma.uni}} or
 #'   \code{\link[metafor]{rma.glmm}}, respectively.
 #' @param \dots Additional arguments passed on to
 #'   \code{\link[metafor]{rma.glmm}} function.
@@ -209,8 +213,7 @@
 #' \code{hakn = TRUE}.
 #' 
 #' The following methods to estimate the between-study variance
-#' \eqn{\tau^2} (argument \code{method.tau}) are available for the
-#' inverse variance method:
+#' \eqn{\tau^2} are available:
 #' \itemize{
 #' \item DerSimonian-Laird estimator (\code{method.tau = "DL"})
 #' \item Paule-Mandel estimator (\code{method.tau = "PM"})
@@ -222,9 +225,19 @@
 #' \item Hedges estimator (\code{method.tau = "HE"})
 #' \item Empirical Bayes estimator (\code{method.tau = "EB"})
 #' }
-#' See \code{\link{metagen}} for more information on these
-#' estimators. Note, the maximum-likelihood method is utilized for
-#' GLMMs.
+#' Confidence intervals for \eqn{\tau^2} and \eqn{\tau} are also
+#' available:
+#' \itemize{
+#' \item Jackson method (\code{method.tau.ci = "J"})
+#' \item Biggerstaff and Jackson method (\code{method.tau.ci = "BJ"})
+#' \item Q-profile method (\code{method.tau.ci = "QP"})
+#' }
+#' See \code{\link{metagen}} for more information on these estimators
+#' and confidence intervals. For GLMMs, the maximum-likelihood method
+#' is utilized and no confidence intervals for \eqn{\tau^2} and
+#' \eqn{\tau} are calculated. In general, no confidence intervals for
+#' \eqn{\tau^2} and \eqn{\tau} are calculated if \code{method.tau.ci =
+#' ""}.
 #' 
 #' @return
 #' An object of class \code{c("metainc", "meta")} with corresponding
@@ -236,8 +249,8 @@
 #'   defined above.}
 #' \item{level, level.comb, comb.fixed, comb.random,}{As defined
 #'   above.}
-#' \item{hakn, method.tau, tau.preset, TE.tau, method.bias,}{As
-#'   defined above.}
+#' \item{hakn, method.tau, method.tau.ci,}{As defined above.}
+#' \item{tau.preset, TE.tau, method.bias,}{As defined above.}
 #' \item{tau.common, title, complab, outclab,}{As defined above.}
 #' \item{label.e, label.c, label.left, label.right,}{As defined
 #'   above.}
@@ -276,10 +289,22 @@
 #'   (only if \code{method = "GLMM"}).}
 #' \item{df.Q.LRT}{Degrees of freedom for likelihood-ratio test}
 #' \item{pval.Q.LRT}{P-value of likelihood-ratio test.}
-#' \item{tau}{Square-root of between-study variance.}
-#' \item{se.tau2}{Standard error of between-study variance.}
-#' \item{C}{Scaling factor utilised internally to calculate common
-#'   tau-squared across subgroups.}
+#' \item{tau2}{Between-study variance \eqn{\tau^2}.}
+#' \item{se.tau2}{Standard error of \eqn{\tau^2}.}
+#' \item{lower.tau2, upper.tau2}{Lower and upper limit of confidence
+#'   interval for \eqn{\tau^2}.}
+#' \item{tau}{Square-root of between-study variance \eqn{\tau}.}
+#' \item{lower.tau, upper.tau}{Lower and upper limit of confidence
+#'   interval for \eqn{\tau}.}
+#' \item{H}{Heterogeneity statistic H.}
+#' \item{lower.H, upper.H}{Lower and upper confidence limit for
+#'  heterogeneity statistic H.}
+#' \item{I2}{Heterogeneity statistic I\eqn{^2}.}
+#' \item{lower.I2, upper.I2}{Lower and upper confidence limit for
+#'   heterogeneity statistic I\eqn{^2}.}
+#' \item{Rb}{Heterogeneity statistic R\eqn{_b}.}
+#' \item{lower.Rb, upper.Rb}{Lower and upper confidence limit for
+#'   heterogeneity statistic R\eqn{_b}.}
 #' \item{sparse}{Logical flag indicating if any study included in
 #'   meta-analysis has any zero cell frequencies.}
 #' \item{incr.event}{Increment added to number of events.}
@@ -357,17 +382,15 @@
 #'   not missing.}
 #' \item{tau.w}{Square-root of between-study variance within subgroups
 #'   - if \code{byvar} is not missing.}
-#' \item{C.w}{Scaling factor utilised internally to calculate common
-#'   tau-squared across subgroups - if \code{byvar} is not missing.}
 #' \item{H.w}{Heterogeneity statistic H within subgroups - if
 #'   \code{byvar} is not missing.}
-#' \item{lower.H.w, upper.H.w}{Lower and upper confidence limti for
+#' \item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
 #'   heterogeneity statistic H within subgroups - if \code{byvar} is
 #'   not missing.}
-#' \item{I2.w}{Heterogeneity statistic I2 within subgroups - if
+#' \item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
 #'   \code{byvar} is not missing.}
-#' \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limti for
-#'   heterogeneity statistic I2 within subgroups - if \code{byvar} is
+#' \item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
+#'   heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
 #'   not missing.}
 #' \item{keepdata}{As defined above.}
 #' \item{data}{Original data (set) used in function call (if
@@ -516,6 +539,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                       ifelse(!is.na(charmatch(tolower(method), "glmm",
                                               nomatch = NA)),
                              "ML", gs("method.tau")),
+                    method.tau.ci = if (method.tau == "DL") "J" else "QP",
                     tau.preset = NULL, TE.tau = NULL,
                     tau.common = gs("tau.common"),
                     ##
@@ -559,8 +583,8 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   chklogical(comb.random)
   ##
   chklogical(hakn)
-  method.tau <- setchar(method.tau,
-                        c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"))
+  method.tau <- setchar(method.tau, .settings$meth4tau)
+  method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
   chklogical(tau.common)
   ##
   chklogical(prediction)
@@ -961,7 +985,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                comb.random = comb.random,
                ##
                hakn = hakn,
-               method.tau = method.tau,
+               method.tau = method.tau, method.tau.ci = method.tau.ci,
                tau.preset = tau.preset,
                TE.tau = if (method == "Inverse") TE.tau else TE.fixed,
                tau.common = FALSE,
@@ -983,7 +1007,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   if (by & tau.common) {
     ## Estimate common tau-squared across subgroups
-    hcc <- hetcalc(TE, seTE, method.tau,
+    hcc <- hetcalc(TE, seTE, method.tau, "",
                    if (method == "Inverse") TE.tau else TE.fixed,
                    level.comb, byvar, control)
   }
@@ -1068,7 +1092,6 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$zval.random <- ci.r$z
     res$pval.random <- ci.r$p
     ##
-    res$se.tau2 <- NA
     ci.p <- predict.rma(glmm.random, level = 100 * level.predict)
     res$seTE.predict <- NA
     res$lower.predict <- ci.p$cr.lb
@@ -1088,8 +1111,23 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$df.Q.LRT   <- res$df.Q
     res$pval.Q.LRT <- pvalQ(res$Q.LRT, res$df.Q.LRT)
     ##
-    if (k > 1)
+    if (k > 1) {
       res$tau <- sqrt(glmm.random$tau2)
+      res$tau2 <- glmm.random$tau2
+      res$se.tau2 <- glmm.random$se.tau2
+    }
+    else
+      res$se.tau2 <- NA
+    ##
+    res$lower.tau2 <- NA
+    res$upper.tau2 <- NA
+    ##
+    res$lower.tau <- NA
+    res$upper.tau <- NA
+    ##
+    res$method.tau.ci <- ""
+    res$sign.lower.tau <- ""
+    res$sign.upper.tau <- ""
     ##
     res$H <- sqrt(glmm.random$H2)
     res$lower.H <- NA
@@ -1098,6 +1136,10 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$I2 <- glmm.random$I2 / 100
     res$lower.I2 <- NA
     res$upper.I2 <- NA
+    ##
+    res$Rb <- NA
+    res$lower.Rb <- NA
+    res$upper.Rb <- NA
     ##
     res$.glmm.fixed  <- glmm.fixed
     res$.glmm.random <- glmm.random
@@ -1123,23 +1165,33 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     ##
     if (!tau.common) {
       res <- c(res, subgroup(res))
-      res$tau.resid <- NA
+      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
     }
     else if (!is.null(tau.preset)) {
       res <- c(res, subgroup(res, tau.preset))
-      res$tau.resid <- NA
+      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
     }
     else {
       if (is.glmm) {
         res <- c(res, subgroup(res, NULL,
                                factor(res$byvar, bylevs(res$byvar)), ...))
-        res$tau.resid <- NA
+        res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+        res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
       }
       else {
         res <- c(res, subgroup(res, hcc$tau))
         res$Q.w.random <- hcc$Q
         res$df.Q.w.random <- hcc$df.Q
+        res$tau2.resid <- hcc$tau2
+        res$lower.tau2.resid <- hcc$lower.tau2
+        res$upper.tau2.resid <- hcc$upper.tau2
         res$tau.resid <- hcc$tau
+        res$lower.tau.resid <- hcc$lower.tau
+        res$upper.tau.resid <- hcc$upper.tau
+        res$sign.lower.tau.resid <- hcc$sign.lower.tau
+        res$sign.upper.tau.resid <- hcc$sign.upper.tau
       }
     }
     ##

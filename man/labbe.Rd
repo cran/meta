@@ -40,6 +40,7 @@ labbe(x, ...)
   weight,
   studlab = FALSE,
   cex.studlab = 0.8,
+  pos.studlab = 2,
   label.e = NULL,
   label.c = NULL,
   ...
@@ -76,6 +77,7 @@ labbe(x, ...)
   weight,
   studlab = FALSE,
   cex.studlab = 0.8,
+  pos.studlab = 2,
   label.e = x$label.e,
   label.c = x$label.c,
   ...
@@ -169,6 +171,9 @@ provided (must be of same length as \code{x$event.e} then).}
 
 \item{cex.studlab}{Size of study labels.}
 
+\item{pos.studlab}{Position of study labels, see argument
+\code{pos} in \code{\link{text}}.}
+
 \item{label.e}{Label for experimental group.}
 
 \item{label.c}{Label for control group.}
@@ -236,8 +241,7 @@ mycols <- c("blue", "yellow", "green", "red",
             "green", "yellow", "blue")
 labbe(m1, sm = "OR",
       comb.random = FALSE,
-      TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2,
-                       1, 2, 5, 10)),
+      TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2, 1, 2, 5, 10)),
       col.fixed = mycols, lwd.fixed = 2)
 
 # L'Abbe plot on log odds scale with coloured lines for various
@@ -245,8 +249,7 @@ labbe(m1, sm = "OR",
 #
 labbe(m1, sm = "OR",
       comb.random = FALSE,
-      TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2,
-                       1, 2, 5, 10)),
+      TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2, 1, 2, 5, 10)),
       col.fixed = mycols, lwd.fixed = 2,
       backtransf = FALSE)
 

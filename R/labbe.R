@@ -58,6 +58,8 @@
 #'   printed in the graph. A vector with study labels can also be
 #'   provided (must be of same length as \code{x$event.e} then).
 #' @param cex.studlab Size of study labels.
+#' @param pos.studlab Position of study labels, see argument
+#'   \code{pos} in \code{\link{text}}.
 #' @param label.e Label for experimental group.
 #' @param label.c Label for control group.
 #' @param \dots Graphical arguments as in \code{par} may also be
@@ -146,8 +148,7 @@
 #'             "green", "yellow", "blue")
 #' labbe(m1, sm = "OR",
 #'       comb.random = FALSE,
-#'       TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2,
-#'                        1, 2, 5, 10)),
+#'       TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2, 1, 2, 5, 10)),
 #'       col.fixed = mycols, lwd.fixed = 2)
 #' 
 #' # L'Abbe plot on log odds scale with coloured lines for various
@@ -155,8 +156,7 @@
 #' #
 #' labbe(m1, sm = "OR",
 #'       comb.random = FALSE,
-#'       TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2,
-#'                        1, 2, 5, 10)),
+#'       TE.fixed = log(c(1 / 10, 1 / 5, 1 / 2, 1, 2, 5, 10)),
 #'       col.fixed = mycols, lwd.fixed = 2,
 #'       backtransf = FALSE)
 #' 
@@ -181,7 +181,8 @@ labbe.default <- function(x, y,
                           xlim, ylim,
                           xlab = NULL, ylab = NULL,
                           TE.fixed = NULL, TE.random = NULL,
-                          comb.fixed = !is.null(TE.fixed), comb.random = !is.null(TE.random),
+                          comb.fixed = !is.null(TE.fixed),
+                          comb.random = !is.null(TE.random),
                           backtransf = TRUE,
                           axes = TRUE,
                           pch = 21, text = NULL, cex = 1,
@@ -192,18 +193,38 @@ labbe.default <- function(x, y,
                           nulleffect = TRUE,
                           lwd.nulleffect = lwd, col.nulleffect = "lightgray",
                           sm = "", weight,
-                          studlab = FALSE, cex.studlab = 0.8,
+                          studlab = FALSE, cex.studlab = 0.8, pos.studlab = 2,
                           label.e = NULL, label.c = NULL,
                           ...) {
   
+  ##
+  ##
+  ## (1) Check arguments
+  ##
+  ##
   xpos <- x
   ypos <- y
-  
+  ##
   if(length(xpos) != length(ypos))
     stop("arguments 'x' and 'y' must be of same length")
-  
+  ##
+  chklogical(comb.fixed)
+  chklogical(comb.random)
+  chklogical(backtransf)
+  chklogical(axes)
+  chknumeric(cex)
+  chknumeric(lwd)
+  chknumeric(lwd.fixed)
+  chknumeric(lwd.random)
+  chknumeric(lty.fixed)
+  chknumeric(lty.random)
+  chklogical(nulleffect)
+  chknumeric(lwd.nulleffect)
   chknull(sm)
   sm <- setchar(sm, .settings$sm4bin)
+  chknumeric(cex.studlab)
+  pos.studlab <- as.numeric(setchar(pos.studlab, as.character(1:4)))
+  
   
   if (!backtransf) {
     if (sm == "OR") {
@@ -219,6 +240,7 @@ labbe.default <- function(x, y,
       ypos <- asin(sqrt(ypos))
     }
   }
+  
   
   if (!missing(weight))
     cex.i <- 4 * cex * sqrt(weight) / sqrt(max(weight))
@@ -250,14 +272,14 @@ labbe.default <- function(x, y,
   
   if (is.null(xlab)) {
     if (length(label.c) > 0) {
-      xlab <- paste("Event rate (", label.c, ")", sep = "")
+      xlab <- paste0("Event rate (", label.c, ")")
       if (!backtransf)
         if (sm == "OR")
-          xlab <- paste("ln (odds) ", label.c, sep = "")
+          xlab <- paste0("ln (odds) ", label.c)
         else if (sm == "RR")
-          xlab <- paste("ln (event rate) ", label.c, sep = "")
+          xlab <- paste0("ln (event rate) ", label.c)
         else if (sm == "ASD")
-          xlab <- paste("Arcsin-transformed event rate (", label.c, ")", sep = "")
+          xlab <- paste0("Arcsin-transformed event rate (", label.c, ")")
     }
     else {
       xlab <- "Event rate (Control)"
@@ -273,14 +295,14 @@ labbe.default <- function(x, y,
   ##
   if (is.null(ylab)) {
     if (length(label.e) > 0) {
-      ylab <- paste("Event rate (", label.e, ")", sep = "")
+      ylab <- paste0("Event rate (", label.e, ")")
       if (!backtransf)
         if (sm == "OR")
-          ylab <- paste("ln (odds) ", label.e, sep = "")
+          ylab <- paste0("ln (odds) ", label.e)
         else if (sm == "RR")
-          ylab <- paste("ln (event rate) ", label.e, sep = "")
+          ylab <- paste0("ln (event rate) ", label.e)
         else if (sm == "ASD")
-          ylab <- paste("Arcsin-transformed event rate (", label.e, ")", sep = "")
+          ylab <- paste0("Arcsin-transformed event rate (", label.e, ")")
     }
     else {
       ylab <- "Event rate (Experimental)"
@@ -432,7 +454,7 @@ labbe.default <- function(x, y,
   ## Add study labels
   ##
   if (!is.logical(studlab) && length(studlab) > 0)
-    text(xpos, ypos, labels = studlab, pos = 2, cex = cex.studlab)
+    text(xpos, ypos, labels = studlab, pos = pos.studlab, cex = cex.studlab)
   
   
   invisible(NULL)
@@ -465,7 +487,7 @@ labbe.metabin <- function(x,
                           nulleffect = TRUE,
                           lwd.nulleffect = lwd, col.nulleffect = "lightgray",
                           sm = x$sm, weight,
-                          studlab = FALSE, cex.studlab = 0.8,
+                          studlab = FALSE, cex.studlab = 0.8, pos.studlab = 2,
                           label.e = x$label.e, label.c = x$label.c,
                           ...) {
   
@@ -477,6 +499,29 @@ labbe.metabin <- function(x,
   ##
   chkclass(x, "metabin")
   x <- updateversion(x)
+  
+  
+  ##
+  ##
+  ## (2) Check other arguments
+  ##
+  ##
+  chklogical(comb.fixed)
+  chklogical(comb.random)
+  chklogical(backtransf)
+  chklogical(axes)
+  chknumeric(cex)
+  chknumeric(lwd)
+  chknumeric(lwd.fixed)
+  chknumeric(lwd.random)
+  chknumeric(lty.fixed)
+  chknumeric(lty.random)
+  chklogical(nulleffect)
+  chknumeric(lwd.nulleffect)
+  chknull(sm)
+  sm <- setchar(sm, .settings$sm4bin)
+  chknumeric(cex.studlab)
+  pos.studlab <- as.numeric(setchar(pos.studlab, as.character(1:4)))
   
   
   if (!backtransf) {
@@ -492,9 +537,6 @@ labbe.metabin <- function(x,
     stop("event rates must be of same length")
   
   
-  chknull(sm)
-  sm <- setchar(sm, .settings$sm4bin)
-  ##
   if (sm != x$sm) {
     m <- update(x, sm = sm)
     if (missing(TE.fixed))
@@ -533,6 +575,7 @@ labbe.metabin <- function(x,
       ypos <- asin(sqrt(ypos))
     }
   }
+  
   
   if (missing(weight))
     weight <- ifelse(comb.random & !comb.fixed, "random", "fixed")
@@ -587,14 +630,14 @@ labbe.metabin <- function(x,
   
   if (is.null(xlab)) {
     if (length(label.c) > 0) {
-      xlab <- paste("Event rate (", label.c, ")", sep = "")
+      xlab <- paste0("Event rate (", label.c, ")")
       if (!backtransf)
         if (sm == "OR")
-          xlab <- paste("ln (odds) ", label.c, sep = "")
+          xlab <- paste0("ln (odds) ", label.c)
         else if (sm == "RR")
-          xlab <- paste("ln (event rate) ", label.c, sep = "")
+          xlab <- paste0("ln (event rate) ", label.c)
         else if (sm == "ASD")
-          xlab <- paste("Arcsin-transformed event rate (", label.c, ")", sep = "")
+          xlab <- paste0("Arcsin-transformed event rate (", label.c, ")")
     }
     else {
       xlab <- "Event rate (Control)"
@@ -610,14 +653,14 @@ labbe.metabin <- function(x,
   ##
   if (is.null(ylab)) {
     if (length(label.e) > 0) {
-      ylab <- paste("Event rate (", label.e, ")", sep = "")
+      ylab <- paste0("Event rate (", label.e, ")")
       if (!backtransf)
         if (sm == "OR")
-          ylab <- paste("ln (odds) ", label.e, sep = "")
+          ylab <- paste0("ln (odds) ", label.e)
         else if (sm == "RR")
-          ylab <- paste("ln (event rate) ", label.e, sep = "")
+          ylab <- paste0("ln (event rate) ", label.e)
         else if (sm == "ASD")
-          ylab <- paste("Arcsin-transformed event rate (", label.e, ")", sep = "")
+          ylab <- paste0("Arcsin-transformed event rate (", label.e, ")")
     }
     else {
       ylab <- "Event rate (Experimental)"
@@ -769,7 +812,7 @@ labbe.metabin <- function(x,
   ## Add study labels
   ##
   if (!is.logical(studlab) && length(studlab) > 0)
-    text(xpos, ypos, labels = studlab, pos = 2, cex = cex.studlab)
+    text(xpos, ypos, labels = studlab, pos = pos.studlab, cex = cex.studlab)
   
   
   invisible(NULL)

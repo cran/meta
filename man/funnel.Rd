@@ -35,7 +35,7 @@ funnel(x, ...)
   sm = "",
   contour.levels = NULL,
   col.contour,
-  ref = ifelse(backtransf & is.relative.effect(sm), 1, 0),
+  ref = ifelse(is.relative.effect(sm), 1, 0),
   level = NULL,
   studlab = FALSE,
   cex.studlab = 0.8,
@@ -69,7 +69,7 @@ funnel(x, ...)
   yaxis = "se",
   contour.levels = NULL,
   col.contour,
-  ref = ifelse(backtransf & is.relative.effect(x$sm), 1, 0),
+  ref = ifelse(is.relative.effect(x$sm), 1, 0),
   level = if (comb.fixed | comb.random) x$level else NULL,
   studlab = FALSE,
   cex.studlab = 0.8,
@@ -134,9 +134,9 @@ is not \code{NULL}).}
 \item{bg}{A vector with background colour of plotting symbols (only
 used if \code{pch} in \code{21:25}).}
 
-\item{col.fixed}{Color of line representing fixed effect estimate.}
+\item{col.fixed}{Colour of line representing fixed effect estimate.}
 
-\item{col.random}{Color of line representing random effects
+\item{col.random}{Colour of line representing random effects
 estimate.}
 
 \item{log}{A character string which contains \code{"x"} if the
@@ -193,7 +193,7 @@ effect).}
 corresponding confidence intervals (if \code{ref.triangle} is
 TRUE and \code{level} is not \code{NULL}).}
 
-\item{col.ref}{Color of line representing reference value.}
+\item{col.ref}{Colour of line representing reference value.}
 
 \item{lty.ref.triangle}{Line type (confidence intervals of
 reference value).}

@@ -29,8 +29,8 @@
 #' @param col A vector with colour of plotting symbols.
 #' @param bg A vector with background colour of plotting symbols (only
 #'   used if \code{pch} in \code{21:25}).
-#' @param col.fixed Color of line representing fixed effect estimate.
-#' @param col.random Color of line representing random effects
+#' @param col.fixed Colour of line representing fixed effect estimate.
+#' @param col.random Colour of line representing random effects
 #'   estimate.
 #' @param lwd The line width for confidence intervals (if \code{level}
 #'   is not \code{NULL}).
@@ -72,7 +72,7 @@
 #' @param lwd.ref The line width for the reference value and
 #'   corresponding confidence intervals (if \code{ref.triangle} is
 #'   TRUE and \code{level} is not \code{NULL}).
-#' @param col.ref Color of line representing reference value.
+#' @param col.ref Colour of line representing reference value.
 #' @param lty.ref.triangle Line type (confidence intervals of
 #'   reference value).
 #' @param backtransf A logical indicating whether results for relative
@@ -204,8 +204,7 @@ funnel.default <- function(x, y,
                            log = "", yaxis = "se", sm = "",
                            contour.levels = NULL, col.contour,
                            ##
-                           ref = ifelse(backtransf & is.relative.effect(sm),
-                                        1, 0),
+                           ref = ifelse(is.relative.effect(sm), 1, 0),
                            ##
                            level = NULL,
                            studlab = FALSE, cex.studlab = 0.8, pos.studlab = 2,
@@ -302,8 +301,7 @@ funnel.meta <- function(x,
                         log = "", yaxis = "se",
                         contour.levels = NULL, col.contour,
                         ##
-                        ref = ifelse(backtransf & is.relative.effect(x$sm),
-                                     1, 0),
+                        ref = ifelse(is.relative.effect(x$sm), 1, 0),
                         ##
                         level = if (comb.fixed | comb.random) x$level else NULL,
                         studlab = FALSE, cex.studlab = 0.8, pos.studlab = 2,
@@ -412,7 +410,7 @@ funnel.meta <- function(x,
   TE.random <- x$TE.random
   sm <- x$sm
   ##  
-  if ( yaxis == "se" )
+  if (yaxis == "se")
     seTE.min <- 0
   else
     seTE.min <- min(seTE, na.rm = TRUE)
@@ -421,6 +419,8 @@ funnel.meta <- function(x,
   ##
   if (is.relative.effect(sm))
     ref <- log(ref)
+  ##
+  ref.contour <- ref
   ##
   if (!is.null(level)) {
     ##
@@ -511,7 +511,7 @@ funnel.meta <- function(x,
   if (yaxis == "invse"  & is.null(ylab)) ylab <- "Inverse of Standard Error"
   ##
   if (is.null(ylim) & yaxis == "se") ylim <- c(max(weight, na.rm = TRUE), 0)
-  if (is.null(ylim)              ) ylim <- range(weight, na.rm = TRUE)
+  if (is.null(ylim)) ylim <- range(weight, na.rm = TRUE)
   
   
   ##
@@ -545,9 +545,9 @@ funnel.meta <- function(x,
       ##
       j <- j + 1
       ##
-      ciContour <- ci(ref, seTE.cont, i)
+      ciContour <- ci(ref.contour, seTE.cont, i)
       ##
-      if (is.relative.effect(sm)) {
+      if (backtransf & is.relative.effect(sm)) {
         ciContour$TE    <- exp(ciContour$TE)
         ciContour$lower <- exp(ciContour$lower)
         ciContour$upper <- exp(ciContour$upper)

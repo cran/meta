@@ -180,9 +180,9 @@
 #'   grid.newpage grid.polygon grid.rect grid.text grid.xaxis textGrob
 #'   popViewport pushViewport viewport unit unit.c convertX
 #'
-#' @importFrom grDevices gray
+#' @importFrom grDevices gray gray.colors
 #'
-#' @importFrom graphics abline axis lines par plot points polygon text
+#' @importFrom graphics abline axis mtext lines par plot points polygon text
 #' 
 #' @importFrom stats as.formula binom.test coef cor lm pchisq pnorm pt
 #'   qnorm qt runif update var weighted.mean weights
@@ -190,7 +190,11 @@
 #' @importFrom utils count.fields read.table assignInNamespace
 #'   getFromNamespace packageDescription packageVersion
 #'
-#' @importFrom metafor rma.uni rma.glmm predict.rma confint.rma.uni
+#' @importFrom metafor rma.uni rma.glmm predict.rma confint.rma.uni escalc
+#'
+#' @importFrom lme4 glmer
+#'
+#' @importFrom CompQuadForm farebrother
 
 
 NULL

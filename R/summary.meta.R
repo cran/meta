@@ -342,7 +342,7 @@ summary.meta <- function(object,
     chklogical(print.CMH)
   chklogical(warn)
   ##
-  cl <- paste("update.meta() or ", class(object)[1], "()", sep = "")
+  cl <- paste0("update.meta() or ", class(object)[1], "()")
   addargs <- names(list(...))
   ##
   fun <- "summary.meta"
@@ -435,7 +435,7 @@ summary.meta <- function(object,
                level = object$level.predict,
                df = object$k - 2)
   ##  
-  ci.lab <- paste(round(100 * object$level.comb, 1), "%-CI", sep = "")
+  ci.lab <- paste0(round(100 * object$level.comb, 1), "%-CI")
   
   
   ##
@@ -567,8 +567,6 @@ summary.meta <- function(object,
     res$cor <- object$cor
     res$n   <- object$n
     ##
-    res$null.effect <- object$null.effect
-    ##
     class(res) <- c(class(res), "metacor")
   }
   ##
@@ -576,13 +574,10 @@ summary.meta <- function(object,
     res$n.e <- object$n.e
     res$n.c <- object$n.c
     ##
-    res$null.effect <- object$null.effect
-    ##
     class(res)  <- c(class(res), "metagen")
   }
   ##
   if (inherits(object, "metainc")) {
-    class(res)  <- c(class(res), "metainc")
     res$sparse  <- object$sparse
     res$incr    <- object$incr
     res$allincr <- object$allincr
@@ -591,14 +586,14 @@ summary.meta <- function(object,
     res$model.glmm   <- object$model.glmm
     res$.glmm.fixed  <- object$.glmm.fixed
     res$.glmm.random <- object$.glmm.random
+    ##
+    class(res)  <- c(class(res), "metainc")
   }
   ##
   if (inherits(object, "metamean")) {
     res$n    <- object$n
     res$mean <- object$mean
     res$sd   <- object$sd
-    ##
-    res$null.effect <- object$null.effect
     ##
     class(res)  <- c(class(res), "metamean")
   }
@@ -612,8 +607,6 @@ summary.meta <- function(object,
     res$allincr <- object$allincr
     res$addincr <- object$addincr
     ##
-    res$null.effect <- object$null.effect
-    ##
     res$method.ci <- object$method.ci
     ##
     res$model.glmm   <- object$model.glmm
@@ -626,8 +619,6 @@ summary.meta <- function(object,
   if (is.prop(object$sm)) {
     res$event <- object$event
     res$n     <- object$n
-    ##
-    res$null.effect <- object$null.effect    
   }
   ##
   if (metarate) {
@@ -639,8 +630,6 @@ summary.meta <- function(object,
     res$allincr <- object$allincr
     res$addincr <- object$addincr
     ##
-    res$null.effect <- object$null.effect
-    ##
     res$model.glmm   <- object$model.glmm
     res$.glmm.fixed  <- object$.glmm.fixed
     res$.glmm.random <- object$.glmm.random
@@ -651,8 +640,6 @@ summary.meta <- function(object,
   if (is.rate(object$sm)) {
     res$event     <- object$event
     res$time      <- object$time
-    ##
-    res$null.effect <- object$null.effect    
   }
   ##
   if (inherits(object, "trimfill")) {
@@ -663,8 +650,6 @@ summary.meta <- function(object,
   }
   ##
   if (inherits(object, "metabind")) {
-    res$null.effect <- object$null.effect    
-    ##
     class(res) <- c(class(res), "metabind")
   }
   ##
@@ -712,6 +697,8 @@ summary.meta <- function(object,
   ##
   res$data   <- object$data
   res$subset <- object$subset
+  ##
+  res$null.effect <- object$null.effect
   ##
   res$backtransf <- backtransf
   res$pscale <- pscale
@@ -862,7 +849,7 @@ print.summary.meta <- function(x,
   ##
   ## Additional arguments / checks for metacont objects
   ##
-  cl <- paste("update.meta() or ", class(x)[1], "()", sep = "")
+  cl <- paste0("update.meta() or ", class(x)[1], "()")
   addargs <- names(list(...))
   ##
   fun <- "print.summary.meta"
@@ -881,11 +868,9 @@ print.summary.meta <- function(x,
   ##
   bip <- inherits(x, c("metabin", "metainc", "metaprop", "metarate"))
   metabin <- inherits(x, "metabin")
-  null.given <- (inherits(x, c("metacor", "metagen", "metamean",
-                               "metaprop", "metarate")) |
-                 is.prop(sm) | is.rate(sm) | is.cor(sm) | is.mean(sm))
   ##
   null.effect <- x$null.effect
+  null.given <- !is.null(null.effect) && !is.na(null.effect)
   ##
   if (null.given & !backtransf) {
     ##
@@ -927,7 +912,7 @@ print.summary.meta <- function(x,
   }
   else
     if (is.relative.effect(sm))
-      sm.lab <- paste("log", sm, sep = "")
+      sm.lab <- paste0("log", sm)
   ##
   if (length(x$tau.common) == 0)
     x$tau.common <- FALSE
@@ -937,7 +922,7 @@ print.summary.meta <- function(x,
   ##
   if (by)
     bylevs <- ifelse(nchar(x$bylevs) > bylab.nchar,
-                     paste(substring(x$bylevs, 1, bylab.nchar - 4), " ...", sep = ""),
+                     paste0(substring(x$bylevs, 1, bylab.nchar - 4), " ..."),
                      x$bylevs)
   
   
@@ -1009,38 +994,52 @@ print.summary.meta <- function(x,
       harmonic.mean <- 1 / mean(1 / x$n)
     ##
     TE.fixed    <- backtransf(TE.fixed, sm, "mean",
-                              harmonic.mean, warn = comb.fixed & warn.backtransf)
+                              harmonic.mean,
+                              warn = comb.fixed & warn.backtransf)
     lowTE.fixed <- backtransf(lowTE.fixed, sm, "lower",
-                              harmonic.mean, warn = comb.fixed & warn.backtransf)
+                              harmonic.mean,
+                              warn = comb.fixed & warn.backtransf)
     uppTE.fixed <- backtransf(uppTE.fixed, sm, "upper",
-                              harmonic.mean, warn = comb.fixed & warn.backtransf)
+                              harmonic.mean,
+                              warn = comb.fixed & warn.backtransf)
     ##
     TE.random <- backtransf(TE.random, sm, "mean",
-                            harmonic.mean, warn = comb.random & warn.backtransf)
+                            harmonic.mean,
+                            warn = comb.random & warn.backtransf)
     lowTE.random <- backtransf(lowTE.random, sm, "lower",
-                               harmonic.mean, warn = comb.random & warn.backtransf)
+                               harmonic.mean,
+                               warn = comb.random & warn.backtransf)
     uppTE.random <- backtransf(uppTE.random, sm, "upper",
-                               harmonic.mean, warn = comb.random & warn.backtransf)
+                               harmonic.mean,
+                               warn = comb.random & warn.backtransf)
     ##
     lowTE.predict <- backtransf(lowTE.predict, sm, "lower",
-                                harmonic.mean, warn = prediction & warn.backtransf)
+                                harmonic.mean,
+                                warn = prediction & warn.backtransf)
     uppTE.predict <- backtransf(uppTE.predict, sm, "upper",
-                                harmonic.mean, warn = prediction & warn.backtransf)
+                                harmonic.mean,
+                                warn = prediction & warn.backtransf)
     ##
     if (by) {
       TE.fixed.w     <- backtransf(TE.fixed.w, sm, "mean",
-                                   harmonic.mean.w, warn = comb.fixed & warn.backtransf)
+                                   harmonic.mean.w,
+                                   warn = comb.fixed & warn.backtransf)
       lowTE.fixed.w  <- backtransf(lowTE.fixed.w, sm, "lower",
-                                   harmonic.mean.w, warn = comb.fixed & warn.backtransf)
+                                   harmonic.mean.w,
+                                   warn = comb.fixed & warn.backtransf)
       uppTE.fixed.w  <- backtransf(uppTE.fixed.w, sm, "upper",
-                                   harmonic.mean.w, warn = comb.fixed & warn.backtransf)
+                                   harmonic.mean.w,
+                                   warn = comb.fixed & warn.backtransf)
       ##
       TE.random.w    <- backtransf(TE.random.w, sm, "mean",
-                                   harmonic.mean.w, warn = comb.random & warn.backtransf)
+                                   harmonic.mean.w,
+                                   warn = comb.random & warn.backtransf)
       lowTE.random.w <- backtransf(lowTE.random.w, sm, "lower",
-                                   harmonic.mean.w, warn = comb.random & warn.backtransf)
+                                   harmonic.mean.w,
+                                   warn = comb.random & warn.backtransf)
       uppTE.random.w <- backtransf(uppTE.random.w, sm, "upper",
-                                   harmonic.mean.w, warn = comb.random & warn.backtransf)
+                                   harmonic.mean.w,
+                                   warn = comb.random & warn.backtransf)
     }
   }
   ##
@@ -1159,11 +1158,16 @@ print.summary.meta <- function(x,
                                   big.mark = big.mark),
                           formatN(uppTE.fixed, digits, "NA",
                                   big.mark = big.mark)),
-                 formatN(zTE.fixed, digits.zval, big.mark = big.mark),
-                 formatPT(pTE.fixed, digits = digits.pval,
-                          scientific = scientific.pval,
-                          zero = zero.pval, JAMA = JAMA.pval))
-    dimnames(res) <- list("", c(sm.lab, x$ci.lab, "z", "p-value"))
+                 if (null.given)
+                   formatN(zTE.fixed, digits.zval, big.mark = big.mark),
+                 if (null.given)
+                   formatPT(pTE.fixed, digits = digits.pval,
+                            scientific = scientific.pval,
+                            zero = zero.pval, JAMA = JAMA.pval))
+    dimnames(res) <- list("",
+                          c(sm.lab, x$ci.lab,
+                            if (null.given) "z",
+                            if (null.given) "p-value"))
     prmatrix(res, quote = FALSE, right = TRUE, ...)
     ## Print information on summary method:
     catmeth(class = class(x),
@@ -1207,19 +1211,19 @@ print.summary.meta <- function(x,
             (inherits(x, c("metabin", "metainc")) &
              comb.fixed & sm %in% c("RD", "IRD") &
              (!is.null(x$k.MH) == 1 && k != x$k.MH)))
-          cat(paste("Number of studies combined:   k.MH = ", x$k.MH,
-                    " (fixed effect), k = ", format(k, big.mark = big.mark),
-                    " (random effects)\n\n", sep = ""))
+          cat(paste0("Number of studies combined:   k.MH = ", x$k.MH,
+                     " (fixed effect), k = ", format(k, big.mark = big.mark),
+                     " (random effects)\n\n"))
         else
-          cat(paste("Number of studies combined: k = ",
-                    format(k, big.mark = big.mark), "\n\n", sep = ""))
+          cat(paste0("Number of studies combined: k = ",
+                     format(k, big.mark = big.mark), "\n\n"))
       }
       else
-        cat(paste("Number of studies combined: k = ",
-                  format(k, big.mark = big.mark),
-                  " (with ",
-                  format(x$k0, big.mark = big.mark),
-                  " added studies)\n\n", sep = ""))
+        cat(paste0("Number of studies combined: k = ",
+                   format(k, big.mark = big.mark),
+                   " (with ",
+                   format(x$k0, big.mark = big.mark),
+                   " added studies)\n\n"))
       ##
       res <- cbind(formatN(c(if (comb.fixed) TE.fixed,
                              if (comb.random) TE.random,
@@ -1234,18 +1238,23 @@ print.summary.meta <- function(x,
                                       if (comb.random) uppTE.random,
                                       if (prediction) uppTE.predict),
                                     digits, "NA", big.mark = big.mark)),
-                   formatN(c(if (comb.fixed) zTE.fixed,
-                             if (comb.random) zTE.random,
-                             if (prediction) NA),
-                           digits = digits.zval, big.mark = big.mark),
-                   formatPT(c(if (comb.fixed) pTE.fixed,
-                              if (comb.random) pTE.random,
-                              if (prediction) NA),
-                            digits = digits.pval,
-                            scientific = scientific.pval,
-                            zero = zero.pval, JAMA = JAMA.pval))
-      if (prediction)
-        res[dim(res)[1], c(1,3:4)] <- ""
+                   if (null.given)
+                     formatN(c(if (comb.fixed) zTE.fixed,
+                               if (comb.random) zTE.random,
+                               if (prediction) NA),
+                             digits = digits.zval, big.mark = big.mark),
+                   if (null.given)
+                     formatPT(c(if (comb.fixed) pTE.fixed,
+                                if (comb.random) pTE.random,
+                                if (prediction) NA),
+                              digits = digits.pval,
+                              scientific = scientific.pval,
+                              zero = zero.pval, JAMA = JAMA.pval))
+      if (prediction) {
+        res[dim(res)[1], 1] <- ""
+        if (null.given)
+          res[dim(res)[1], 3:4] <- ""
+      }
       if (!is.null(x$hakn) && x$hakn) {
         if (comb.fixed & comb.random)
           zlab <- "z|t"
@@ -1260,7 +1269,9 @@ print.summary.meta <- function(x,
       dimnames(res) <- list(c(if (comb.fixed) "Fixed effect model",
                               if (comb.random) "Random effects model",
                               if (prediction) "Prediction interval"),  
-                            c(sm.lab, x$ci.lab, zlab, "p-value"))
+                            c(sm.lab, x$ci.lab,
+                              if (null.given) zlab,
+                              if (null.given) "p-value"))
       prmatrix(res, quote = FALSE, right = TRUE, ...)
       ##
       if (metabin && print.CMH) {
@@ -1278,7 +1289,7 @@ print.summary.meta <- function(x,
       }
     }
     else
-      cat(paste("Number of studies: k = ", k, "\n", sep = ""))
+      cat(paste0("Number of studies: k = ", k, "\n"))
     ##
     ## Print information on heterogeneity
     ##
@@ -1408,13 +1419,11 @@ print.summary.meta <- function(x,
                          if (print.I2)
                            ifelse(is.na(I2.w),
                                   "--",
-                                  paste(formatN(I2.w, digits.I2),
-                                        "%", sep = "")),
+                                  paste0(formatN(I2.w, digits.I2), "%")),
                          if (print.Rb)
                            ifelse(is.na(Rb.w),
                                   "--",
-                                  paste(formatN(Rb.w, digits.I2),
-                                        "%", sep = ""))
+                                  paste0(formatN(Rb.w, digits.I2), "%"))
                          )
           ##
           bylab <- bylabel(x$bylab, bylevs, print.byvar, byseparator,
@@ -1490,14 +1499,12 @@ print.summary.meta <- function(x,
                          if (print.I2)
                            ifelse(is.na(I2.w),
                                   "--",
-                                  paste(formatN(I2.w, digits.I2),
-                                        "%", sep = "")),
+                                  paste0(formatN(I2.w, digits.I2), "%")),
                          if (print.Rb)
                            ifelse(is.na(Rb.w),
                                   "--",
-                                  paste(formatN(Rb.w, digits.I2,
-                                                big.mark = big.mark),
-                                        "%", sep = ""))
+                                  paste0(formatN(Rb.w, digits.I2,
+                                                 big.mark = big.mark), "%"))
                          )
           ##
           bylab <- bylabel(x$bylab, bylevs, print.byvar, byseparator,

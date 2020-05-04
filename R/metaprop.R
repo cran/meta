@@ -58,6 +58,9 @@
 #' @param hakn A logical indicating whether the method by Hartung and
 #'   Knapp should be used to adjust test statistics and confidence
 #'   intervals.
+#' @param adhoc.hakn A character string indicating whether an \emph{ad
+#'   hoc} variance correction should be applied in the case of an
+#'   arbitrarily small Hartung-Knapp variance estimate, see Details.
 #' @param method.tau A character string indicating which method is
 #'   used to estimate the between-study variance \eqn{\tau^2} and its
 #'   square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
@@ -269,10 +272,26 @@
 #' for the treatment estimate. Simulation studies (Hartung and Knapp,
 #' 2001a,b; IntHout et al., 2014; Langan et al., 2019) show improved
 #' coverage probabilities compared to the classic random effects
-#' method. However, in rare settings with very homogeneous treatment
-#' estimates, the Hartung-Knapp method can be anti-conservative
-#' (Wiksten et al., 2016). The Hartung-Knapp method is used if
-#' argument \code{hakn = TRUE}.
+#' method.
+#'
+#' In rare settings with very homogeneous treatment estimates, the
+#' Hartung-Knapp variance estimate can be arbitrarily small resulting
+#' in a very narrow confidence interval (Knapp and Hartung, 2003;
+#' Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
+#' correction has been proposed by utilising the variance estimate
+#' from the classic random effects model (Knapp and Hartung,
+#' 2003). Argument \code{adhoc.hakn} can be used to choose the
+#' \emph{ad hoc} method:
+#' \tabular{ll}{
+#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+#' \code{adhoc.hakn = ""}\tab not used \cr
+#' \code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
+#'  standard error \cr
+#'  \tab from classic random effects model (Knapp and Hartung, 2003) \cr
+#' \code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
+#'  narrower than CI from \cr
+#'  \tab classic random effects model with DL estimator (IQWiG, 2020)
+#' }
 #' }
 #' 
 #' \subsection{Prediction interval}{
@@ -337,7 +356,7 @@
 #' \item{level, level.comb,}{As defined above.}
 #' \item{comb.fixed, comb.random,}{As defined above.}
 #' \item{overall, overall.hetstat,}{As defined above.}
-#' \item{hakn, method.tau, method.tau.ci,}{As defined above.}
+#' \item{hakn, adhoc.hakn, method.tau, method.tau.ci,}{As defined above.}
 #' \item{tau.preset, TE.tau, null.hypothesis,}{As defined above.}
 #' \item{method.bias, tau.common, title, complab, outclab,}{As defined
 #'   above.}
@@ -550,6 +569,10 @@
 #' standard DerSimonian-Laird method.
 #' \emph{BMC Medical Research Methodology},
 #' \bold{14}, 25
+#' 
+#' IQWiG (2020):
+#' General Methods: Draft of Version 6.0.
+#' \url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
 #'
 #' Langan D, Higgins JPT, Jackson D, Bowden J, Veroniki AA,
 #' Kontopantelis E, et al. (2019):
@@ -775,7 +798,7 @@ metaprop <- function(event, n, studlab,
                      overall = comb.fixed | comb.random,
                      overall.hetstat = comb.fixed | comb.random,
                      ##
-                     hakn = gs("hakn"),
+                     hakn = gs("hakn"), adhoc.hakn = gs("adhoc.hakn"),
                      method.tau,
                      method.tau.ci = if (method.tau == "DL") "J" else "QP",
                      tau.preset = NULL, TE.tau = NULL,
@@ -826,6 +849,7 @@ metaprop <- function(event, n, studlab,
   chklogical(overall.hetstat)
   ##
   chklogical(hakn)
+  adhoc.hakn <- setchar(adhoc.hakn, .settings$adhoc4hakn)
   if (missing(method.tau))
     method.tau <- if (method == "GLMM") "ML" else gs("method.tau")
   method.tau <- setchar(method.tau, .settings$meth4tau)
@@ -1068,6 +1092,25 @@ metaprop <- function(event, n, studlab,
   ##
   event <- int2num(event)
   n     <- int2num(n)
+  ##
+  ## Check for whole numbers
+  ##
+  if (method.ci != "NAsm") {
+    if (any(!is.wholenumber(event), na.rm = TRUE)) {
+      warning("Normal approximation confidence interval ",
+              "(argument method.ci = \"NAsm\") used as\n",
+              "at least one number of events contains a non-integer value.",
+              call. = FALSE)
+      method.ci <- "NAsm"
+    }
+    else if (any(!is.wholenumber(n), na.rm = TRUE)) {
+      warning("Normal approximation confidence interval ",
+              "(argument method.ci = \"NAsm\") used as\n",
+              "at least one sample size contains a non-integer value.",
+              call. = FALSE)
+      method.ci <- "NAsm"
+    }
+  }
   
   
   ##
@@ -1105,7 +1148,7 @@ metaprop <- function(event, n, studlab,
   }
   else if (sm == "PAS") {
     TE <- asin(sqrt(event / n))
-    seTE <- sqrt(0.25 * (1 / n))
+    seTE <- sqrt(1 / (4 * n))
     transf.null.effect <- asin(sqrt(null.effect))
   }
   else if (sm == "PFT") {
@@ -1229,7 +1272,7 @@ metaprop <- function(event, n, studlab,
                overall = overall,
                overall.hetstat = overall.hetstat,
                ##
-               hakn = hakn,
+               hakn = hakn, adhoc.hakn = adhoc.hakn,
                method.tau = method.tau, method.tau.ci = method.tau.ci,
                tau.preset = tau.preset,
                TE.tau = TE.tau,
@@ -1328,14 +1371,21 @@ metaprop <- function(event, n, studlab,
     res$zval.random <- ci.r$z
     res$pval.random <- ci.r$p
     ##
-    ci.p <- predict.rma(glmm.random, level = 100 * level.predict)
-    res$seTE.predict <- NA
-    res$lower.predict <- ci.p$cr.lb
-    res$upper.predict <- ci.p$cr.ub
-    if (is.null(res$lower.predict))
+    ## Prediction interval
+    ##
+    if (k >= 3) {
+      tau2.calc <- if (is.na(glmm.random$tau2)) 0 else glmm.random$tau2
+      seTE.predict <- sqrt(seTE.random^2 + tau2.calc)
+      ci.p <- ci(TE.random, seTE.predict, level.predict, k - 2)
+      res$seTE.predict <- seTE.predict
+      res$lower.predict <- ci.p$lower
+      res$upper.predict <- ci.p$upper
+    }
+    else {
+      res$seTE.predict <- NA
       res$lower.predict <- NA
-    if (is.null(res$upper.predict))
       res$upper.predict <- NA
+    }
     ##
     res$Q <- glmm.random$QE.Wld
     res$df.Q <- glmm.random$QE.df

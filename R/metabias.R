@@ -496,6 +496,8 @@ metabias.meta <- function(x, method.bias = x$method.bias,
               (n.e - event.e + n.c - event.c)
             V <- n.e * n.c * (event.e + event.c) /  
               ((n.e + n.c) * (n.e - event.e + n.c - event.c))
+            V <- (n.e + n.c) / 4 *
+              (event.e + event.c) / (n.e - event.e + n.c - event.c)
           }
           else {
             if (x$sm != "OR")
@@ -547,18 +549,18 @@ metabias.meta <- function(x, method.bias = x$method.bias,
       ##
       bias <- lreg$slope
       df <- lreg$df
-      slope <- lreg$intercept
+      intercept <- lreg$intercept
       ##
       statistic <- bias / se.bias
       p.value <- 2 * pt(abs(statistic), df = df, lower.tail = FALSE)[[1]]
       ##
-      res <- list(estimate = c(bias, se.bias, slope),
+      res <- list(estimate = c(bias, se.bias, intercept),
                   parameters = df, statistic = statistic,
                   p.value = p.value)
       
       names(res$statistic) <- "t"
       names(res$parameters) <- "df"
-      names(res$estimate) <- c("bias", "se.bias", "slope")
+      names(res$estimate) <- c("bias", "se.bias", "intercept")
     }
     else if (method.bias == "count") {
       ##

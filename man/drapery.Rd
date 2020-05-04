@@ -6,22 +6,32 @@
 \usage{
 drapery(
   x,
-  type = "cvalue",
+  type = "zvalue",
   layout = "grayscale",
+  study.results = TRUE,
   lty.study = 1,
   lwd.study = 1,
   col.study = "darkgray",
+  labels,
+  col.labels = "black",
+  cex.labels = 0.7,
+  subset.labels,
+  srt.labels,
   comb.fixed = x$comb.fixed,
   comb.random = x$comb.random,
   lty.fixed = 1,
   lwd.fixed = max(3, lwd.study),
   col.fixed = "blue",
   lty.random = 1,
-  lwd.random = max(3, lwd.study),
+  lwd.random = lwd.fixed,
   col.random = "red",
+  sign = NULL,
+  lty.sign = 1,
+  lwd.sign = 1,
+  col.sign = "black",
   prediction = comb.random,
   col.predict = "lightblue",
-  alpha = if (type == "cvalue") c(0.001, 0.01, 0.05, 0.1) else c(0.01, 0.05, 0.1),
+  alpha = if (type == "zvalue") c(0.001, 0.01, 0.05, 0.1) else c(0.01, 0.05, 0.1),
   lty.alpha = 2,
   lwd.alpha = 1,
   col.alpha = "black",
@@ -33,32 +43,52 @@ drapery(
   bty = "o",
   backtransf = x$backtransf,
   xlab,
-  ylab = if (type == "cvalue") "Critical value" else "P-value",
+  ylab = if (type == "zvalue") "Test statistic" else "P-value",
   xlim,
   ylim,
   lwd.max = 2.5,
   lwd.study.weight = if (comb.random) "random" else "fixed",
-  n.grid = if (type == "cvalue") 10000 else 1000,
+  at = NULL,
+  n.grid = if (type == "zvalue") 10000 else 1000,
   mar = c(5.1, 4.1, 4.1, 4.1),
+  plot = TRUE,
   ...
 )
 }
 \arguments{
 \item{x}{An object of class \code{meta}.}
 
-\item{type}{A character string indicating whether to plot critical
-values (\code{"cvalue"}) or p-values (\code{"pvalue"}), can be
-abbreviated.}
+\item{type}{A character string indicating whether to plot test
+statistics (\code{"zvalue"}) or p-values (\code{"pvalue"}), can
+be abbreviated.}
 
 \item{layout}{A character string for the line layout of individual
 studies: \code{"grayscale"}, \code{"equal"}, or
 \code{"linewidth"} (see Details), can be abbreviated.}
+
+\item{study.results}{A logical indicating whether results for
+individual studies should be shown in the figure.}
 
 \item{lty.study}{Line type for individual studies.}
 
 \item{lwd.study}{Line width for individual studies.}
 
 \item{col.study}{Colour of lines for individual studies.}
+
+\item{labels}{A logical or character string indicating whether
+study labels should be shown at the top of the drapery plot;
+either \code{FALSE}, \code{"id"}, or \code{"studlab"}; see
+Details.}
+
+\item{col.labels}{Colour of study labels.}
+
+\item{cex.labels}{The magnification for study labels.}
+
+\item{subset.labels}{A vector specifying which study labels should
+be shown in the drapery plot.}
+
+\item{srt.labels}{A numerical vector or single numeric (between 0
+and 90) specifying the angle to rotate study labels; see Details.}
 
 \item{comb.fixed}{A logical indicating whether to show result for
 the fixed effect model.}
@@ -78,6 +108,15 @@ the random effects model.}
 
 \item{col.random}{Colour of lines for random effects meta-analysis.}
 
+\item{sign}{Significance level used to highlight significant
+values in curves.}
+
+\item{lty.sign}{Line type for significant values.}
+
+\item{lwd.sign}{Line width for significant values.}
+
+\item{col.sign}{Line colour for significant values.}
+
 \item{prediction}{A logical indicating whether to show prediction
 region.}
 
@@ -88,12 +127,11 @@ values.}
 
 \item{lty.alpha}{Line type of horizonal lines for alpha values.}
 
-\item{lwd.alpha}{Line width for individual studies.}
+\item{lwd.alpha}{Line width of horizonal lines for alpha values.}
 
 \item{col.alpha}{Colour of horizonal lines for alpha values.}
 
-\item{cex.alpha}{The magnification for the text of the alpha
-values.}
+\item{cex.alpha}{The magnification for the text of the alpha}
 
 \item{col.null.effect}{Colour of vertical line indicating null
 effect.}
@@ -131,10 +169,14 @@ fixed effect (\code{"fixed"}) or random effects model
 (\code{"random"}), can be abbreviated (only considered if
 argument \code{layout} is equal to \code{"linewidth"}).}
 
+\item{at}{Points at which tick-marks are to be drawn on the x-axis.}
+
 \item{n.grid}{The number of grid points to calculate the p-value or
-critical value functions.}
+test statistic functions.}
 
 \item{mar}{Physical plot margin, see \code{\link{par}}.}
+
+\item{plot}{A logical indicating whether to generate a figure.}
 
 \item{\dots}{Graphical arguments as in \code{par} may also be
 passed as arguments.}
@@ -155,8 +197,8 @@ information for a single confidence level however for any
 confidence level.
 
 Argument \code{type} can be used to either show p-value functions
-(Birnbaum, 1961) or a scaled version (Infanger, 2019) with critical
-values (default).
+(Birnbaum, 1961) or a scaled version (Infanger, 2019) with test
+statistics (default).
 
 Argument \code{layout} determines how curves for individual studies
 are presented:
@@ -167,6 +209,30 @@ are presented:
   "linewidth"})
 \item equal lines (\code{layout = "equal"})
 }
+
+Argument \code{labels} determines how curves of individual studies
+are labelled:
+\itemize{
+\item number of the study in the (unsorted) forest plot / printout
+  of a meta-analysis (\code{labels = "id"})
+\item study labels provided by argument \code{studlab} in
+  meta-analysis functions (\code{labels = "studlab"})
+\item no study labels (\code{labels = FALSE})
+}
+By default, study labels are used (\code{labels = "studlab"}) if no
+label has more than three characters; otherwise IDs are used
+(\code{labels = "id"}). The connection between IDs and study labels
+(among other information) is part of a data frame which is
+invisibly returned (if argument \code{ study.results = TRUE}).
+
+Argument \code{srt.labels} can be used to change the rotation of
+IDs or study labels. By default, study labels are rotated by +/- 45
+degrees if at least one study label has more than three characters;
+otherwise labels are not rotated.
+
+If \code{labels = "studlab"}, labels are rotated by -45 degrees for
+studies with a treatment estimate below the fixed effect estimate
+and otherwise by 45 degrees.
 }
 \examples{
 data("lungcancer")
@@ -177,6 +243,26 @@ m1 <- metainc(d.smokers, py.smokers,
 # Drapery plot
 #
 drapery(m1, xlim = c(0.5, 50))
+
+\dontrun{
+data(Fleiss93)
+m2 <- metabin(event.e, n.e, event.c, n.c,
+         data = Fleiss93, studlab = paste(study, year),
+         sm = "OR", comb.random = FALSE)
+
+# Produce drapery plot and print data frame with connection between
+# IDs and study labels
+#
+(drapery(m2))
+
+# For studies with a significant effect (p < 0.05), show
+# study labels and print labels and lines in red
+#
+drapery(m2,
+        labels = "studlab", subset.labels = pval < 0.05,
+        srt.labels = 0, col.labels = "red",
+        col.study = ifelse(pval < 0.05, "red", "darkgray"))
+}
 
 }
 \references{

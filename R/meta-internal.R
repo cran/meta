@@ -100,6 +100,32 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5) {
 }
 
 
+catchvar <- function(varname, x, mf) {
+  res <- NULL
+  error <-
+    try(res <- eval(mf[[match(varname, names(mf))]],
+                    x,
+                    enclos = sys.frame(sys.parent())),
+        silent = TRUE)
+  ##
+  if (class(error) == "try-error") {
+    res <- eval(mf[[match(varname, names(mf))]],
+                x$data, enclos = NULL)
+  }
+  ##
+  res
+}
+
+
+augment <- function(x, len, fun) {
+  if (length(x) > 1)
+    chklength(x, len, fun)
+  else
+    x <- rep(x, len)
+  x
+}
+
+
 .settings <- list()
 ##
 ## Set defaults (for internal options)
@@ -116,13 +142,15 @@ setOption("sm4rate", c("IR", "IRLN", "IRS", "IRFT"))
 ##
 setOption("ci4prop", c("CP", "WS", "WSCC", "AC", "SA", "SACC", "NAsm"))
 ##
+setOption("meth4bin", c("Inverse", "MH", "Peto", "GLMM", "SSW"))
 setOption("meth4tau", c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"))
 setOption("meth4tau.ci", c("QP", "BJ", "J", ""))
+setOption("adhoc4hakn", c("", "se", "ci"))
 ##
 ## List of arguments that can be changed by user
 ##
 argslist <- c("level", "level.comb", "comb.fixed", "comb.random",
-              "hakn", "method.tau", "tau.common",
+              "hakn", "adhoc.hakn", "method.tau", "tau.common",
               "prediction", "level.predict",
               "method.bias", "title", "complab", "CIbracket", "CIseparator",
               "print.byvar", "byseparator", "keepdata", "warn",
@@ -153,6 +181,7 @@ setOption("level.comb", 0.95)
 setOption("comb.fixed", TRUE)
 setOption("comb.random", TRUE)
 setOption("hakn", FALSE)
+setOption("adhoc.hakn", "")
 setOption("method.tau", "DL")
 setOption("tau.common", FALSE)
 setOption("prediction", FALSE)

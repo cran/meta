@@ -3,6 +3,7 @@ catmeth <- function(method,
                     sm = "",
                     k.all,
                     hakn = FALSE,
+                    adhoc.hakn = FALSE,
                     class = "",
                     tau.common = FALSE,
                     tau.preset = NULL,
@@ -296,8 +297,12 @@ catmeth <- function(method,
         lab.method.tau <- paste0(lab.method.tau, lab.tau.ci)
       }
       ##
-      if (hakn)
+      if (hakn) {
         lab.hakn <- "\n- Hartung-Knapp adjustment for random effects model"
+        if (adhoc.hakn)
+          lab.hakn <- paste0(lab.hakn,
+                             "\n  (with ad hoc variance correction)")
+      }
       else
         lab.hakn <- ""
       ##      
@@ -306,7 +311,7 @@ catmeth <- function(method,
   }
   ##
   imeth <- charmatch(method,
-                     c("MH", "Peto", "Inverse", "Cochran", "GLMM", "NoMA"),
+                     c("MH", "Peto", "Inverse", "Cochran", "SSW", "GLMM", "NoMA"),
                      nomatch = NA)
   ##
   if ((metabin|metainc) & imeth == 1 & (sparse | addincr))
@@ -323,6 +328,7 @@ catmeth <- function(method,
               "\n- Peto method",
               "\n- Inverse variance method",
               "\n- Cochran method",
+              "\n- Sample size method",
               "GLMM",
               "")[imeth]
   ##

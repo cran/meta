@@ -4,8 +4,8 @@
 #' Calculation of fixed effect and random effects estimates (risk
 #' ratio, odds ratio, risk difference, or arcsine difference) for
 #' meta-analyses with binary outcome data. Mantel-Haenszel, inverse
-#' variance, Peto method, and generalised linear mixed model (GLMM)
-#' are available for pooling. For GLMMs, the
+#' variance, Peto method, generalised linear mixed model (GLMM), and
+#' sample size method are available for pooling. For GLMMs, the
 #' \code{\link[metafor]{rma.glmm}} function from R package
 #' \bold{metafor} (Viechtbauer, 2010) is called internally.
 #' 
@@ -23,7 +23,8 @@
 #'   plots.
 #' @param method A character string indicating which method is to be
 #'   used for pooling of studies. One of \code{"Inverse"},
-#'   \code{"MH"}, \code{"Peto"}, or \code{"GLMM"}, can be abbreviated.
+#'   \code{"MH"}, \code{"Peto"}, \code{"GLMM"}, or \code{"SSW"}, can
+#'   be abbreviated.
 #' @param sm A character string indicating which summary measure
 #'   (\code{"RR"}, \code{"OR"}, \code{"RD"}, or \code{"ASD"}) is to be
 #'   used for pooling of studies, see Details.
@@ -80,6 +81,9 @@
 #' @param hakn A logical indicating whether the method by Hartung and
 #'   Knapp should be used to adjust test statistics and confidence
 #'   intervals.
+#' @param adhoc.hakn A character string indicating whether an \emph{ad
+#'   hoc} variance correction should be applied in the case of an
+#'   arbitrarily small Hartung-Knapp variance estimate, see Details.
 #' @param method.tau A character string indicating which method is
 #'   used to estimate the between-study variance \eqn{\tau^2} and its
 #'   square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
@@ -99,7 +103,7 @@
 #'   funnel plot asymmetry is to be used. Either \code{"rank"},
 #'   \code{"linreg"}, \code{"mm"}, \code{"count"}, \code{"score"}, or
 #'   \code{"peters"}, can be abbreviated. See function
-#'   \code{\link{metabias}}
+#'   \code{\link{metabias}.}
 #' @param backtransf A logical indicating whether results for odds
 #'   ratio (\code{sm="OR"}) and risk ratio (\code{sm="RR"}) should be
 #'   back transformed in printouts and plots. If TRUE (default),
@@ -131,8 +135,8 @@
 #'   (e.g., if \code{incr} is added to studies with zero cell
 #'   frequencies).
 #' @param control An optional list to control the iterative process to
-#'   estimate the between-study variance \eqn{\tau^2}. This argument is
-#'   passed on to \code{\link[metafor]{rma.uni}} or
+#'   estimate the between-study variance \eqn{\tau^2}. This argument
+#'   is passed on to \code{\link[metafor]{rma.uni}} or
 #'   \code{\link[metafor]{rma.glmm}}, respectively.
 #' @param \dots Additional arguments passed on to
 #'   \code{\link[metafor]{rma.glmm}} function.
@@ -156,7 +160,9 @@
 #' 1986) is used to calculate the fixed effect estimate; if
 #' \code{method} is \code{"Inverse"}, inverse variance weighting is
 #' used for pooling (Fleiss, 1993); if \code{method} is \code{"Peto"},
-#' the Peto method is used for pooling (Yussuf et al., 1985).
+#' the Peto method is used for pooling (Yussuf et al., 1985); if
+#' \code{method} is \code{"SSW"}, the sample size method is used for
+#' pooling (Bakbergenuly et al., 2020).
 #'
 #' While the Mantel-Haenszel and Peto method are defined under the
 #' fixed effect model, random effects variants based on these methods
@@ -274,9 +280,28 @@
 #' 
 #' For the random effects, the method by Hartung and Knapp (2001) is
 #' used to adjust test statistics and confidence intervals if argument
-#' \code{hakn = TRUE}. For GLMMs, a method similar to Knapp and
-#' Hartung (2003) is implemented, see description of argument
-#' \code{tdist} in \code{\link[metafor]{rma.glmm}}.
+#' \code{hakn = TRUE}. In rare settings with very homogeneous
+#' treatment estimates, the Hartung-Knapp variance estimate can be
+#' arbitrarily small resulting in a very narrow confidence interval
+#' (Knapp and Hartung, 2003; Wiksten et al., 2016). In such cases, an
+#' \emph{ad hoc} variance correction has been proposed by utilising
+#' the variance estimate from the classic random effects model (Knapp
+#' and Hartung, 2003). Argument \code{adhoc.hakn} can be used to
+#' choose the \emph{ad hoc} method:
+#' \tabular{ll}{
+#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+#' \code{adhoc.hakn = ""}\tab not used \cr
+#' \code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
+#'  standard error \cr
+#'  \tab from classic random effects model (Knapp and Hartung, 2003) \cr
+#' \code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
+#'  narrower than CI from \cr
+#'  \tab classic random effects model with DL estimator (IQWiG, 2020)
+#' }
+#'
+#' For GLMMs, a method similar to Knapp and Hartung (2003) is
+#' implemented, see description of argument \code{tdist} in
+#' \code{\link[metafor]{rma.glmm}}.
 #' 
 #' The following methods to estimate the between-study variance
 #' \eqn{\tau^2} are available:
@@ -322,7 +347,7 @@
 #' \item{warn, level, level.comb, comb.fixed, comb.random,}{As defined
 #'   above.}
 #' \item{overall, overall.hetstat,}{As defined above.}
-#' \item{hakn, method.tau, method.tau.ci,}{As defined above.}
+#' \item{hakn, adhoc.hakn, method.tau, method.tau.ci,}{As defined above.}
 #' \item{tau.preset, TE.tau, method.bias,}{As defined above.}
 #' \item{tau.common, title, complab, outclab,}{As defined above.}
 #' \item{label.e, label.c, label.left, label.right,}{As defined
@@ -493,6 +518,12 @@
 #'   \code{\link{metareg}}, \code{\link{print.meta}}
 #' 
 #' @references
+#' Bakbergenuly I, Hoaglin DC, Kulinskaya E (2020):
+#' Methods for estimating between-study variance and overall
+#' effect in meta-analysis of odds-ratios.
+#' \emph{Research Synthesis Methods},
+#' DOI: 10.1002/jrsm.1404
+#' 
 #' Cooper H & Hedges LV (1994):
 #' \emph{The Handbook of Research Synthesis}.
 #' Newbury Park, CA: Russell Sage Foundation
@@ -528,6 +559,10 @@
 #' A re-evaluation of random-effects meta-analysis.
 #' \emph{Journal of the Royal Statistical Society: Series A},
 #' \bold{172}, 137--59
+#' 
+#' IQWiG (2020):
+#' General Methods: Draft of Version 6.0.
+#' \url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
 #' 
 #' Knapp G & Hartung J (2003):
 #' Improved tests for a random effects meta-regression with a single
@@ -589,6 +624,12 @@
 #' Conducting meta-analyses in R with the metafor package.
 #' \emph{Journal of Statistical Software},
 #' \bold{36}, 1--48
+#' 
+#' Wiksten A, Rücker G, Schwarzer G (2016):
+#' Hartung-Knapp method is not always conservative compared with
+#' fixed-effect meta-analysis.
+#' \emph{Statistics in Medicine},
+#' \bold{35}, 2503--15
 #'
 #' Yusuf S, Peto R, Lewis J, Collins R, Sleight P (1985):
 #' Beta blockade during and after myocardial infarction: An overview
@@ -728,7 +769,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                     method = ifelse(tau.common, "Inverse", gs("method")),
                     sm =
                       ifelse(!is.na(charmatch(tolower(method),
-                                              c("peto", "glmm"),
+                                              c("peto", "glmm", "ssw"),
                                               nomatch = NA)),
                              "OR", gs("smbin")),
                     incr = gs("incr"), allincr = gs("allincr"),
@@ -744,7 +785,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                     overall = comb.fixed | comb.random,
                     overall.hetstat = comb.fixed | comb.random,
                     ##
-                    hakn = gs("hakn"),
+                    hakn = gs("hakn"), adhoc.hakn = gs("adhoc.hakn"),
                     method.tau =
                       ifelse(!is.na(charmatch(tolower(method), "glmm",
                                               nomatch = NA)),
@@ -799,7 +840,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   chklogical(overall.hetstat)
   ##
   chklogical(hakn)
-  method.tau <- setchar(method.tau, .settings$meth4tau)
+  adhoc.hakn <- setchar(adhoc.hakn, .settings$adhoc4hakn)
+  method.tau <- setchar(method.tau, c(.settings$meth4tau, "KD"))
   method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
   chklogical(tau.common)
   ##
@@ -826,7 +868,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     pscale <- 1
   }
   ##
-  method <- setchar(method, c("Inverse", "MH", "Peto", "GLMM"))
+  method <- setchar(method, .settings$meth4bin)
   if (metafor)
     method <- "Inverse"
   is.glmm <- method == "GLMM"
@@ -859,14 +901,19 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     Q.Cochrane <- FALSE
   }
   ##
-  if (method == "Peto" & sm != "OR")
-    stop("Peto's method only possible with argument 'sm = \"OR\"'")
-  ##
-  if (is.glmm & sm != "OR")
-    stop("Generalised linear mixed models only possible with argument 'sm = \"OR\"'.")
+  if (sm != "OR") {
+    if (method == "Peto")
+      stop("Peto's method only possible with argument 'sm = \"OR\"'")
+    else if (method == "SSW")
+      stop("Sample size weighting only available with argument 'sm = \"OR\"'")
+    else if (is.glmm)
+      stop("Generalised linear mixed models only possible with ",
+           "argument 'sm = \"OR\"'.")
+  }
   ##
   if (is.glmm & method.tau != "ML")
-    stop("Generalised linear mixed models only possible with argument 'method.tau = \"ML\"'.")
+    stop("Generalised linear mixed models only possible with ",
+         "argument 'method.tau = \"ML\"'.")
   ##
   ## Check for deprecated arguments in '...'
   ##
@@ -1310,10 +1357,13 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   Q.CMH <- (sum((n11 - n1. * n.1 / n..)[!exclude], na.rm = TRUE)^2 /
               sum((n1. * n2. * n.1 * n.2 / n..^3)[!exclude], na.rm = TRUE))
   ##
+  p.e <- (n11 + incr.e) / (n1. + 2 * incr.e)
+  p.c <- (n21 + incr.c) / (n2. + 2 * incr.c)
+  ##
   ## Estimation of treatment effects in individual studies
   ##
   if (sm == "OR") {
-    if (method %in% c("MH", "Inverse", "GLMM")) {
+    if (method %in% c("MH", "Inverse", "GLMM", "SSW")) {
       ##
       ## Cooper & Hedges (1994), p. 251-2
       ##
@@ -1490,6 +1540,15 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     ##
     w.fixed <- rep(NA, length(event.e))
   }
+  else if (method == "SSW") {
+    w.fixed <- n.e * n.c / (n.e + n.c)
+    w.fixed[exclude] <- 0
+    TE.fixed <- weighted.mean(TE, w.fixed, na.rm = TRUE)
+    seTE.fixed <- sqrt(sum(w.fixed^2 * seTE^2, na.rm = TRUE) /
+                       sum(w.fixed, na.rm = TRUE)^2)
+    ##
+    w.fixed[is.na(w.fixed)] <- 0
+  }
   ##
   m <- metagen(TE, seTE, studlab,
                exclude = if (missing.exclude) NULL else exclude,
@@ -1502,7 +1561,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                overall = overall,
                overall.hetstat = overall.hetstat,
                ##
-               hakn = hakn,
+               hakn = hakn, adhoc.hakn = adhoc.hakn,
                method.tau = method.tau, method.tau.ci = method.tau.ci,
                tau.preset = tau.preset,
                TE.tau = if (Q.Cochrane) TE.fixed else TE.tau,
@@ -1522,6 +1581,16 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                warn = warn,
                ##
                control = control)
+  ##
+  if (method == "SSW") {
+    w.random <- n.e * n.c / (n.e + n.c)
+    w.random[exclude] <- 0
+    TE.random <- weighted.mean(TE, w.random, na.rm = TRUE)
+    seTE.random <- sqrt(sum(w.random^2 * (seTE^2 + m$tau^2), na.rm = TRUE) /
+                        sum(w.random, na.rm = TRUE)^2)
+    ##
+    w.random[is.na(w.random)] <- 0
+  }
   ##
   if (by & tau.common) {
     ## Estimate common tau-squared across subgroups
@@ -1549,7 +1618,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
               Q.CMH = Q.CMH, df.Q.CMH = 1, pval.Q.CMH = pvalQ(Q.CMH, 1),
               print.CMH = print.CMH,
               incr.e = incr.e, incr.c = incr.c,
-              k.MH = if (method == "MH") sum(w.fixed > 0) else NA)
+              k.MH = if (method == "MH") sum(w.fixed > 0) else NA,
+              k.all = k.all)
   ##
   ## Add meta-analysis results
   ## (after removing unneeded list elements)
@@ -1568,7 +1638,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   ##
   res$call <- match.call()
   ##
-  if (method %in% c("MH", "Peto", "GLMM")) {
+  if (method %in% c("MH", "Peto", "GLMM", "SSW")) {
     ##
     ci.f <- ci(TE.fixed, seTE.fixed, level = level.comb)
     ##
@@ -1613,14 +1683,21 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     res$zval.random <- ci.r$z
     res$pval.random <- ci.r$p
     ##
-    ci.p <- predict.rma(glmm.random, level = 100 * level.predict)
-    res$seTE.predict <- NA
-    res$lower.predict <- ci.p$cr.lb
-    res$upper.predict <- ci.p$cr.ub
-    if (is.null(res$lower.predict))
+    ## Prediction interval
+    ##
+    if (k >= 3) {
+      tau2.calc <- if (is.na(glmm.random$tau2)) 0 else glmm.random$tau2
+      seTE.predict <- sqrt(seTE.random^2 + tau2.calc)
+      ci.p <- ci(TE.random, seTE.predict, level.predict, k - 2)
+      res$seTE.predict <- seTE.predict
+      res$lower.predict <- ci.p$lower
+      res$upper.predict <- ci.p$upper
+    }
+    else {
+      res$seTE.predict <- NA
       res$lower.predict <- NA
-    if (is.null(res$upper.predict))
       res$upper.predict <- NA
+    }
     ##
     res$model.glmm <- model.glmm
     ##
@@ -1665,6 +1742,20 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
     res$.glmm.fixed  <- glmm.fixed
     res$.glmm.random <- glmm.random
     res$version.metafor <- packageDescription("metafor")$Version
+  }
+  else if (method == "SSW") {
+    if (hakn)
+      ci.r <- ci(TE.random, seTE.random, level = level.comb, df = m$k - 1)
+    else
+      ci.r <- ci(TE.random, seTE.random, level = level.comb)
+    ##
+    res$TE.random <- TE.random
+    res$seTE.random <- seTE.random
+    res$w.random <- w.random
+    res$lower.random <- ci.r$lower
+    res$upper.random <- ci.r$upper
+    res$zval.random <- ci.r$z
+    res$pval.random <- ci.r$p      
   }
   ##
   if (keepdata) {

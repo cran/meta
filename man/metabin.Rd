@@ -14,8 +14,8 @@ metabin(
   subset = NULL,
   exclude = NULL,
   method = ifelse(tau.common, "Inverse", gs("method")),
-  sm = ifelse(!is.na(charmatch(tolower(method), c("peto", "glmm"), nomatch = NA)), "OR",
-    gs("smbin")),
+  sm = ifelse(!is.na(charmatch(tolower(method), c("peto", "glmm", "ssw"), nomatch =
+    NA)), "OR", gs("smbin")),
   incr = gs("incr"),
   allincr = gs("allincr"),
   addincr = gs("addincr"),
@@ -31,6 +31,7 @@ metabin(
   overall = comb.fixed | comb.random,
   overall.hetstat = comb.fixed | comb.random,
   hakn = gs("hakn"),
+  adhoc.hakn = gs("adhoc.hakn"),
   method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch = NA)), "ML",
     gs("method.tau")),
   method.tau.ci = if (method.tau == "DL") "J" else "QP",
@@ -83,7 +84,8 @@ plots.}
 
 \item{method}{A character string indicating which method is to be
 used for pooling of studies. One of \code{"Inverse"},
-\code{"MH"}, \code{"Peto"}, or \code{"GLMM"}, can be abbreviated.}
+\code{"MH"}, \code{"Peto"}, \code{"GLMM"}, or \code{"SSW"}, can
+be abbreviated.}
 
 \item{sm}{A character string indicating which summary measure
 (\code{"RR"}, \code{"OR"}, \code{"RD"}, or \code{"ASD"}) is to be
@@ -153,6 +155,10 @@ level.}
 Knapp should be used to adjust test statistics and confidence
 intervals.}
 
+\item{adhoc.hakn}{A character string indicating whether an \emph{ad
+hoc} variance correction should be applied in the case of an
+arbitrarily small Hartung-Knapp variance estimate, see Details.}
+
 \item{method.tau}{A character string indicating which method is
 used to estimate the between-study variance \eqn{\tau^2} and its
 square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
@@ -183,7 +189,7 @@ interval for a new study.}
 funnel plot asymmetry is to be used. Either \code{"rank"},
 \code{"linreg"}, \code{"mm"}, \code{"count"}, \code{"score"}, or
 \code{"peters"}, can be abbreviated. See function
-\code{\link{metabias}}}
+\code{\link{metabias}.}}
 
 \item{backtransf}{A logical indicating whether results for odds
 ratio (\code{sm="OR"}) and risk ratio (\code{sm="RR"}) should be
@@ -232,8 +238,8 @@ should be kept in meta object.}
 frequencies).}
 
 \item{control}{An optional list to control the iterative process to
-estimate the between-study variance \eqn{\tau^2}. This argument is
-passed on to \code{\link[metafor]{rma.uni}} or
+estimate the between-study variance \eqn{\tau^2}. This argument
+is passed on to \code{\link[metafor]{rma.uni}} or
 \code{\link[metafor]{rma.glmm}}, respectively.}
 
 \item{\dots}{Additional arguments passed on to
@@ -252,7 +258,7 @@ object is a list containing the following components:
 \item{warn, level, level.comb, comb.fixed, comb.random,}{As defined
   above.}
 \item{overall, overall.hetstat,}{As defined above.}
-\item{hakn, method.tau, method.tau.ci,}{As defined above.}
+\item{hakn, adhoc.hakn, method.tau, method.tau.ci,}{As defined above.}
 \item{tau.preset, TE.tau, method.bias,}{As defined above.}
 \item{tau.common, title, complab, outclab,}{As defined above.}
 \item{label.e, label.c, label.left, label.right,}{As defined
@@ -419,8 +425,8 @@ object is a list containing the following components:
 Calculation of fixed effect and random effects estimates (risk
 ratio, odds ratio, risk difference, or arcsine difference) for
 meta-analyses with binary outcome data. Mantel-Haenszel, inverse
-variance, Peto method, and generalised linear mixed model (GLMM)
-are available for pooling. For GLMMs, the
+variance, Peto method, generalised linear mixed model (GLMM), and
+sample size method are available for pooling. For GLMMs, the
 \code{\link[metafor]{rma.glmm}} function from R package
 \bold{metafor} (Viechtbauer, 2010) is called internally.
 }
@@ -443,7 +449,9 @@ Mantel-Haenszel method (Greenland & Robins, 1985; Robins et al.,
 1986) is used to calculate the fixed effect estimate; if
 \code{method} is \code{"Inverse"}, inverse variance weighting is
 used for pooling (Fleiss, 1993); if \code{method} is \code{"Peto"},
-the Peto method is used for pooling (Yussuf et al., 1985).
+the Peto method is used for pooling (Yussuf et al., 1985); if
+\code{method} is \code{"SSW"}, the sample size method is used for
+pooling (Bakbergenuly et al., 2020).
 
 While the Mantel-Haenszel and Peto method are defined under the
 fixed effect model, random effects variants based on these methods
@@ -561,9 +569,28 @@ arguments which should be changed.
 
 For the random effects, the method by Hartung and Knapp (2001) is
 used to adjust test statistics and confidence intervals if argument
-\code{hakn = TRUE}. For GLMMs, a method similar to Knapp and
-Hartung (2003) is implemented, see description of argument
-\code{tdist} in \code{\link[metafor]{rma.glmm}}.
+\code{hakn = TRUE}. In rare settings with very homogeneous
+treatment estimates, the Hartung-Knapp variance estimate can be
+arbitrarily small resulting in a very narrow confidence interval
+(Knapp and Hartung, 2003; Wiksten et al., 2016). In such cases, an
+\emph{ad hoc} variance correction has been proposed by utilising
+the variance estimate from the classic random effects model (Knapp
+and Hartung, 2003). Argument \code{adhoc.hakn} can be used to
+choose the \emph{ad hoc} method:
+\tabular{ll}{
+\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+\code{adhoc.hakn = ""}\tab not used \cr
+\code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
+ standard error \cr
+ \tab from classic random effects model (Knapp and Hartung, 2003) \cr
+\code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
+ narrower than CI from \cr
+ \tab classic random effects model with DL estimator (IQWiG, 2020)
+}
+
+For GLMMs, a method similar to Knapp and Hartung (2003) is
+implemented, see description of argument \code{tdist} in
+\code{\link[metafor]{rma.glmm}}.
 
 The following methods to estimate the between-study variance
 \eqn{\tau^2} are available:
@@ -720,6 +747,12 @@ summary(update(m10, model.glmm = "CM.AL"))
 
 }
 \references{
+Bakbergenuly I, Hoaglin DC, Kulinskaya E (2020):
+Methods for estimating between-study variance and overall
+effect in meta-analysis of odds-ratios.
+\emph{Research Synthesis Methods},
+DOI: 10.1002/jrsm.1404
+
 Cooper H & Hedges LV (1994):
 \emph{The Handbook of Research Synthesis}.
 Newbury Park, CA: Russell Sage Foundation
@@ -755,6 +788,10 @@ Higgins JPT, Thompson SG, Spiegelhalter DJ (2009):
 A re-evaluation of random-effects meta-analysis.
 \emph{Journal of the Royal Statistical Society: Series A},
 \bold{172}, 137--59
+
+IQWiG (2020):
+General Methods: Draft of Version 6.0.
+\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
 
 Knapp G & Hartung J (2003):
 Improved tests for a random effects meta-regression with a single
@@ -816,6 +853,12 @@ Viechtbauer W (2010):
 Conducting meta-analyses in R with the metafor package.
 \emph{Journal of Statistical Software},
 \bold{36}, 1--48
+
+Wiksten A, Rücker G, Schwarzer G (2016):
+Hartung-Knapp method is not always conservative compared with
+fixed-effect meta-analysis.
+\emph{Statistics in Medicine},
+\bold{35}, 2503--15
 
 Yusuf S, Peto R, Lewis J, Collins R, Sleight P (1985):
 Beta blockade during and after myocardial infarction: An overview

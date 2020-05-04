@@ -26,6 +26,7 @@ metainc(
   overall = comb.fixed | comb.random,
   overall.hetstat = comb.fixed | comb.random,
   hakn = gs("hakn"),
+  adhoc.hakn = gs("adhoc.hakn"),
   method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch = NA)), "ML",
     gs("method.tau")),
   method.tau.ci = if (method.tau == "DL") "J" else "QP",
@@ -128,6 +129,10 @@ level.}
 Knapp should be used to adjust test statistics and confidence
 intervals.}
 
+\item{adhoc.hakn}{A character string indicating whether an \emph{ad
+hoc} variance correction should be applied in the case of an
+arbitrarily small Hartung-Knapp variance estimate, see Details.}
+
 \item{method.tau}{A character string indicating which method is
 used to estimate the between-study variance \eqn{\tau^2} and its
 square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
@@ -227,7 +232,7 @@ object is a list containing the following components:
 \item{level, level.comb, comb.fixed, comb.random,}{As defined
   above.}
 \item{overall, overall.hetstat,}{As defined above.}
-\item{hakn, method.tau, method.tau.ci,}{As defined above.}
+\item{hakn, adhoc.hakn, method.tau, method.tau.ci,}{As defined above.}
 \item{tau.preset, TE.tau, method.bias,}{As defined above.}
 \item{tau.common, title, complab, outclab,}{As defined above.}
 \item{label.e, label.c, label.left, label.right,}{As defined
@@ -491,9 +496,26 @@ R function \code{\link{update.meta}} can be used to redo the
 meta-analysis of an existing metainc object by only specifying
 arguments which should be changed.
 
-For the random effects, the method by Hartung and Knapp (2003) is
+For the random effects, the method by Knapp and Hartung (2003) is
 used to adjust test statistics and confidence intervals if argument
-\code{hakn = TRUE}.
+\code{hakn = TRUE}. In rare settings with very homogeneous
+treatment estimates, the Hartung-Knapp variance estimate can be
+arbitrarily small resulting in a very narrow confidence interval
+(Knapp and Hartung, 2003; Wiksten et al., 2016). In such cases, an
+\emph{ad hoc} variance correction has been proposed by utilising
+the variance estimate from the classic random effects model (Knapp
+and Hartung, 2003). Argument \code{adhoc.hakn} can be used to
+choose the \emph{ad hoc} method:
+\tabular{ll}{
+\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+\code{adhoc.hakn = ""}\tab not used \cr
+\code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
+ standard error \cr
+ \tab from classic random effects model (Knapp and Hartung, 2003) \cr
+\code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
+ narrower than CI from \cr
+ \tab classic random effects model with DL estimator (IQWiG, 2020)
+}
 
 The following methods to estimate the between-study variance
 \eqn{\tau^2} are available:
@@ -593,12 +615,6 @@ Estimation of a common effect parameter from sparse follow-up data.
 \emph{Biometrics},
 \bold{41}, 55--68
 
-Hartung J & Knapp G (2001):
-A refined method for the meta-analysis of controlled clinical
-trials with binary outcome.
-\emph{Statistics in Medicine},
-\bold{20}, 3875--89
-
 Higgins JPT, Thompson SG, Spiegelhalter DJ (2009):
 A re-evaluation of random-effects meta-analysis.
 \emph{Journal of the Royal Statistical Society: Series A},
@@ -626,6 +642,12 @@ Viechtbauer W (2010):
 Conducting Meta-Analyses in R with the Metafor Package.
 \emph{Journal of Statistical Software},
 \bold{36}, 1--48
+
+Wiksten A, Rücker G, Schwarzer G (2016):
+Hartung-Knapp method is not always conservative compared with
+fixed-effect meta-analysis.
+\emph{Statistics in Medicine},
+\bold{35}, 2503--15
 }
 \seealso{
 \code{\link{metabin}}, \code{\link{update.meta}},

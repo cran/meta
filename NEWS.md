@@ -1,3 +1,17 @@
+## meta, version 4.13-0 (2020-07-02)
+
+### Major changes
+
+* Rely on generic functions from R package **metafor**, e.g., to
+  produce forest or funnel plots (since R version 4.0.0 generic
+  functions from an R package do not consider corresponding functions
+  from another R package which can result in errors if R packages
+  **meta** and **metafor** are both loaded)
+
+* R function funnel.default() removed from **meta** (conflicts with
+  **metafor**)
+
+
 ## meta, version 4.12-0 (2020-05-04)
 
 ### Major changes

@@ -140,9 +140,10 @@
 #'   standard error.
 #' @param method.ci A character string indicating which method is used
 #'   to calculate confidence intervals for individual studies. Either
-#'   \code{"CP"}, \code{"WS"}, \code{"WSCC"}, \code{"AC"},
-#'   \code{"SA"},, \code{"SACC"}, or \code{"NAsm"}, can be
-#'   abbreviated. See function \code{\link{metaprop}}.
+#'   \code{"z"}, \code{"t"}, \code{"WS"}, \code{"WSCC"}, \code{"AC"},
+#'   \code{"SA"}, \code{"SACC"}, or \code{"NAsm"}, can be
+#'   abbreviated. See functions \code{\link{metacont}} and
+#'   \code{\link{metaprop}}.
 #' @param byvar An optional vector containing grouping information
 #'   (must be of same length as \code{event.e}).
 #' @param bylab A character string with a label for the grouping
@@ -203,9 +204,10 @@
 #'   \code{\link{metaprop}}, \code{\link{metarate}}
 #' 
 #' @examples
-#' data(Fleiss93cont)
-#' m1 <- metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c,
-#'                data = Fleiss93cont, sm = "SMD", studlab = study)
+#' data(Fleiss1993cont)
+#' m1 <- metacont(n.psyc, mean.psyc, sd.psyc, n.cont, mean.cont, sd.cont,
+#'                data = Fleiss1993cont, sm = "SMD",
+#'                studlab = paste(study, year))
 #' m1
 #' 
 #' # Change summary measure (from 'SMD' to 'MD')
@@ -339,7 +341,8 @@ update.meta <- function(object,
   ##
   RR.Cochrane <- replacemiss(RR.Cochrane, object$RR.cochrane)
   Q.Cochrane <- replacemiss(Q.Cochrane, TRUE)
-  if (Q.Cochrane & (!(sm %in% c("OR", "RR", "RD")) | method.tau != "DL"))
+  if (Q.Cochrane &
+      (!(sm %in% c("OR", "RR", "RD", "DOR")) | method.tau != "DL"))
     Q.Cochrane <- FALSE
   ##
   model.glmm <- replacemiss(model.glmm)
@@ -683,6 +686,8 @@ update.meta <- function(object,
                   sm = sm, pooledvar = pooledvar,
                   method.smd = method.smd, sd.glass = sd.glass, exact.smd = exact.smd,
                   ##
+                  method.ci = ifelse(is.null(method.ci), gs("method.ci.cont"),
+                                     method.ci),
                   level = level, level.comb = level.comb,
                   comb.fixed = comb.fixed, comb.random = comb.random,
                   overall = overall, overall.hetstat = overall.hetstat,
@@ -881,6 +886,8 @@ update.meta <- function(object,
                   ##
                   sm = sm,
                   ##
+                  method.ci = ifelse(is.null(method.ci), gs("method.ci.cont"),
+                                     method.ci),
                   level = level, level.comb = level.comb,
                   comb.fixed = comb.fixed, comb.random = comb.random,
                   overall = overall, overall.hetstat = overall.hetstat,
@@ -919,8 +926,9 @@ update.meta <- function(object,
                   sm = ifelse(method == "GLMM", "PLOGIT", sm),
                   incr = incr,
                   allincr = allincr, addincr = addincr,
-                  method.ci = ifelse(is.null(method.ci), "CP", method.ci),
                   ##
+                  method.ci = ifelse(is.null(method.ci), gs("method.ci.prop"),
+                                     method.ci),
                   level = level, level.comb = level.comb,
                   comb.fixed = comb.fixed, comb.random = comb.random,
                   overall = overall, overall.hetstat = overall.hetstat,

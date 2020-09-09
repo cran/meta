@@ -1,3 +1,134 @@
+## meta, version 4.14-0 (2020-09-09)
+
+### Major changes
+
+* Median and related statistics can be used in meta-analysis with
+  continuous outcomes to approximate means and standard deviations
+  ([Wan et., 2014](https://doi.org/10.1186/1471-2288-14-135); [Luo
+  et al., 2018](https://doi.org/10.1177/0962280216669183); [Shi et
+  al., 2020](https://doi.org/10.1002/jrsm.1429))
+
+* RevMan 5 analysis datasets can be imported directly using the
+  RM5-file
+
+* R package **xml2** added to Imports (RM5-files are in XML-format)
+
+* Confidence intervals for individual studies can be based on quantile
+  of t-distribution (only implemented for mean differences and raw
+  untransformed means at the moment)
+
+* For the generic inverse variance method,
+  - methods by [Luo et
+    al. (2018)](https://doi.org/10.1177/0962280216669183) implemented
+    to estimate mean from sample size, median and other statistics
+  - method by [Shi et al. (2020)](https://doi.org/10.1002/jrsm.1429)
+    implemented to estimate the standard deviation from sample size,
+    median, interquartile range and range
+
+### Bug fixes
+
+* forest.meta():
+  - show all studies with estimable treatment effects if argument
+    'allstudies' is FALSE
+
+* metabind():
+  - works with meta-analysis objects created with metacor()
+  - calculate correct p-value for heterogeneity test if input are
+    subgroup analyses of the same dataset
+  - calculate correct p-value for within-subgroup heterogeneity test
+    if input are subgroup analyses of the same dataset
+
+* metacum():
+  - works with Hartung-Knapp method
+
+* metagen():
+  - list element 'seTE' contained standard deviation instead of
+    standard error for method by [Wan
+    et. (2014)](https://doi.org/10.1186/1471-2288-14-135) to estimate
+    mean and its standard error from median and other statistics
+
+### User-visible changes
+
+* read.rm5():
+  - direct import of RM5-file possible
+  - new argument 'debug' for debug messages while importing RM5-files directly
+
+* metacr():
+  - overall results not shown if this was specified in the Cochrane
+    review (only applies to imported RM5-files)
+
+* metagen(), metacont(), metamean():
+  - new argument 'method.mean' to choose method to estimate mean from
+    sample size, median and other statistics
+  - new argument 'method.sd' to choose method to estimate standard
+    deviation from sample size, median, interquartile range and range
+  - new argument 'method.ci' to choose method for confidence intervals
+    of individual studies (only applies to mean differences and raw
+    untransformed means at the moment)
+
+* metacont():
+  - new arguments to estimate mean and standard deviation from median
+    and related statistics:
+	'median.e', 'q1.e', 'q3.e', 'min.e', 'max.e', 'median.c', 'q1.c',
+    'q3.c', 'min.c', 'max.c', 'method.mean', 'method.sd',
+    'approx.mean.e', 'approx.mean.c', 'approx.sd.e', 'approx.sd.c'
+
+* metamean():
+  - new arguments to estimate mean and standard deviation from median
+    and related statistics:
+	'median', 'q1', 'q3', 'min', 'max', 'method.mean', 'method.sd',
+    'approx.mean', 'approx.sd'
+  
+* forest():
+  - by default, show number of participants in forest plot if this
+    information is available for meta-analysis objects created with
+    metagen()
+  - automatically format p-values for individual studies if added to
+    forest plot using argument 'leftcols' or 'rightcols'
+
+* Datasets renamed from Fleiss93, Fleiss93cont and Olkin95 to
+  Fleiss1993bin, Fleiss1993cont and Olkin1995
+ 
+* More sensible variable names in datasets Fleiss1993bin,
+  Fleiss1993cont and Olkin1995
+
+### Internal changes
+
+* Previous R function read.rm5() for CSV-files renamed to
+  read.rm5.csv()
+
+* New auxiliary functions to import RevMan 5 analysis datasets:
+  - extract_outcomes(), oct2txt(), read.rm5.rm5()
+
+* ci():
+  - list element 'z' renamed to 'statistic' as calculations can also
+    be based on the t-distribution (list element 'z' is still part of
+    the output for backward compatibility, however, will be removed in
+    a future update)
+
+* metagen():
+  - list elements 'zval', 'zval.fixed' and 'zval.random' renamed to
+    'statistic', 'statistic.fixed' and 'statistic.random' (list
+    elements 'zval', 'zval.fixed' and 'zval.random' are still part of
+    the output for backward compatibility, however, will be removed in
+    a future update)
+
+* Internal functions TE.seTE.iqr.range(), TE.seTE.iqr() and
+  TE.seTE.range() renamed to mean.sd.iqr.range(), mean.sd.iqr() and
+  mean.sd.range()
+
+* mean.sd.iqr.range():
+  - new arguments 'method.mean' and 'method.sd'
+
+* mean.sd.iqr(), mean.sd.range():
+  - new argument 'method.mean'
+
+* chkchar(), chkcolor(), chklevel(), chknumeric():
+  - argument 'single' renamed to 'length' (which can be used to test
+    for a specific vector length instead whether it is a single value)
+	(argument 'single' is still available for backward compatibility,
+     however, will be removed in a future update)
+
 ## meta, version 4.13-0 (2020-07-02)
 
 ### Major changes
@@ -263,7 +394,7 @@
 ### User-visible changes
 
 * Major update of help pages:
-  - metabin(), metagen(), metainc(), metaprop(), and metarate()
+  - metabin(), metagen(), metainc(), metaprop(), metarate()
 
 
 ## meta, version 4.9-6 (2019-08-06)
@@ -362,7 +493,7 @@
   - new arguments 'type.subgroup.fixed', 'type.subgroup.random', and
     'lab.NA.weight'
 
-* settings.meta() and gs():
+* settings.meta(), gs():
   - argument names can be abbreviated
 
 * Major update of help pages of metagen() and metaprop()
@@ -488,7 +619,7 @@
 * metamean():
   - use of argument 'byvar' for subgroup analyses possible
 
-* metacor(), metamean(), metaprop(), and metarate():
+* metacor(), metamean(), metaprop(), metarate():
   - use as input to metabind() possible
 
 * Internal function subgroup():
@@ -624,7 +755,7 @@
   - C program kenscore.c as cor() from R package **stats** is used
     instead to calculate Kendall's tau
 
-* Deprecated functions: format.NA(), format.p(), and p.ci()
+* Deprecated functions: format.NA(), format.p(), p.ci()
 
 * Check whether argument 'sm' is NULL in meta-analysis functions
 
@@ -672,11 +803,11 @@
 
 ### Internal changes
 
-* New internal functions is.cor(), is.prop(), and is.rate() to check
+* New internal functions is.cor(), is.prop() and is.rate() to check
   whether summary measure refers to meta-analysis of correlations,
   proportions, or rates
 
-* metabias.default(), radial.default(), and trimfill.default():
+* metabias.default(), radial.default(), trimfill.default():
   - call metagen() internally to create meta-analysis object
   - call metabias.meta(), radial.meta(), or trimfill.meta() internally
     to conduct analysis
@@ -707,9 +838,9 @@
   i.e., degrees of freedom (which is used in R package **netmeta** to
   calculate prediction intervals for network meta-analysis estimates)
 
-* metacum() and metainf():
+* metacum(), metainf():
   - argument 'null.effect' considered internally for objects generated
-    with metacor(), metagen(), metaprop(), and metarate()
+    with metacor(), metagen(), metaprop() and metarate()
 
 ### Internal changes
  

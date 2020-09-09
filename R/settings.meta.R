@@ -96,7 +96,7 @@
 #' \tabular{lll}{
 #' \bold{Argument} \tab \bold{Value} \tab \bold{Comment} \cr
 #' \code{hakn} \tab TRUE \tab Hartung-Knapp method \cr
-#' \code{adhoc.hakn} \tab TRUE \tab \emph{ad hoc} variance correction \cr
+#' \code{adhoc.hakn} \tab "ci" \tab \emph{ad hoc} variance correction \cr
 #' \code{method.tau} \tab "PM" \tab Paule-Mandel estimator for
 #'   between-study variance \cr
 #' \code{prediction} \tab TRUE \tab Prediction interval \cr
@@ -209,9 +209,9 @@ settings.meta <- function(...) {
   res$metafor <- NULL
   res$sm4bin <- res$sm4cont <- res$sm4cor <- res$sm4inc <-
     res$sm4mean <- res$sm4prop <- res$sm4rate <- NULL
-  res$ci4prop <- NULL
+  res$ci4cont <- res$ci4prop <- NULL
   res$meth4bin <- res$meth4tau <- res$meth4tau.ci <- NULL
-  res$adhoc4hakn <- NULL
+  res$adhoc4hakn <- res$meth4bias <- NULL
   res$argslist <- NULL
   res$Wan2014.Table1 <- res$Wan2014.Table2 <- NULL
   
@@ -444,9 +444,10 @@ settings.meta <- function(...) {
     catarg("method.smd")
     catarg("sd.glass  ")
     catarg("exact.smd ")
+    catarg("method.ci.cont")
     ##
     cat("\n* Additional setting for metaprop() *\n")
-    catarg("method.ci")
+    catarg("method.ci.prop")
     ##
     cat("\n* Settings for R functions comparing two treatments *\n")
     catarg("label.e    ")
@@ -532,8 +533,9 @@ settings.meta <- function(...) {
     setOption("method.smd", "Hedges")
     setOption("sd.glass", "control")
     setOption("exact.smd", FALSE)
+    setOption("method.ci.cont", "z")
     ##
-    setOption("method.ci", "CP")
+    setOption("method.ci.prop", "CP")
     ##
     setOption("label.e", "Experimental")
     setOption("label.c", "Control")
@@ -680,8 +682,9 @@ settings.meta <- function(...) {
     idmethod.smd <- argid(names, "method.smd")
     idsd.glass <- argid(names, "sd.glass")
     idexact.smd <- argid(names, "exact.smd")
+    idmethod.ci.cont <- argid(names, "method.ci.cont")
     ##
-    idmethod.ci <- argid(names, "method.ci")
+    idmethod.ci.prop <- argid(names, "method.ci.prop")
     ##
     idlabel.e <- argid(names, "label.e")
     idlabel.c <- argid(names, "label.c")
@@ -748,8 +751,7 @@ settings.meta <- function(...) {
     }
     if (!is.na(idmethod.bias)) {
       method.bias <- args[[idmethod.bias]]
-      method.bias <- setchar(method.bias,
-                             c("rank", "linreg", "mm", "count", "score", "peters"))
+      method.bias <- setchar(method.bias, .settings$meth4bias)
       setOption("method.bias", method.bias)
     }
     if (!is.na(idtitle)) {
@@ -808,62 +810,62 @@ settings.meta <- function(...) {
     }
     if (!is.na(iddigits)) {
       digits <- args[[iddigits]]
-      chknumeric(digits, min = 0, single = TRUE)
+      chknumeric(digits, min = 0, length = 1)
       setOption("digits", digits)
     }
     if (!is.na(iddigits.se)) {
       digits.se <- args[[iddigits.se]]
-      chknumeric(digits.se, min = 0, single = TRUE)
+      chknumeric(digits.se, min = 0, length = 1)
       setOption("digits.se", digits.se)
     }
     if (!is.na(iddigits.zval)) {
       digits.zval <- args[[iddigits.zval]]
-      chknumeric(digits.zval, min = 0, single = TRUE)
+      chknumeric(digits.zval, min = 0, length = 1)
       setOption("digits.zval", digits.zval)
     }
     if (!is.na(iddigits.Q)) {
       digits.Q <- args[[iddigits.Q]]
-      chknumeric(digits.Q, min = 0, single = TRUE)
+      chknumeric(digits.Q, min = 0, length = 1)
       setOption("digits.Q", digits.Q)
     }
     if (!is.na(iddigits.tau2)) {
       digits.tau2 <- args[[iddigits.tau2]]
-      chknumeric(digits.tau2, min = 0, single = TRUE)
+      chknumeric(digits.tau2, min = 0, length = 1)
       setOption("digits.tau2", digits.tau2)
     }
     if (!is.na(iddigits.tau)) {
       digits.tau <- args[[iddigits.tau]]
-      chknumeric(digits.tau, min = 0, single = TRUE)
+      chknumeric(digits.tau, min = 0, length = 1)
       setOption("digits.tau", digits.tau)
     }
     if (!is.na(iddigits.H)) {
       digits.H <- args[[iddigits.H]]
-      chknumeric(digits.H, min = 0, single = TRUE)
+      chknumeric(digits.H, min = 0, length = 1)
       setOption("digits.H", digits.H)
     }
     if (!is.na(iddigits.I2)) {
       digits.I2 <- args[[iddigits.I2]]
-      chknumeric(digits.I2, min = 0, single = TRUE)
+      chknumeric(digits.I2, min = 0, length = 1)
       setOption("digits.I2", digits.I2)
     }
     if (!is.na(iddigits.prop)) {
       digits.prop <- args[[iddigits.prop]]
-      chknumeric(digits.prop, min = 0, single = TRUE)
+      chknumeric(digits.prop, min = 0, length = 1)
       setOption("digits.prop", digits.prop)
     }
     if (!is.na(iddigits.weight)) {
       digits.weight <- args[[iddigits.weight]]
-      chknumeric(digits.weight, min = 0, single = TRUE)
+      chknumeric(digits.weight, min = 0, length = 1)
       setOption("digits.weight", digits.weight)
     }
     if (!is.na(iddigits.pval)) {
       digits.pval <- args[[iddigits.pval]]
-      chknumeric(digits.pval, min = 0, single = TRUE)
+      chknumeric(digits.pval, min = 0, length = 1)
       setOption("digits.pval", digits.pval)
     }
     if (!is.na(iddigits.pval.Q)) {
       digits.pval.Q <- args[[iddigits.pval.Q]]
-      chknumeric(digits.pval.Q, min = 0, single = TRUE)
+      chknumeric(digits.pval.Q, min = 0, length = 1)
       setOption("digits.pval.Q", digits.pval.Q)
     }
     if (!is.na(idscientific.pval)) {
@@ -1032,6 +1034,12 @@ settings.meta <- function(...) {
       setOption("exact.smd", exact.smd)
     }
     ##
+    if (!is.na(idmethod.ci.cont)) {
+      method.ci.cont <- args[[idmethod.ci.cont]]
+      method.ci.cont <- setchar(method.ci.cont, .settings$ci4cont)
+      setOption("method.ci.cont", method.ci.cont)
+    }
+    ##
     ## R function metainc
     ##
     if (!is.na(idsminc)) {
@@ -1056,10 +1064,10 @@ settings.meta <- function(...) {
       setOption("smprop", smprop)
     }
     ##
-    if (!is.na(idmethod.ci)) {
-      method.ci <- args[[idmethod.ci]]
-      method.ci <- setchar(method.ci, .settings$ci4prop)
-      setOption("method.ci", method.ci)
+    if (!is.na(idmethod.ci.prop)) {
+      method.ci.prop <- args[[idmethod.ci.prop]]
+      method.ci.prop <- setchar(method.ci.prop, .settings$ci4prop)
+      setOption("method.ci.prop", method.ci.prop)
     }
     ##
     ## R function metarate
@@ -1125,7 +1133,7 @@ settings.meta <- function(...) {
     }
     if (!is.na(iddigits.forest)) {
       digits.forest <- args[[iddigits.forest]]
-      chknumeric(digits.forest, min = 0, single = TRUE)
+      chknumeric(digits.forest, min = 0, length = 1)
       setOption("digits.forest", digits.forest)
     }
   }

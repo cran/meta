@@ -20,6 +20,9 @@
 #' @param sm A character string indicating underlying summary measure,
 #'   e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"ASD"},
 #'   \code{"HR"}, \code{"MD"}, \code{"SMD"}, or \code{"ROM"}.
+#' @param method.ci A character string indicating which method is used
+#'   to calculate confidence intervals for individual studies, see
+#'   Details.
 #' @param level The level used to calculate confidence intervals for
 #'   individual studies.
 #' @param level.comb The level used to calculate confidence intervals
@@ -63,6 +66,12 @@
 #'   standard error).
 #' @param max Maximum (used to estimate the treatment effect and
 #'   standard error).
+#' @param method.mean A character string indicating which method to
+#'   use to approximate the mean from the median and other statistics
+#'   (see Details).
+#' @param method.sd A character string indicating which method to use
+#'   to approximate the standard deviation from sample size, median,
+#'   interquartile range and range (see Details).
 #' @param approx.TE Approximation method to estimate treatment
 #'   estimate (see Details).
 #' @param approx.seTE Approximation method to estimate standard error
@@ -166,15 +175,32 @@
 #' }
 #' For confidence limits, the treatment estimate is defined as the
 #' center of the confidence interval (on the log scale for relative
-#' effect measures like the odds ratio or hazard ratio). For median,
-#' interquartile range and range, equation (10) in Wan et al. (2014)
-#' is used to approximate the treatment effect (i.e.,
-#' mean). Similarly, equations (14) and (2) in Wan et al. (2014) are
-#' used if median and interquartile range or range, respectively, are
-#' provided.
+#' effect measures like the odds ratio or hazard ratio).
+#'
+#' If the treatment effect is a mean it can be approximated from
+#' sample size, median, interquartile range and range. By default,
+#' methods described in Luo et al. (2018) are utilized (argument
+#' \code{method.mean = "Luo"}):
+#' \itemize{
+#' \item equation (7) if sample size, median and range are available,
+#' \item equation (11) if sample size, median and interquartile range
+#'   are available,
+#' \item equation (15) if sample size, median, range and interquartile
+#'   range are available.
+#' }
+#' 
+#' Instead the methods described in Wan et al. (2014) are used if
+#' argument \code{method.mean = "Wan"}):
+#' \itemize{
+#' \item equation (2) if sample size, median and range are available,
+#' \item equation (14) if sample size, median and interquartile range
+#'   are available,
+#' \item equation (10) if sample size, median, range and interquartile
+#'   range are available.
+#' }
 #'
 #' By default, missing treatment estimates are replaced successively
-#' using these method, e.g., confidence limits are utilised before
+#' using these method, i.e., confidence limits are utilised before
 #' interquartile ranges. Argument \code{approx.TE} can be used to
 #' overwrite this default for each individual study:
 #' \itemize{
@@ -207,12 +233,23 @@
 #' For p-values and confidence limits, calculations are either based
 #' on the standard normal or \emph{t} distribution if argument
 #' \code{df} is provided. Furthermore, argument \code{level.ci} can be
-#' used to provide the level of the confidence interval. For median,
-#' interquartile range and range, depending on the sample size,
-#' equation (12) or (13) in Wan et al. (2014) is used to approximate
-#' the standard error. Similarly, equations (15) / (16) and (7) / (9)
-#' in Wan et al. (2014) are used if median and interquartile range or
-#' range, respectively, are provided. The sample size of individual
+#' used to provide the level of the confidence interval.
+#'
+#' Wan et al. (2014) describe methods to estimate the standard
+#' deviation (and thus the standard error by deviding the standard
+#' deviation with the square root of the sample size) from the sample
+#' size, median and additional statistics. Shi et al. (2020) provide
+#' an improved estimate of the standard deviation if the interquartile
+#' range and range are available in addition to the sample size and
+#' median. Accordingly, equation (11) in Shi et al. (2020) is the
+#' default (argument \code{method.sd = "Shi"}), if the median,
+#' interquartile range and range are provided (arguments
+#' \code{median}, \code{q1}, \code{q3}, \code{min} and
+#' \code{max}). The method by Wan et al. (2014) is used if argument
+#' \code{method.sd = "Wan"} and, depending on the sample size, either
+#' equation (12) or (13) is used. If only the interquartile range or
+#' range is available, equations (15) / (16) and (7) / (9) in Wan et
+#' al. (2014) are used, respectively. The sample size of individual
 #' studies must be provided with arguments \code{n.e} and / or
 #' \code{n.c}. The total sample size is calculated as \code{n.e} +
 #' \code{n.c} if both arguments are provided.
@@ -233,6 +270,22 @@
 #' }
 #' }
 #'
+#' \subsection{Confidence intervals for individual studies}{
+#' 
+#' For the mean difference (argument \code{sm = "MD"}), the confidence
+#' interval for individual studies can be based on the
+#' \itemize{
+#' \item standard normal distribution (\code{method.ci = "z"}), or
+#' \item t-distribution (\code{method.ci = "t"}).
+#' }
+#'
+#' By default, the first method is used if argument \code{df} is
+#' missing and the second method otherwise.
+#' 
+#' Note, this choice does not affect the results of the fixed effect
+#' and random effects meta-analysis.
+#' }
+#' 
 #' \subsection{Estimation of between-study variance}{
 #' 
 #' The following methods are available to estimate the between-study
@@ -394,7 +447,7 @@
 #' \code{print}, \code{summary}, and \code{forest} functions. The
 #' object is a list containing the following components:
 #' \item{TE, seTE, studlab, exclude, n.e, n.c}{As defined above.}
-#' \item{sm, level, level.comb,}{As defined above.}
+#' \item{sm, method.ci, level, level.comb,}{As defined above.}
 #' \item{comb.fixed, comb.random,}{As defined above.}
 #' \item{overall, overall.hetstat,}{As defined above.}
 #' \item{hakn, adhoc.hakn, method.tau, method.tau.ci,}{As defined above.}
@@ -406,23 +459,22 @@
 #'   above.}
 #' \item{lower, upper}{Lower and upper confidence interval limits for
 #'   individual studies.}
-#' \item{zval, pval}{z-value and p-value for test of treatment effect
-#'   for individual studies.}
+#' \item{statistic, pval}{Statistic and p-value for test of treatment
+#'   effect for individual studies.}
 #' \item{w.fixed, w.random}{Weight of individual studies (in fixed and
 #'   random effects model).}
 #' \item{TE.fixed, seTE.fixed}{Estimated overall treatment effect and
 #'   standard error (fixed effect model).}
 #' \item{lower.fixed, upper.fixed}{Lower and upper confidence interval
 #'   limits (fixed effect model).}
-#' \item{zval.fixed, pval.fixed}{z-value and p-value for test of
+#' \item{statistic.fixed, pval.fixed}{Statistic and p-value for test of
 #'   overall treatment effect (fixed effect model).}
 #' \item{TE.random, seTE.random}{Estimated overall treatment effect
 #'   and standard error (random effects model).}
 #' \item{lower.random, upper.random}{Lower and upper confidence
 #'   interval limits (random effects model).}
-#' \item{zval.random, pval.random}{z-value or t-value and
-#'   corresponding p-value for test of overall treatment effect
-#'   (random effects model).}
+#' \item{statistic.random, pval.random}{Statistic and p-value for test
+#'   of overall treatment effect (random effects model).}
 #' \item{prediction, level.predict}{As defined above.}
 #' \item{seTE.predict}{Standard error utilised for prediction
 #'   interval.}
@@ -461,8 +513,8 @@
 #' \item{lower.fixed.w, upper.fixed.w}{Lower and upper confidence
 #'   interval limits in subgroups (fixed effect model) - if
 #'   \code{byvar} is not missing.}
-#' \item{zval.fixed.w, pval.fixed.w}{z-value and p-value for test of
-#'   treatment effect in subgroups (fixed effect model) - if
+#' \item{statistic.fixed.w, pval.fixed.w}{Statistics and p-values for
+#'   test of treatment effect in subgroups (fixed effect model) - if
 #'   \code{byvar} is not missing.}
 #' \item{TE.random.w, seTE.random.w}{Estimated treatment effect and
 #'   standard error in subgroups (random effects model) - if
@@ -470,9 +522,9 @@
 #' \item{lower.random.w, upper.random.w}{Lower and upper confidence
 #'   interval limits in subgroups (random effects model) - if
 #'   \code{byvar} is not missing.}
-#' \item{zval.random.w, pval.random.w}{z-value or t-value and
-#'   corresponding p-value for test of treatment effect in subgroups
-#'   (random effects model) - if \code{byvar} is not missing.}
+#' \item{statistic.random.w, pval.random.w}{Statistics and p-values
+#'   for test of treatment effect in subgroups (random effects model)
+#'   - if \code{byvar} is not missing.}
 #' \item{w.fixed.w, w.random.w}{Weight of subgroups (in fixed and
 #'   random effects model) - if \code{byvar} is not missing.}
 #' \item{df.hakn.w}{Degrees of freedom for test of treatment effect
@@ -621,6 +673,12 @@
 #' \emph{Research Synthesis Methods},
 #' \bold{10}, 83--98
 #' 
+#' Luo D, Wan X, Liu J, Tong T (2018):
+#' Optimally estimating the sample mean from the sample size, median,
+#' mid-range, and/or mid-quartile range.
+#' \emph{Statistical Methods in Medical Research},
+#' \bold{27}, 1785--805
+#' 
 #' Morris CN (1983):
 #' Parametric empirical Bayes inference: Theory and applications (with
 #' discussion).
@@ -634,6 +692,11 @@
 #' 
 #' \emph{Review Manager (RevMan)} [Computer program]. Version 5.3.
 #' Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
+#'
+#' Shi J, Luo D, Weng H, Zeng X-T, Lin L, Chu H, et al. (2020):
+#' Optimally estimating the sample standard deviation from the
+#' five-number summary.
+#' \emph{Research Synthesis Methods}.
 #'
 #' Sidik K & Jonkman JN (2005):
 #' Simple heterogeneity variance estimation for meta-analysis.
@@ -677,9 +740,9 @@
 #' \bold{35}, 2503--15
 #' 
 #' @examples
-#' data(Fleiss93)
-#' m1 <- metabin(event.e, n.e, event.c, n.c,
-#'               data = Fleiss93, sm = "RR", method = "I")
+#' data(Fleiss1993bin)
+#' m1 <- metabin(d.asp, n.asp, d.plac, n.plac,
+#'               data = Fleiss1993bin, sm = "RR", method = "I")
 #' m1
 #' 
 #' # Identical results using the generic inverse variance method with
@@ -737,6 +800,7 @@ metagen <- function(TE, seTE, studlab,
                     ##
                     sm = "",
                     ##
+                    method.ci = if (missing(df)) "z" else "t",
                     level = gs("level"), level.comb = gs("level.comb"),
                     comb.fixed = gs("comb.fixed"),
                     comb.random = gs("comb.random"),
@@ -760,6 +824,8 @@ metagen <- function(TE, seTE, studlab,
                     ##
                     pval, df, lower, upper, level.ci = 0.95,
                     median, q1, q3, min, max,
+                    method.mean = "Luo",
+                    method.sd = "Shi",
                     ##
                     approx.TE, approx.seTE,
                     ##
@@ -788,6 +854,12 @@ metagen <- function(TE, seTE, studlab,
   ##
   ##
   chknull(sm)
+  ##
+  method.ci <- setchar(method.ci, .settings$ci4cont)
+  ##
+  method.mean <- setchar(method.mean, c("Luo", "Wan"))
+  method.sd <- setchar(method.sd, c("Shi", "Wan"))
+  ##
   chklevel(level)
   chklevel(level.comb)
   chklogical(comb.fixed)
@@ -804,22 +876,21 @@ metagen <- function(TE, seTE, studlab,
   chklogical(prediction)
   chklevel(level.predict)
   ##
-  chknumeric(null.effect, single = TRUE)
+  chknumeric(null.effect, length = 1)
   ##
-  method.bias <- setchar(method.bias,
-                         c("rank", "linreg", "mm", "count", "score", "peters"))
+  method.bias <- setchar(method.bias, .settings$meth4bias)
   ##
   chklogical(backtransf)
   if (!is.prop(sm))
     pscale <- 1
-  chknumeric(pscale, single = TRUE)
+  chknumeric(pscale, length = 1)
   if (!backtransf & pscale != 1) {
     warning("Argument 'pscale' set to 1 as argument 'backtransf' is FALSE.")
     pscale <- 1
   }
   if (!is.rate(sm))
     irscale <- 1
-  chknumeric(irscale, single = TRUE)
+  chknumeric(irscale, length = 1)
   if (!backtransf & irscale != 1) {
     warning("Argument 'irscale' set to 1 as argument 'backtransf' is FALSE.")
     irscale <- 1
@@ -1073,7 +1144,7 @@ metagen <- function(TE, seTE, studlab,
   if (keepdata) {
     if (inherits(data, "meta")) {
       data <- data$data
-      if (!is.null(data$.subset))
+      if (isCol(data, ".subset"))
         data <- data[data$.subset, ]
     }
     ##
@@ -1238,14 +1309,17 @@ metagen <- function(TE, seTE, studlab,
         !is.na(min) & !is.na(max)
       approx.seTE[j] <- "iqr.range"
       if (is.null(n.c))
-        seTE[j] <- TE.seTE.iqr.range(n.e[j], median[j], q1[j], q3[j],
-                                     min[j], max[j])$seTE
+        seTE[j] <- mean.sd.iqr.range(n.e[j], median[j], q1[j], q3[j],
+                                     min[j], max[j],
+                                     method.sd = method.sd)$se
       else if (is.null(n.e))
-        seTE[j] <- TE.seTE.iqr.range(n.c[j], median[j], q1[j], q3[j],
-                                     min[j], max[j])$seTE
+        seTE[j] <- mean.sd.iqr.range(n.c[j], median[j], q1[j], q3[j],
+                                     min[j], max[j],
+                                     method.sd = method.sd)$se
       else
-        seTE[j] <- TE.seTE.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
-                                     min[j], max[j])$seTE
+        seTE[j] <- mean.sd.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
+                                     min[j], max[j],
+                                     method.sd = method.sd)$se
     }
     ##
     ## Use IQR
@@ -1257,11 +1331,11 @@ metagen <- function(TE, seTE, studlab,
       j <- sel.NA & !is.na(median) & !is.na(q1) & !is.na(q3)
       approx.seTE[j] <- "iqr"
       if (is.null(n.c))
-        seTE[j] <- TE.seTE.iqr(n.e[j], median[j], q1[j], q3[j])$seTE
+        seTE[j] <- mean.sd.iqr(n.e[j], median[j], q1[j], q3[j])$se
       else if (is.null(n.e))
-        seTE[j] <- TE.seTE.iqr(n.c[j], median[j], q1[j], q3[j])$seTE
+        seTE[j] <- mean.sd.iqr(n.c[j], median[j], q1[j], q3[j])$se
       else
-        seTE[j] <- TE.seTE.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j])$seTE
+        seTE[j] <- mean.sd.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j])$se
     }
     ##
     ## Use range
@@ -1273,12 +1347,12 @@ metagen <- function(TE, seTE, studlab,
       j <- sel.NA & !is.na(median) & !is.na(min) & !is.na(max)
       approx.seTE[j] <- "range"
       if (is.null(n.c))
-        seTE[j] <- TE.seTE.range(n.e[j], median[j], min[j], max[j])$seTE
+        seTE[j] <- mean.sd.range(n.e[j], median[j], min[j], max[j])$se
       else if (is.null(n.e))
-        seTE[j] <- TE.seTE.range(n.c[j], median[j], min[j], max[j])$seTE
+        seTE[j] <- mean.sd.range(n.c[j], median[j], min[j], max[j])$se
       else
-        seTE[j] <- TE.seTE.range(n.e[j] + n.c[j], median[j],
-                                 min[j], max[j])$seTE
+        seTE[j] <- mean.sd.range(n.e[j] + n.c[j], median[j],
+                                 min[j], max[j])$se
     }
   }
   else {
@@ -1303,37 +1377,40 @@ metagen <- function(TE, seTE, studlab,
           stop("Sample size needed if argument 'approx.seTE' = \"iqr\".",
                call. = FALSE)
         else if (is.null(n.c))
-          seTE[j] <- TE.seTE.iqr.range(n.e[j], median[j], q1[j], q3[j],
-                                       min[j], max[j])$seTE
+          seTE[j] <- mean.sd.iqr.range(n.e[j], median[j], q1[j], q3[j],
+                                       min[j], max[j],
+                                       method.sd = method.sd)$se
         else if (is.null(n.e))
-          seTE[j] <- TE.seTE.iqr.range(n.c[j], median[j], q1[j], q3[j],
-                                       min[j], max[j])$seTE
+          seTE[j] <- mean.sd.iqr.range(n.c[j], median[j], q1[j], q3[j],
+                                       min[j], max[j],
+                                       method.sd = method.sd)$se
         else
-          seTE[j] <- TE.seTE.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
-                                       min[j], max[j])$seTE
+          seTE[j] <- mean.sd.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
+                                       min[j], max[j],
+                                       method.sd = method.sd)$se
       }
       else if (i == "iqr") {
         if (is.null(n.e) & is.null(n.c))
           stop("Sample size needed if argument 'approx.seTE' = \"iqr\".",
                call. = FALSE)
         else if (is.null(n.c))
-          seTE[j] <- TE.seTE.iqr(n.e[j], median[j], q1[j], q3[j])$seTE
+          seTE[j] <- mean.sd.iqr(n.e[j], median[j], q1[j], q3[j])$se
         else if (is.null(n.e))
-          seTE[j] <- TE.seTE.iqr(n.c[j], median[j], q1[j], q3[j])$seTE
+          seTE[j] <- mean.sd.iqr(n.c[j], median[j], q1[j], q3[j])$se
         else
-          seTE[j] <- TE.seTE.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j])$seTE
+          seTE[j] <- mean.sd.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j])$se
       }
       else if (i == "range") {
         if (is.null(n.e) & is.null(n.c))
           stop("Sample size needed if argument 'approx.seTE' = \"range\".",
                call. = FALSE)
         else if (is.null(n.c))
-          seTE[j] <- TE.seTE.range(n.e[j], median[j], min[j], max[j])$seTE
+          seTE[j] <- mean.sd.range(n.e[j], median[j], min[j], max[j])$se
         else if (is.null(n.e))
-          seTE[j] <- TE.seTE.range(n.c[j], median[j], min[j], max[j])$seTE
+          seTE[j] <- mean.sd.range(n.c[j], median[j], min[j], max[j])$se
         else
-          seTE[j] <- TE.seTE.range(n.e[j] + n.c[j], median[j],
-                                   min[j], max[j])$seTE
+          seTE[j] <- mean.sd.range(n.e[j] + n.c[j], median[j],
+                                   min[j], max[j])$se
       }
     }
   }
@@ -1367,14 +1444,14 @@ metagen <- function(TE, seTE, studlab,
         !is.na(min) & !is.na(max)
       approx.TE[j] <- "iqr.range"
       if (is.null(n.c))
-        TE[j] <- TE.seTE.iqr.range(n.e[j], median[j], q1[j], q3[j],
-                                   min[j], max[j])$TE
+        TE[j] <- mean.sd.iqr.range(n.e[j], median[j], q1[j], q3[j],
+                                   min[j], max[j], method.mean)$mean
       else if (is.null(n.e))
-        TE[j] <- TE.seTE.iqr.range(n.c[j], median[j], q1[j], q3[j],
-                                   min[j], max[j])$TE
+        TE[j] <- mean.sd.iqr.range(n.c[j], median[j], q1[j], q3[j],
+                                   min[j], max[j], method.mean)$mean
       else
-        TE[j] <- TE.seTE.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
-                                   min[j], max[j])$TE
+        TE[j] <- mean.sd.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
+                                   min[j], max[j], method.mean)$mean
     }
     ##
     ## Use IQR
@@ -1386,11 +1463,12 @@ metagen <- function(TE, seTE, studlab,
       j <- sel.NA & !is.na(median) & !is.na(q1) & !is.na(q3)
       approx.TE[j] <- "iqr"
       if (is.null(n.c))
-        TE[j] <- TE.seTE.iqr(n.e[j], median[j], q1[j], q3[j])$TE
+        TE[j] <- mean.sd.iqr(n.e[j], median[j], q1[j], q3[j], method.mean)$mean
       else if (is.null(n.e))
-        TE[j] <- TE.seTE.iqr(n.c[j], median[j], q1[j], q3[j])$TE
+        TE[j] <- mean.sd.iqr(n.c[j], median[j], q1[j], q3[j], method.mean)$mean
       else
-        TE[j] <- TE.seTE.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j])$TE
+        TE[j] <- mean.sd.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j],
+                             method.mean)$mean
     }
     ##
     ## Use range
@@ -1402,11 +1480,14 @@ metagen <- function(TE, seTE, studlab,
       j <- sel.NA & !is.na(median) & !is.na(min) & !is.na(max)
       approx.TE[j] <- "range"
       if (is.null(n.c))
-        TE[j] <- TE.seTE.range(n.e[j], median[j], min[j], max[j])$TE
+        TE[j] <- mean.sd.range(n.e[j], median[j], min[j], max[j],
+                               method.mean)$mean
       else if (is.null(n.e))
-        TE[j] <- TE.seTE.range(n.c[j], median[j], min[j], max[j])$TE
+        TE[j] <- mean.sd.range(n.c[j], median[j], min[j], max[j],
+                               method.mean)$mean
       else
-        TE[j] <- TE.seTE.range(n.e[j] + n.c[j], median[j], min[j], max[j])$TE
+        TE[j] <- mean.sd.range(n.e[j] + n.c[j], median[j], min[j], max[j],
+                               method.mean)$mean
     }
   }
   else {
@@ -1421,24 +1502,25 @@ metagen <- function(TE, seTE, studlab,
           stop("Sample size needed if argument 'approx.TE' = \"iqr.range\".",
                call. = FALSE)
         else if (is.null(n.c))
-          TE[j] <- TE.seTE.iqr.range(n.e[j], median[j], q1[j], q3[j],
-                                     min[j], max[j])$TE
+          TE[j] <- mean.sd.iqr.range(n.e[j], median[j], q1[j], q3[j],
+                                     min[j], max[j], method.mean)$mean
       else if (is.null(n.e))
-        TE[j] <- TE.seTE.iqr.range(n.c[j], median[j], q1[j], q3[j],
-                                   min[j], max[j])$TE
+        TE[j] <- mean.sd.iqr.range(n.c[j], median[j], q1[j], q3[j],
+                                   min[j], max[j], method.mean)$mean
       else
-        TE[j] <- TE.seTE.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
-                                   min[j], max[j])$TE
+        TE[j] <- mean.sd.iqr.range(n.e[j] + n.c[j], median[j], q1[j], q3[j],
+                                   min[j], max[j], method.mean)$mean
       else if (i == "iqr") {
         if (is.null(n.e) & is.null(n.c))
           stop("Sample size needed if argument 'approx.TE' = \"iqr\".",
                call. = FALSE)
         else if (is.null(n.c))
-          TE[j] <- TE.seTE.iqr(n.e[j], median[j], q1[j], q3[j])$TE
+          TE[j] <- mean.sd.iqr(n.e[j], median[j], q1[j], q3[j], method.mean)$mean
         else if (is.null(n.e))
-          TE[j] <- TE.seTE.iqr(n.c[j], median[j], q1[j], q3[j])$TE
+          TE[j] <- mean.sd.iqr(n.c[j], median[j], q1[j], q3[j], method.mean)$mean
         else
-          TE[j] <- TE.seTE.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j])$TE
+          TE[j] <- mean.sd.iqr(n.e[j] + n.c[j], median[j], q1[j], q3[j],
+                               method.mean)$mean
       }
       else if (i == "range") {
         cat(paste0("Use 'range' for study", j, "\n"))
@@ -1446,12 +1528,26 @@ metagen <- function(TE, seTE, studlab,
           stop("Sample size needed if argument 'approx.TE' = \"range\".",
                call. = FALSE)
         else if (is.null(n.c))
-          TE[j] <- TE.seTE.range(n.e[j], median[j], min[j], max[j])$TE
+          TE[j] <- mean.sd.range(n.e[j], median[j], min[j], max[j],
+                                 method.mean)$mean
         else if (is.null(n.e))
-          TE[j] <- TE.seTE.range(n.c[j], median[j], min[j], max[j])$TE
+          TE[j] <- mean.sd.range(n.c[j], median[j], min[j], max[j],
+                                 method.mean)$mean
         else
-          TE[j] <- TE.seTE.range(n.e[j] + n.c[j], median[j], min[j], max[j])$TE
+          TE[j] <- mean.sd.range(n.e[j] + n.c[j], median[j], min[j], max[j],
+                                 method.mean)$mean
       }
+    }
+  }
+  ##
+  if (keepdata) {
+    if (!isCol(data, ".subset")) {
+      data$.TE <- TE
+      data$.seTE <- seTE
+    }
+    else {
+      data$.TE[data$.subset] <- TE
+      data$.seTE[data$.subset] <- seTE
     }
   }
   
@@ -1483,7 +1579,7 @@ metagen <- function(TE, seTE, studlab,
   if (k == 0) {
     TE.fixed <- NA
     seTE.fixed <- NA
-    zval.fixed <- NA
+    statistic.fixed <- NA
     pval.fixed <- NA
     lower.fixed <- NA
     upper.fixed <- NA
@@ -1491,7 +1587,7 @@ metagen <- function(TE, seTE, studlab,
     ##
     TE.random <- NA
     seTE.random <- NA
-    zval.random <- NA
+    statistic.random <- NA
     pval.random <- NA
     lower.random <- NA
     upper.random <- NA
@@ -1548,7 +1644,7 @@ metagen <- function(TE, seTE, studlab,
     ##
     ci.f <- ci(TE.fixed, seTE.fixed, level = level.comb,
                null.effect = null.effect)
-    zval.fixed <- ci.f$z
+    statistic.fixed <- ci.f$statistic
     pval.fixed <- ci.f$p
     lower.fixed <- ci.f$lower
     upper.fixed <- ci.f$upper
@@ -1603,7 +1699,7 @@ metagen <- function(TE, seTE, studlab,
       ci.r <- ci(TE.random, seTE.random, level = level.comb,
                  null.effect = null.effect)
     ##
-    zval.random <- ci.r$z
+    statistic.random <- ci.r$statistic
     pval.random <- ci.r$p
     lower.random <- ci.r$lower
     upper.random <- ci.r$upper
@@ -1611,7 +1707,9 @@ metagen <- function(TE, seTE, studlab,
   ##
   ## Individual study results
   ##
-  ci.study <- ci(TE, seTE, level = level, null.effect = null.effect)
+  ci.study <- ci(TE, seTE, level = level,
+                 df = if (method.ci == "t") df else NULL,
+                 null.effect = null.effect)
   ##
   ## Prediction interval
   ##
@@ -1642,16 +1740,21 @@ metagen <- function(TE, seTE, studlab,
               ##
               TE = TE, seTE = seTE,
               lower = ci.study$lower, upper = ci.study$upper,
-              zval = ci.study$z, pval = ci.study$p,
+              zval = ci.study$statistic,
+              statistic = ci.study$statistic,
+              pval = ci.study$p,
+              df = if (method.ci == "t") df else rep_len(NA, length(TE)),
               w.fixed = w.fixed, w.random = w.random,
               ##
               TE.fixed = TE.fixed, seTE.fixed = seTE.fixed,
               lower.fixed = lower.fixed, upper.fixed = upper.fixed,
-              zval.fixed = zval.fixed, pval.fixed = pval.fixed,
+              zval.fixed = statistic.fixed,
+              statistic.fixed = statistic.fixed, pval.fixed = pval.fixed,
               ##
               TE.random = TE.random, seTE.random = seTE.random,
               lower.random = lower.random, upper.random = upper.random,
-              zval.random = zval.random, pval.random = pval.random,
+              zval.random = statistic.random,
+              statistic.random = statistic.random, pval.random = pval.random,
               ##
               null.effect = null.effect,
               ##
@@ -1673,6 +1776,7 @@ metagen <- function(TE, seTE, studlab,
               ##
               Rb = Rbres$TE, lower.Rb = Rbres$lower, upper.Rb = Rbres$upper,
               ##
+              method.mean = method.mean,
               approx.TE = approx.TE,
               approx.seTE = approx.seTE,
               ##
@@ -1684,7 +1788,7 @@ metagen <- function(TE, seTE, studlab,
               overall = overall,
               overall.hetstat = overall.hetstat,
               hakn = hakn, adhoc.hakn = adhoc.hakn,
-              df.hakn = if (hakn) df.hakn else NULL,
+              df.hakn = if (hakn) df.hakn else NA,
               seTE.random.hakn.orig = seTE.random.hakn.orig,
               method.tau = method.tau, method.tau.ci = method.tau.ci,
               tau.preset = tau.preset,

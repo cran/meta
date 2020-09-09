@@ -1,9 +1,9 @@
 Package: meta
 Title: General Package for Meta-Analysis
-Version: 4.13-0
-Date: 2020-07-02
+Version: 4.14-0
+Date: 2020-09-09
 Depends: R (>= 3.5.0)
-Imports: metafor (>= 2.1-0), grid, lme4, CompQuadForm
+Imports: metafor (>= 2.1-0), grid, lme4, CompQuadForm, xml2
 Suggests: BiasedUrn
 Authors@R: person("Guido", "Schwarzer",
                   role = c("cre", "aut"),
@@ -24,8 +24,8 @@ License: GPL (>= 2)
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-07-02 20:46:01 UTC; sc
+Packaged: 2020-09-09 12:47:37 UTC; sc
 Author: Guido Schwarzer [cre, aut] (<https://orcid.org/0000-0001-6214-9087>)
 Maintainer: Guido Schwarzer <sc@imbi.uni-freiburg.de>
 Repository: CRAN
-Date/Publication: 2020-07-03 05:20:02 UTC
+Date/Publication: 2020-09-09 14:30:03 UTC

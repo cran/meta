@@ -36,12 +36,12 @@ effect in individual studies.}
 
 \item{method.bias}{A character string indicating which test is to
 be used.  Either \code{"rank"}, \code{"linreg"}, \code{"mm"},
-\code{"count"}, \code{"score"}, or \code{"peters"}, can be
-abbreviated.}
+\code{"count"}, \code{"score"}, \code{"peters"}, or
+\code{"deeks"}, can be abbreviated.}
 
 \item{plotit}{A logical indicating whether a plot should be
 produced for method.bias \code{"rank"}, \code{"linreg"},
-\code{"mm"}, or \code{"score"}.}
+\code{"mm"}, \code{"score"}, or \code{"deeks"}.}
 
 \item{correct}{A logical indicating whether a continuity corrected
 statistic is used for rank correlation methods \code{"rank"} and
@@ -147,6 +147,12 @@ efficient score and score variance (Harbord et al., 2006,
 2009). The test statistic follows a t distribution with
 \code{number of studies - 2} degrees of freedom.
 
+If argument \code{method.bias} is \code{"deeks"}, the test
+statistic is based on a weighted linear regression utilising
+efficient score and score variance (Harbord et al., 2006,
+2009). The test statistic follows a t distribution with
+\code{number of studies - 2} degrees of freedom.
+
 In order to calculate an arcsine test for funnel plot asymmetry
 (Rücker et al., 2008), one has to use the \code{metabin} function
 with argument \code{sm = "ASD"} as input to the \code{metabias}
@@ -163,9 +169,9 @@ No test for funnel plot asymmetry is conducted in meta-analyses
 with subgroups.
 }
 \examples{
-data(Olkin95)
-m1 <- metabin(event.e, n.e, event.c, n.c,
-              data = Olkin95, subset = 1:10,
+data(Olkin1995)
+m1 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+              data = Olkin1995, subset = 1:10,
               sm = "RR", method = "I")
 
 metabias(m1)

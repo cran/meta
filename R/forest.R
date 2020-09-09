@@ -761,9 +761,9 @@
 #' @keywords hplot
 #' 
 #' @examples
-#' data(Olkin95)
-#' m1 <- metabin(event.e, n.e, event.c, n.c,
-#'               data = Olkin95, subset = c(41, 47, 51, 59),
+#' data(Olkin1995)
+#' m1 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+#'               data = Olkin1995, subset = c(41, 47, 51, 59),
 #'               sm = "RR", method = "I",
 #'               studlab = paste(author, year))
 #' 
@@ -1267,19 +1267,19 @@ forest.meta <- function(x,
   chklogical(backtransf)
   ##
   if (!is.null(pscale))
-    chknumeric(pscale, single = TRUE)
+    chknumeric(pscale, length = 1)
   else
     pscale <- 1
   if (!is.null(irscale))
-    chknumeric(irscale, single = TRUE)
+    chknumeric(irscale, length = 1)
   else
     irscale <- 1
   if (!is.null(irunit) && !is.na(irunit))
     chkchar(irunit)
   ##
-  chknumeric(ref, single = TRUE)
-  chknumeric(lower.equi, single = TRUE)
-  chknumeric(upper.equi, single = TRUE)
+  chknumeric(ref, length = 1)
+  chknumeric(lower.equi, length = 1)
+  chknumeric(upper.equi, length = 1)
   if (!is.na(lower.equi) && !is.na(upper.equi) && lower.equi > upper.equi)
     stop("Value for 'lower.equi' must be smaller than 'upper.equi'.")
   chknumeric(lty.equi)
@@ -1406,39 +1406,39 @@ forest.meta <- function(x,
     chklogical(test.effect.subgroup.fixed)
   if (!missing(test.effect.subgroup.random))
     chklogical(test.effect.subgroup.random)
-  chknumeric(fontsize, single = TRUE)
-  chknumeric(fs.heading, single = TRUE)
+  chknumeric(fontsize, length = 1)
+  chknumeric(fs.heading, length = 1)
   if (!missing(fs.fixed))
-    chknumeric(fs.fixed, single = TRUE)
+    chknumeric(fs.fixed, length = 1)
   if (!missing(fs.random))
-    chknumeric(fs.random, single = TRUE)
+    chknumeric(fs.random, length = 1)
   if (!missing(fs.predict))
-    chknumeric(fs.predict, single = TRUE)
+    chknumeric(fs.predict, length = 1)
   if (!missing(fs.fixed.labels))
-    chknumeric(fs.fixed.labels, single = TRUE)
+    chknumeric(fs.fixed.labels, length = 1)
   if (!missing(fs.random.labels))
-    chknumeric(fs.random.labels, single = TRUE)
+    chknumeric(fs.random.labels, length = 1)
   if (!missing(fs.predict.labels))
-    chknumeric(fs.predict.labels, single = TRUE)
+    chknumeric(fs.predict.labels, length = 1)
   if (!missing(fs.study))
-    chknumeric(fs.study, single = TRUE)
+    chknumeric(fs.study, length = 1)
   if (!missing(fs.study.labels))
-    chknumeric(fs.study.labels, single = TRUE)
+    chknumeric(fs.study.labels, length = 1)
   if (!missing(fs.hetstat))
-    chknumeric(fs.hetstat, single = TRUE)
+    chknumeric(fs.hetstat, length = 1)
   if (!missing(fs.test.overall))
-    chknumeric(fs.test.overall, single = TRUE)
+    chknumeric(fs.test.overall, length = 1)
   if (!missing(fs.test.subgroup))
-    chknumeric(fs.test.subgroup, single = TRUE)
+    chknumeric(fs.test.subgroup, length = 1)
   if (!missing(fs.test.effect.subgroup))
-    chknumeric(fs.test.effect.subgroup, single = TRUE)
+    chknumeric(fs.test.effect.subgroup, length = 1)
   if (!missing(fs.addline))
-    chknumeric(fs.addline, single = TRUE)
-  chknumeric(fs.axis, single = TRUE)
-  chknumeric(fs.smlab, single = TRUE)
-  chknumeric(fs.xlab, single = TRUE)
-  chknumeric(fs.lr, single = TRUE)
-  chknumeric(squaresize, single = TRUE)
+    chknumeric(fs.addline, length = 1)
+  chknumeric(fs.axis, length = 1)
+  chknumeric(fs.smlab, length = 1)
+  chknumeric(fs.xlab, length = 1)
+  chknumeric(fs.lr, length = 1)
+  chknumeric(squaresize, length = 1)
   chklogical(calcwidth.pooled)
   chklogical(calcwidth.fixed)
   chklogical(calcwidth.random)
@@ -1456,7 +1456,7 @@ forest.meta <- function(x,
     weight.study <- ifelse(comb.random & !comb.fixed, "random", "fixed")
   weight.study <- setchar(weight.study, c("same", "fixed", "random"))
   ##
-  chknumeric(spacing, single = TRUE)
+  chknumeric(spacing, length = 1)
   ##
   missing.text.addline1 <- missing(text.addline1)
   if (!missing.text.addline1)
@@ -1484,23 +1484,23 @@ forest.meta <- function(x,
   else
     addrow.subgroups <- !jama
   ##
-  chknumeric(digits, min = 0, single = TRUE)
-  chknumeric(digits.tau2, min = 0, single = TRUE)
-  chknumeric(digits.zval, min = 0, single = TRUE)
-  chknumeric(digits.pval, min = 1, single = TRUE)
-  chknumeric(digits.pval.Q, min = 1, single = TRUE)
-  chknumeric(digits.Q, min = 0, single = TRUE)
-  chknumeric(digits.I2, min = 0, single = TRUE)
-  chknumeric(digits.se, min = 0, single = TRUE)
+  chknumeric(digits, min = 0, length = 1)
+  chknumeric(digits.tau2, min = 0, length = 1)
+  chknumeric(digits.zval, min = 0, length = 1)
+  chknumeric(digits.pval, min = 1, length = 1)
+  chknumeric(digits.pval.Q, min = 1, length = 1)
+  chknumeric(digits.Q, min = 0, length = 1)
+  chknumeric(digits.I2, min = 0, length = 1)
+  chknumeric(digits.se, min = 0, length = 1)
   if (!missing(digits.mean))
-    chknumeric(digits.mean, min = 0, single = TRUE)
+    chknumeric(digits.mean, min = 0, length = 1)
   if (!missing(digits.sd))
-    chknumeric(digits.sd, min = 0, single = TRUE)
+    chknumeric(digits.sd, min = 0, length = 1)
   if (!missing(digits.cor))
-    chknumeric(digits.cor, min = 0, single = TRUE)
+    chknumeric(digits.cor, min = 0, length = 1)
   missing.digits.time <- missing(digits.time)
   if (!missing.digits.time)
-    chknumeric(digits.time, min = 0, single = TRUE)
+    chknumeric(digits.time, min = 0, length = 1)
   missing.addcols.left <-
     missing(digits.addcols) & missing(digits.addcols.left)
   missing.addcols.right <-
@@ -2277,6 +2277,8 @@ forest.meta <- function(x,
         j <- match(rightcols.new[i], colnames)
         if (!is.na(j))
           rightlabs.new[i] <- labnames[j]
+        else if (rightcols.new[i] == "pval")
+          rightlabs.new[i] <- "P-value"
       }
       ##
       if (missing(rightlabs))
@@ -2302,6 +2304,8 @@ forest.meta <- function(x,
         j <- match(leftcols.new[i], colnames)
         if (!is.na(j))
           leftlabs.new[i] <- labnames[j]
+        else if (leftcols.new[i] == "pval")
+          leftlabs.new[i] <- "P-value"
       }
       ##
       if (missing(leftlabs))
@@ -2373,9 +2377,20 @@ forest.meta <- function(x,
         }
       }
       ##
-      if (metagen & study.results)
+      if (metagen & study.results) {
         leftcols <- c(leftcols,
                       "TE", "seTE")
+        if (!is.null(x$n.e)) {
+          leftcols <- c(leftcols, "n.e")
+          if (is.null(lab.e.attach.to.col))
+            lab.e.attach.to.col <- "n.e"
+        }
+        if (!is.null(x$n.c)) {
+          leftcols <- c(leftcols, "n.c")
+          if (is.null(lab.c.attach.to.col))
+            lab.c.attach.to.col <- "n.c"
+        }
+      }
       ##
       if (metaprop) {
         if (study.results)
@@ -2556,7 +2571,7 @@ forest.meta <- function(x,
   if (allstudies)
     n.stud <- k.all # all studies
   else
-    n.stud <- x$k   # number of studies combined in meta-analysis
+    n.stud <- sum(!is.na(x$TE)) # number of studies with treatment estimates
   ##
   if (length(type.study) == 1)
     type.study <- rep(type.study, k.all)
@@ -2571,12 +2586,9 @@ forest.meta <- function(x,
     stop("Missing values in 'byvar'")
   ##
   if (allstudies)
-    sel <- 1:length(x$TE)
+    sel <- 1:k.all
   else
     sel <- !is.na(x$TE)
-  ##
-  if (n.stud != sum(sel > 0))
-    warning("n.stud != sum(sel)")
   ##
   x$n.e <- x$n.e[sel]
   x$n.c <- x$n.c[sel]
@@ -3913,9 +3925,9 @@ forest.meta <- function(x,
                               zero = zero.pval, JAMA = JAMA.pval,
                               scientific = scientific.pval,
                               lab.NA = "NA")
-    zvals.overall <- formatN(round(c(x$zval.fixed, x$zval.random),
-                                   digits = digits.zval),
-                             digits.zval, "NA", big.mark = big.mark)
+    statistics.overall <- formatN(round(c(x$statistic.fixed, x$statistic.random),
+                                        digits = digits.zval),
+                                  digits.zval, "NA", big.mark = big.mark)
     ##
     ## Remove superfluous spaces
     ##
@@ -3923,8 +3935,8 @@ forest.meta <- function(x,
     ##
     while(any(grepl("  ", pvals.overall)))
       pvals.overall <- gsub("  ", " ", pvals.overall)
-    while(any(grepl("  ", zvals.overall)))
-      zvals.overall <- gsub("  ", " ", zvals.overall)
+    while(any(grepl("  ", statistics.overall)))
+      statistics.overall <- gsub("  ", " ", statistics.overall)
   }
   ##
   if (test.overall.fixed) {
@@ -3935,7 +3947,7 @@ forest.meta <- function(x,
                                                 " (P", tp, ")"),
                                           list(tl = label.test.overall.fixed,
                                                hetseparator = hetseparator,
-                                               tt = zvals.overall[1],
+                                               tt = statistics.overall[1],
                                                tp = pvals.overall[1]))
       else if (jama)
         text.overall.fixed  <- substitute(paste(tl,
@@ -3943,7 +3955,7 @@ forest.meta <- function(x,
                                                 " (", italic(P), tp, ")"),
                                           list(tl = label.test.overall.fixed,
                                                hetseparator = hetseparator,
-                                               tt = zvals.overall[1],
+                                               tt = statistics.overall[1],
                                                tp = pvals.overall[1]))
       else
         text.overall.fixed  <- substitute(paste(tl,
@@ -3951,7 +3963,7 @@ forest.meta <- function(x,
                                                 " (", italic(p), tp, ")"),
                                           list(tl = label.test.overall.fixed,
                                                hetseparator = hetseparator,
-                                               tt = zvals.overall[1],
+                                               tt = statistics.overall[1],
                                                tp = pvals.overall[1]))
     }
     else {
@@ -3981,7 +3993,7 @@ forest.meta <- function(x,
                                                    " (P", tp, ")"),
                                              list(tl = label.test.overall.random,
                                                   hetseparator = hetseparator,
-                                                  tt = zvals.overall[2],
+                                                  tt = statistics.overall[2],
                                                   tp = pvals.overall[2]))
         else if (jama)
           text.overall.random  <- substitute(paste(tl,
@@ -3989,7 +4001,7 @@ forest.meta <- function(x,
                                                    " (", italic(P), tp, ")"),
                                              list(tl = label.test.overall.random,
                                                   hetseparator = hetseparator,
-                                                  tt = zvals.overall[2],
+                                                  tt = statistics.overall[2],
                                                   tp = pvals.overall[2]))
         else
           text.overall.random  <- substitute(paste(tl,
@@ -3997,7 +4009,7 @@ forest.meta <- function(x,
                                                    " (", italic(p), tp, ")"),
                                              list(tl = label.test.overall.random,
                                                   hetseparator = hetseparator,
-                                                  tt = zvals.overall[2],
+                                                  tt = statistics.overall[2],
                                                   tp = pvals.overall[2]))
       }
       else {
@@ -4007,7 +4019,7 @@ forest.meta <- function(x,
                                                    " (P", tp, ")"),
                                              list(tl = label.test.overall.random,
                                                   hetseparator = hetseparator,
-                                                  tt = zvals.overall[2],
+                                                  tt = statistics.overall[2],
                                                   tp = pvals.overall[2],
                                                   df = round(x$df.hakn, 1)))
         else if (jama)
@@ -4016,7 +4028,7 @@ forest.meta <- function(x,
                                                    " (", italic(P), tp, ")"),
                                              list(tl = label.test.overall.random,
                                                   hetseparator = hetseparator,
-                                                  tt = zvals.overall[2],
+                                                  tt = statistics.overall[2],
                                                   tp = pvals.overall[2],
                                                   df = round(x$df.hakn, 1)))
         else
@@ -4025,7 +4037,7 @@ forest.meta <- function(x,
                                                    " (", italic(p), tp, ")"),
                                              list(tl = label.test.overall.random,
                                                   hetseparator = hetseparator,
-                                                  tt = zvals.overall[2],
+                                                  tt = statistics.overall[2],
                                                   tp = pvals.overall[2],
                                                   df = round(x$df.hakn, 1)))
       }
@@ -4921,7 +4933,7 @@ forest.meta <- function(x,
                            rep(NA, 3 * n.by))
     weight.w.p <- c(w.fixed.w.p, w.random.w.p, rep(NA, 3 * n.by))
     ##
-    test.fixed.w <- ""
+    ##test.fixed.w <- ""
     ##
     ## Label of test for effect in subgroups
     ##
@@ -4932,9 +4944,9 @@ forest.meta <- function(x,
                                  zero = zero.pval, JAMA = JAMA.pval,
                                  scientific = scientific.pval,
                                  lab.NA = "NA")
-      zvals.effect.w <- formatN(round(c(x$zval.fixed.w, x$zval.random.w),
-                                      digits = digits.zval),
-                                digits.zval, "NA", big.mark = big.mark)
+      statistics.effect.w <- formatN(round(c(x$statistic.fixed.w, x$statistic.random.w),
+                                           digits = digits.zval),
+                                     digits.zval, "NA", big.mark = big.mark)
       ##
       ## Remove superfluous spaces
       ##
@@ -4942,8 +4954,8 @@ forest.meta <- function(x,
       ##
       while(any(grepl("  ", pvals.effect.w)))
         pvals.effect.w <- gsub("  ", " ", pvals.effect.w)
-      while(any(grepl("  ", zvals.effect.w)))
-        zvals.effect.w <- gsub("  ", " ", zvals.effect.w)
+      while(any(grepl("  ", statistics.effect.w)))
+        statistics.effect.w <- gsub("  ", " ", statistics.effect.w)
     }
     ##
     if (test.effect.subgroup.fixed) {
@@ -4957,7 +4969,7 @@ forest.meta <- function(x,
                                " (P", tp, ")"),
                          list(tl = label.test.effect.subgroup.fixed,
                               hetseparator = hetseparator,
-                              tt = zvals.effect.w[i],
+                              tt = statistics.effect.w[i],
                               tp = rmSpace(pvals.effect.w[i], end = TRUE)))
           else if (jama)
             text.effect.subgroup.fixed[[i]] <-
@@ -4966,7 +4978,7 @@ forest.meta <- function(x,
                                " (", italic(P), tp, ")"),
                          list(tl = label.test.effect.subgroup.fixed,
                               hetseparator = hetseparator,
-                              tt = zvals.effect.w[i],
+                              tt = statistics.effect.w[i],
                               tp = rmSpace(pvals.effect.w[i], end = TRUE)))
           else
             text.effect.subgroup.fixed[[i]] <-
@@ -4975,7 +4987,7 @@ forest.meta <- function(x,
                                " (", italic(p), tp, ")"),
                          list(tl = label.test.effect.subgroup.fixed,
                               hetseparator = hetseparator,
-                              tt = zvals.effect.w[i],
+                              tt = statistics.effect.w[i],
                               tp = rmSpace(pvals.effect.w[i], end = TRUE)))
         }
         else {
@@ -5018,7 +5030,7 @@ forest.meta <- function(x,
                                  " (P", tp, ")"),
                            list(tl = label.test.effect.subgroup.random,
                                 hetseparator = hetseparator,
-                                tt = zvals.effect.w[n.by + i],
+                                tt = statistics.effect.w[n.by + i],
                                 tp = rmSpace(pvals.effect.w[n.by + i],
                                              end = TRUE)))
             else if (jama)
@@ -5028,7 +5040,7 @@ forest.meta <- function(x,
                                  " (", italic(P), tp, ")"),
                            list(tl = label.test.effect.subgroup.random,
                                 hetseparator = hetseparator,
-                                tt = zvals.effect.w[n.by + i],
+                                tt = statistics.effect.w[n.by + i],
                                 tp = rmSpace(pvals.effect.w[n.by + i],
                                              end = TRUE)))
             else
@@ -5038,7 +5050,7 @@ forest.meta <- function(x,
                                  " (", italic(p), tp, ")"),
                            list(tl = label.test.effect.subgroup.random,
                                 hetseparator = hetseparator,
-                                tt = zvals.effect.w[n.by + i],
+                                tt = statistics.effect.w[n.by + i],
                                 tp = rmSpace(pvals.effect.w[n.by + i],
                                              end = TRUE)))
           }
@@ -5050,7 +5062,7 @@ forest.meta <- function(x,
                                  " (P", tp, ")"),
                            list(tl = label.test.effect.subgroup.random,
                                 hetseparator = hetseparator,
-                                tt = zvals.effect.w[n.by + i],
+                                tt = statistics.effect.w[n.by + i],
                                 tp = rmSpace(pvals.effect.w[n.by + i],
                                              end = TRUE),
                                 df = k.w.hetstat - 1))
@@ -5061,7 +5073,7 @@ forest.meta <- function(x,
                                  " (", italic(P), tp, ")"),
                            list(tl = label.test.effect.subgroup.random,
                                 hetseparator = hetseparator,
-                                tt = zvals.effect.w[n.by + i],
+                                tt = statistics.effect.w[n.by + i],
                                 tp = rmSpace(pvals.effect.w[n.by + i],
                                              end = TRUE),
                                 df = k.w.hetstat - 1))
@@ -5072,7 +5084,7 @@ forest.meta <- function(x,
                                  " (", italic(p), tp, ")"),
                            list(tl = label.test.effect.subgroup.random,
                                 hetseparator = hetseparator,
-                                tt = zvals.effect.w[n.by + i],
+                                tt = statistics.effect.w[n.by + i],
                                 tp = rmSpace(pvals.effect.w[n.by + i],
                                              end = TRUE),
                                 df = k.w.hetstat - 1))
@@ -6881,9 +6893,14 @@ forest.meta <- function(x,
             tmp.r <- ifelse(is.na(tmp.r), lab.NA,
                             format(tmp.r, scientific = FALSE,
                                    big.mark = big.mark))
-          else if (is.numeric(tmp.r))
-            tmp.r <- formatN(tmp.r, digits = digits.addcols.right[i],
-                             text.NA = "", big.mark = big.mark)
+          else if (is.numeric(tmp.r)) {
+            if (rightcols.new[i] == "pval")
+              tmp.r <- formatPT(tmp.r, digits = digits.pval,
+                                big.mark = big.mark)
+            else
+              tmp.r <- formatN(tmp.r, digits = digits.addcols.right[i],
+                               text.NA = "", big.mark = big.mark)
+          }
         }
         ##
         tmp.r <- ifelse(is.na(tmp.r), lab.NA, tmp.r)
@@ -6901,7 +6918,8 @@ forest.meta <- function(x,
         cols[[tname]] <- formatcol(lab.new,
                                    c("", "", "", rep("", length(TE.w)), tmp.r),
                                    yS,
-                                   just.addcols.right[i],
+                                   if (rightcols.new[i] == "pval") just
+                                   else just.addcols.right[i],
                                    fcs, fontfamily)
         cols.calc[[tname]] <- formatcol(longer.new,
                                         c("", "", "", rep("", length(TE.w)), tmp.r),
@@ -6923,9 +6941,14 @@ forest.meta <- function(x,
             tmp.l <- ifelse(is.na(tmp.l), lab.NA,
                             format(tmp.l, scientific = FALSE,
                                    big.mark = big.mark))
-          else if (is.numeric(tmp.l))
-            tmp.l <- formatN(tmp.l, digits = digits.addcols.left[i],
-                             text.NA = "", big.mark = big.mark)
+          else if (is.numeric(tmp.l)) {
+            if (leftcols.new[i] == "pval")
+              tmp.l <- formatPT(tmp.l, digits = digits.pval,
+                                big.mark = big.mark)
+            else
+              tmp.l <- formatN(tmp.l, digits = digits.addcols.left[i],
+                               text.NA = "", big.mark = big.mark)
+          }
         }
         ##
         tmp.l <- ifelse(is.na(tmp.l), lab.NA, tmp.l)
@@ -6945,7 +6968,8 @@ forest.meta <- function(x,
                                    c("", "", "",
                                      rep("", length(TE.w)), tmp.l),
                                    yS,
-                                   just.addcols.left[i],
+                                   if (leftcols.new[i] == "pval") just
+                                   else just.addcols.left[i],
                                    fcs, fontfamily)
         ##
         cols.calc[[tname]] <- formatcol(longer.new,
@@ -6971,9 +6995,18 @@ forest.meta <- function(x,
             tmp.r <- ifelse(is.na(tmp.r), lab.NA,
                             format(tmp.r, scientific = FALSE,
                                    big.mark = big.mark))
-          else if (is.numeric(tmp.r))
-            tmp.r <- formatN(tmp.r, digits = digits.addcols.right[i],
-                             text.NA = "", big.mark = big.mark)
+          else if (is.numeric(tmp.r)) {
+            if (rightcols.new[i] == "pval")
+              tmp.r <- formatPT(tmp.r, digits = digits.pval,
+                                big.mark = big.mark,
+                                lab = FALSE, labval = "",
+                                zero = zero.pval, JAMA = JAMA.pval,
+                                scientific = scientific.pval,
+                                lab.NA = "NA")
+            else
+              tmp.r <- formatN(tmp.r, digits = digits.addcols.right[i],
+                               text.NA = "", big.mark = big.mark)
+          }
         }
         ##
         tmp.r <- ifelse(is.na(tmp.r), "", tmp.r)
@@ -6992,7 +7025,8 @@ forest.meta <- function(x,
         cols[[tname]] <- formatcol(lab.new,
                                    c("", "", "", tmp.r),
                                    yS,
-                                   just.addcols.right[i],
+                                   if (rightcols.new[i] == "pval") just
+                                   else just.addcols.right[i],
                                    fcs, fontfamily)
         cols.calc[[tname]] <- formatcol(longer.new,
                                         c("", "", "", tmp.r),
@@ -7014,9 +7048,18 @@ forest.meta <- function(x,
             tmp.l <- ifelse(is.na(tmp.l), lab.NA,
                             format(tmp.l, scientific = FALSE,
                                    big.mark = big.mark))
-          else if (is.numeric(tmp.l))
-            tmp.l <- formatN(tmp.l, digits = digits.addcols.left[i],
-                             text.NA = "", big.mark = big.mark)
+          else if (is.numeric(tmp.l)) {
+            if (leftcols.new[i] == "pval")
+              tmp.l <- formatPT(tmp.l, digits = digits.pval,
+                                big.mark = big.mark,
+                                lab = FALSE, labval = "",
+                                zero = zero.pval, JAMA = JAMA.pval,
+                                scientific = scientific.pval,
+                                lab.NA = "NA")
+            else
+              tmp.l <- formatN(tmp.l, digits = digits.addcols.left[i],
+                               text.NA = "", big.mark = big.mark)
+          }
         }
         ##
         tmp.l <- ifelse(is.na(tmp.l), "", tmp.l)
@@ -7035,7 +7078,8 @@ forest.meta <- function(x,
         cols[[tname]] <- formatcol(lab.new,
                                    c("", "", "", tmp.l),
                                    yS,
-                                   just.addcols.left[i],
+                                   if (leftcols.new[i] == "pval") just
+                                   else just.addcols.left[i],
                                    fcs, fontfamily)
         cols.calc[[tname]] <- formatcol(longer.new,
                                         c("", "", "", tmp.l),

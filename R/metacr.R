@@ -96,29 +96,29 @@
 #' Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
 #' 
 #' @examples
-#' # Locate export data file "Fleiss93_CR.csv"
+#' # Locate export data file "Fleiss1993_CR.csv"
 #' # in sub-directory of package "meta"
 #' #
-#' filename <- system.file("extdata", "Fleiss93_CR.csv", package = "meta")
+#' filename <- system.file("extdata", "Fleiss1993_CR.csv", package = "meta")
 #' #
-#' Fleiss93_CR <- read.rm5(filename)
+#' Fleiss1993_CR <- read.rm5(filename)
 #' 
 #' # Choose RevMan 5 settings and store old settings
 #' #
 #' oldset <- settings.meta("revman5")
 #' 
-#' # Same result as R command example(Fleiss93)
+#' # Same result as R command example(Fleiss1993bin)
 #' #
-#' metacr(Fleiss93_CR)
+#' metacr(Fleiss1993_CR)
 #' 
-#' # Same result as R command example(Fleiss93cont)
+#' # Same result as R command example(Fleiss1993cont)
 #' #
-#' metacr(Fleiss93_CR, 1, 2)
-#' forest(metacr(Fleiss93_CR, 1, 2))
+#' metacr(Fleiss1993_CR, 1, 2)
+#' forest(metacr(Fleiss1993_CR, 1, 2))
 #' 
 #' # Change summary measure to RR
 #' #
-#' m1 <- metacr(Fleiss93_CR)
+#' m1 <- metacr(Fleiss1993_CR)
 #' update(m1, sm="RR")
 #' 
 #' # Use old settings
@@ -211,6 +211,9 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
   label.left  <- unique(x$label.left[sel])
   label.right <- unique(x$label.right[sel])
   ##
+  overall <- replaceNULL(unique(x$overall[sel]), TRUE)
+  if (is.na(overall))
+    overall <- TRUE
   type <- unique(x$type[sel])
   ##
   if (missing(sm))
@@ -270,6 +273,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
   ##
   dropnames <- c("comp.no", "outcome.no", "group.no",
                  "lower.TE", "upper.TE", "weight",
+                 "overall",
                  "type", "method", "sm", "model", "comb.fixed", "comb.random",
                  "outclab", "k", "event.e.pooled", "n.e.pooled", "event.c.pooled",
                  "n.c.pooled", "TE.pooled", "lower.pooled", "upper.pooled",
@@ -298,6 +302,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       tau.common = tau.common,
                       level = level, level.comb = level.comb,
                       prediction = prediction, level.predict = level.predict,
+                      overall = overall,
                       byvar = grplab,
                       bylab = "grp",
                       print.byvar = FALSE,
@@ -319,6 +324,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       tau.common = tau.common,
                       level = level, level.comb = level.comb,
                       prediction = prediction, level.predict = level.predict,
+                      overall = overall,
                       byvar = grplab,
                       bylab = "grp",
                       print.byvar = FALSE,
@@ -343,6 +349,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                      tau.common = tau.common,
                      level = level, level.comb = level.comb,
                      prediction = prediction, level.predict = level.predict,
+                     overall = overall,
                      byvar = grplab,
                      bylab = "grp",
                      print.byvar = FALSE,
@@ -362,6 +369,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     tau.common = tau.common,
                     level = level, level.comb = level.comb,
                     prediction = prediction, level.predict = level.predict,
+                    overall = overall,
                     byvar = grplab,
                     bylab = "grp",
                     print.byvar = FALSE,
@@ -382,6 +390,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     tau.common = tau.common,
                     level = level, level.comb = level.comb,
                     prediction = prediction, level.predict = level.predict,
+                    overall = overall,
                     byvar = grplab,
                     bylab = "grp",
                     print.byvar = FALSE,
@@ -404,6 +413,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     tau.common = tau.common,
                     level = level, level.comb = level.comb,
                     prediction = prediction, level.predict = level.predict,
+                    overall = overall,
                     byvar = grplab,
                     bylab = "grp",
                     print.byvar = FALSE,
@@ -432,6 +442,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       tau.common = tau.common,
                       level = level, level.comb = level.comb,
                       prediction = prediction, level.predict = level.predict,
+                      overall = overall,
                       backtransf = backtransf,
                       title = title,
                       complab = complab, outclab = outclab,
@@ -450,6 +461,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       tau.common = tau.common,
                       level = level, level.comb = level.comb,
                       prediction = prediction, level.predict = level.predict,
+                      overall = overall,
                       backtransf = backtransf,
                       title = title,
                       complab = complab, outclab = outclab,
@@ -471,6 +483,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                      tau.common = tau.common,
                      level = level, level.comb = level.comb,
                      prediction = prediction, level.predict = level.predict,
+                     overall = overall,
                      title = title,
                      complab = complab, outclab = outclab,
                      label.e = label.e, label.c = label.c,
@@ -487,6 +500,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     tau.common = tau.common,
                     level = level, level.comb = level.comb,
                     prediction = prediction, level.predict = level.predict,
+                    overall = overall,
                     backtransf = backtransf,
                     title = title,
                     complab = complab, outclab = outclab,
@@ -504,6 +518,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     tau.common = tau.common,
                     level = level, level.comb = level.comb,
                     prediction = prediction, level.predict = level.predict,
+                    overall = overall,
                     n.e = n.e,
                     n.c = n.c,
                     backtransf = backtransf,
@@ -523,6 +538,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     tau.common = tau.common,
                     level = level, level.comb = level.comb,
                     prediction = prediction, level.predict = level.predict,
+                    overall = overall,
                     backtransf = backtransf,
                     title = title,
                     complab = complab, outclab = outclab,

@@ -257,9 +257,10 @@ standard error.}
 
 \item{method.ci}{A character string indicating which method is used
 to calculate confidence intervals for individual studies. Either
-\code{"CP"}, \code{"WS"}, \code{"WSCC"}, \code{"AC"},
-\code{"SA"},, \code{"SACC"}, or \code{"NAsm"}, can be
-abbreviated. See function \code{\link{metaprop}}.}
+\code{"z"}, \code{"t"}, \code{"WS"}, \code{"WSCC"}, \code{"AC"},
+\code{"SA"}, \code{"SACC"}, or \code{"NAsm"}, can be
+abbreviated. See functions \code{\link{metacont}} and
+\code{\link{metaprop}}.}
 
 \item{byvar}{An optional vector containing grouping information
 (must be of same length as \code{event.e}).}
@@ -329,9 +330,10 @@ This function can also be used for objects of class 'trimfill',
 'metacum', and 'metainf'.
 }
 \examples{
-data(Fleiss93cont)
-m1 <- metacont(n.e, mean.e, sd.e, n.c, mean.c, sd.c,
-               data = Fleiss93cont, sm = "SMD", studlab = study)
+data(Fleiss1993cont)
+m1 <- metacont(n.psyc, mean.psyc, sd.psyc, n.cont, mean.cont, sd.cont,
+               data = Fleiss1993cont, sm = "SMD",
+               studlab = paste(study, year))
 m1
 
 # Change summary measure (from 'SMD' to 'MD')

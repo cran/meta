@@ -71,6 +71,9 @@ lm2or <- function(coef, se.coef, studlab,
             data, enclos = sys.frame(sys.parent()))
   k.All <- length(n)
   ##
+  m <- eval(mf[[match("m", names(mf))]],
+            data, enclos = sys.frame(sys.parent()))
+  ##
   ## Catch 'studlab', 'subset', and 'exclude' from data:
   ##
   studlab <- eval(mf[[match("studlab", names(mf))]],
@@ -137,19 +140,19 @@ lm2or <- function(coef, se.coef, studlab,
   if (!missing.tval)
     chknumeric(tval)
   if (!missing.pval)
-    chklevel(pval, single = FALSE)
+    chklevel(pval, length = 0)
   if (!missing.lower)
     chknumeric(lower)
   if (!missing.upper)
     chknumeric(upper)
-  chklevel(level.ci, single = FALSE)
+  chklevel(level.ci, length = 0)
   ##
   chknumeric(n, min = 1)
   if (!all(is.wholenumber(n)))
     stop("Sample sizes in argument 'n' must be whole numbers.", call. = FALSE)
   ##
   chknumeric(m, min = 1)
-  if (!all(is.wholenumber(m)))
+  if (!all(is.wholenumber(m[!is.na(m)])))
     stop("Argument 'm' must contain whole numbers.", call. = FALSE)
   ##
   chklogical(backtransf)
@@ -163,34 +166,35 @@ lm2or <- function(coef, se.coef, studlab,
   if (missing.tval)
     tval <- rep_len(NA, k.All)
   ##
-  calc.tval <- rep_len("", k.All)
+  method.tval <- rep_len("", k.All)
+  method.tval[!is.na(tval)] <- "tval"
   ##
   ## (a) Use standard errors
   ##
   sel.NA <- is.na(tval)
   if (any(sel.NA) & !missing.se.coef) {
     j <- sel.NA & !is.na(se.coef)
-    calc.tval[j] <- "se"
+    method.tval[j] <- "se"
     tval[j] <- coef[j] / se.coef[j]
   }
   ##
-  ## (b) Use confidence limits
-  ##
-  sel.NA <- is.na(tval)
-  if (any(sel.NA) & !missing.lower & !missing.upper) {
-    j <- sel.NA & !is.na(lower) & !is.na(upper)
-    calc.tval[j] <- "ci"
-    se.coef.j <- TE.seTE.ci(lower[j], upper[j], level.ci[j])$seTE
-    tval[j] <- coef[j] / se.coef.j
-  }
-  ##
-  ## (c) Use p-values
+  ## (b) Use p-values
   ##
   sel.NA <- is.na(tval)
   if (any(sel.NA) & !missing.pval) {
     j <- sel.NA & !is.na(coef) & !is.na(pval)
-    calc.tval[j] <- "pval"
+    method.tval[j] <- "pval"
     se.coef.j <- seTE.pval(coef[j], pval[j])$seTE
+    tval[j] <- coef[j] / se.coef.j
+  }
+  ##
+  ## (c) Use confidence limits
+  ##
+  sel.NA <- is.na(tval)
+  if (any(sel.NA) & !missing.lower & !missing.upper) {
+    j <- sel.NA & !is.na(lower) & !is.na(upper)
+    method.tval[j] <- "ci"
+    se.coef.j <- TE.seTE.ci(lower[j], upper[j], level.ci[j])$seTE
     tval[j] <- coef[j] / se.coef.j
   }
   
@@ -214,7 +218,7 @@ lm2or <- function(coef, se.coef, studlab,
                     tval = tval,
                     n = n,
                     m = m,
-                    calc.tval = calc.tval,
+                    method.tval = method.tval,
                     stringsAsFactors = FALSE)
   ##
   if (!missing.coef)

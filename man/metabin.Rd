@@ -40,7 +40,8 @@ metabin(
   tau.common = gs("tau.common"),
   prediction = gs("prediction"),
   level.predict = gs("level.predict"),
-  method.bias = ifelse(sm == "OR", "score", gs("method.bias")),
+  method.bias = ifelse(sm == "OR", "score", ifelse(sm == "DOR", "deeks",
+    gs("method.bias"))),
   backtransf = gs("backtransf"),
   pscale = 1,
   title = gs("title"),
@@ -88,8 +89,8 @@ used for pooling of studies. One of \code{"Inverse"},
 be abbreviated.}
 
 \item{sm}{A character string indicating which summary measure
-(\code{"RR"}, \code{"OR"}, \code{"RD"}, or \code{"ASD"}) is to be
-used for pooling of studies, see Details.}
+(\code{"RR"}, \code{"OR"}, \code{"RD"}, \code{"ASD"}, or
+\code{"DOR"}) is to be used for pooling of studies, see Details.}
 
 \item{incr}{Could be either a numerical value which is added to
 each cell frequency for studies with a zero cell count or the
@@ -106,8 +107,8 @@ cell frequency of all studies irrespective of zero cell counts.}
 
 \item{allstudies}{A logical indicating if studies with zero or all
 events in both groups are to be included in the meta-analysis
-(applies only if \code{sm} is equal to \code{"RR"} or
-\code{"OR"}).}
+(applies only if \code{sm} is equal to \code{"RR"}, \code{"OR"},
+or \code{"DOR"}).}
 
 \item{MH.exact}{A logical indicating if \code{incr} is not to be
 added to all cell frequencies for studies with a zero cell count
@@ -192,10 +193,11 @@ funnel plot asymmetry is to be used. Either \code{"rank"},
 \code{\link{metabias}.}}
 
 \item{backtransf}{A logical indicating whether results for odds
-ratio (\code{sm="OR"}) and risk ratio (\code{sm="RR"}) should be
-back transformed in printouts and plots. If TRUE (default),
-results will be presented as odds ratios and risk ratios;
-otherwise log odds ratios and log risk ratios will be shown.}
+ratio (\code{sm="OR"}), risk ratio (\code{sm="RR"}), or
+diagnostic odds ratio (\code{sm="DOR"}) should be back
+transformed in printouts and plots. If TRUE (default), results
+will be presented as odds ratios and risk ratios; otherwise log
+odds ratios and log risk ratios will be shown.}
 
 \item{pscale}{A numeric defining a scaling factor for printing of
 risk differences.}
@@ -440,7 +442,11 @@ study. The following measures of treatment effect are available
 \item Odds ratio (\code{sm = "OR"})
 \item Risk difference (\code{sm = "RD"})
 \item Arcsine difference (\code{sm = "ASD"})
+\item Diagnostic Odds ratio (\code{sm = "DOR"})
 }
+
+Note, mathematically, odds ratios and diagnostic odds ratios are
+identical, however, the labels in printouts and figures differ.
 
 By default, both fixed effect and random effects models are
 considered (see arguments \code{comb.fixed} and
@@ -636,24 +642,24 @@ metabin(0, 10, 0, 10, sm = "OR", allstudies = TRUE)
 # Use subset of Olkin (1995) to conduct meta-analysis based on
 # inverse variance method (with risk ratio as summary measure)
 #
-data(Olkin95)
-m1 <- metabin(event.e, n.e, event.c, n.c,
-              data = Olkin95, subset = c(41, 47, 51, 59),
+data(Olkin1995)
+m1 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+              data = Olkin1995, subset = c(41, 47, 51, 59),
               method = "Inverse")
 summary(m1)
 
 # Use different subset of Olkin (1995)
 #
-m2 <- metabin(event.e, n.e, event.c, n.c,
-              data = Olkin95, subset = year < 1970,
+m2 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+              data = Olkin1995, subset = year < 1970,
               method = "Inverse", studlab = author)
 summary(m2)
 forest(m2)
 
 # Meta-analysis with odds ratio as summary measure
 #
-m3 <- metabin(event.e, n.e, event.c, n.c,
-              data = Olkin95, subset = year < 1970,
+m3 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+              data = Olkin1995, subset = year < 1970,
               sm = "OR", method = "Inverse", studlab = author)
 # Same meta-analysis result using 'update.meta' function
 m3 <- update(m2, sm = "OR")
@@ -681,8 +687,8 @@ if (suppressMessages(require(metafor, quietly = TRUE, warn = FALSE)) &
 # Logistic regression model with (k = 4) fixed study effects
 # (default: model.glmm = "UM.FS")
 #
-m6 <- metabin(event.e, n.e, event.c, n.c,
-              data = Olkin95, subset = year < 1970,
+m6 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+              data = Olkin1995, subset = year < 1970,
               method = "GLMM")
 # Same results:
 m6 <- update(m2, method = "GLMM")
@@ -715,8 +721,8 @@ summary(m9)
 # Logistic regression model with (k = 70) fixed study effects
 # (about 18 seconds with Intel Core i7-3667U, 2.0GHz)
 #
-m10 <- metabin(event.e, n.e, event.c, n.c,
-               data = Olkin95, method = "GLMM")
+m10 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+               data = Olkin1995, method = "GLMM")
 summary(m10)
 
 # Mixed-effects logistic regression model with random study effects

@@ -127,9 +127,9 @@
 #' @keywords hplot
 #' 
 #' @examples
-#' data(Olkin95)
-#' m1 <- metabin(event.e, n.e, event.c, n.c,
-#'               data = Olkin95, subset = c(41, 47, 51, 59),
+#' data(Olkin1995)
+#' m1 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
+#'               data = Olkin1995, subset = c(41, 47, 51, 59),
 #'               studlab = paste(author, year),
 #'               sm = "RR", method = "I")
 #' 
@@ -228,9 +228,9 @@ funnel.meta <- function(x,
   chknumeric(lwd)
   chknumeric(lwd.fixed)
   chknumeric(lwd.random)
-  yaxis <- setchar(yaxis, c("se", "size", "invvar", "invse"))
+  yaxis <- setchar(yaxis, c("se", "size", "invvar", "invse", "ess"))
   if (!is.null(contour.levels))
-    chklevel(contour.levels, single = FALSE, ci = FALSE)
+    chklevel(contour.levels, length = 0, ci = FALSE)
   chknumeric(ref)
   if (!is.null(level))
     chklevel(level)
@@ -369,6 +369,18 @@ funnel.meta <- function(x,
     else
       stop("No information on sample size available in object '",
            x.name, "'.")
+  if (yaxis == "ess") {
+    if (inherits(x, "metabin") || inherits(x, "metacont"))
+      weight <- 4 * floor(x$n.e) * floor(x$n.c) /
+        (floor(x$n.e) + floor(x$n.c))
+    else if (length(x$n.e) > 0 & length(x$n.c) > 0)
+      weight <- 4 * floor(x$n.e) * floor(x$n.c) /
+        (floor(x$n.e) + floor(x$n.c))
+    else
+      stop("No information on sample size available in object '",
+           x.name, "'.")
+    weight <- 1 / sqrt(weight)
+  }
   ##
   ## x-axis: labels / xlim
   ##
@@ -394,6 +406,7 @@ funnel.meta <- function(x,
   if (yaxis == "size"   & is.null(ylab)) ylab <- "Study Size"
   if (yaxis == "invvar" & is.null(ylab)) ylab <- "Inverse of Variance"
   if (yaxis == "invse"  & is.null(ylab)) ylab <- "Inverse of Standard Error"
+  if (yaxis == "ess"    & is.null(ylab)) ylab <- "1 / root(Effective Study Size)"
   ##
   if (is.null(ylim) & yaxis == "se") ylim <- c(max(weight, na.rm = TRUE), 0)
   if (is.null(ylim)) ylim <- range(weight, na.rm = TRUE)

@@ -30,6 +30,10 @@
 #' @param lty.random Line type (pooled random effects estimate).
 #' @param col.fixed Line colour (pooled fixed effect estimate).
 #' @param col.random Line colour (pooled random effects estimate).
+#' @param text.w.fixed A character string used to label weights of
+#'   fixed effect model.
+#' @param text.w.random A character string used to label weights of
+#'   random effects model.
 #' @param prediction A logical indicating whether a prediction
 #'   interval should be printed.
 #' @param text.predict A character string used in the plot to label
@@ -667,7 +671,7 @@
 #' If argument \code{layout = "JAMA"} (and arguments \code{leftcols} and
 #' \code{rightcols} are \code{NULL}), instructions for authors of the
 #' \emph{Journal of the American Medical Association}, see
-#' \url{http://jamanetwork.com/journals/jama/pages/instructions-for-authors},
+#' \url{https://jamanetwork.com/journals/jama/pages/instructions-for-authors/},
 #' are taken into account:
 #' \enumerate{
 #' \item Graph labels on right and left side are printed in bold font
@@ -936,13 +940,15 @@ forest.meta <- function(x,
                         comb.fixed = x$comb.fixed,
                         comb.random = x$comb.random,
                         overall = x$overall,
-                        text.fixed = NULL,
-                        text.random = NULL,
+                        text.fixed = x$text.fixed,
+                        text.random = x$text.random,
                         lty.fixed = 2, lty.random = 3,
                         col.fixed = "black", col.random = "black",
+                        text.w.fixed = x$text.w.fixed,
+                        text.w.random = x$text.w.random,
                         ##
                         prediction = x$prediction,
-                        text.predict = NULL,
+                        text.predict = x$text.predict,
                         ##
                         subgroup = TRUE,
                         print.subgroup.labels = TRUE,
@@ -967,7 +973,8 @@ forest.meta <- function(x,
                         pscale = x$pscale,
                         irscale = x$irscale, irunit = x$irunit,
                         ##
-                        ref = ifelse(backtransf & is.relative.effect(x$sm), 1, 0),
+                        ref =
+                          ifelse(backtransf & is.relative.effect(x$sm), 1, 0),
                         ##
                         lower.equi = NA, upper.equi = NA,
                         lty.equi = 1, col.equi = "blue",
@@ -996,7 +1003,8 @@ forest.meta <- function(x,
                         type.study = "square",
                         type.fixed = "diamond",
                         type.random = type.fixed,
-                        type.subgroup = ifelse(study.results, "diamond", "square"),
+                        type.subgroup =
+                          ifelse(study.results, "diamond", "square"),
                         type.subgroup.fixed = type.subgroup,
                         type.subgroup.random = type.subgroup,
                         ##
@@ -1027,8 +1035,7 @@ forest.meta <- function(x,
                           print.Q | print.pval.Q | print.Rb,
                         overall.hetstat = x$overall.hetstat,
                         hetlab = "Heterogeneity: ",
-                        resid.hetstat = overall &
-                          (is.character(hetstat) || hetstat) & !LRT,
+                        resid.hetstat,
                         resid.hetlab = "Residual heterogeneity: ",
                         print.I2 = comb.fixed | comb.random,
                         print.I2.ci = FALSE,
@@ -1045,8 +1052,10 @@ forest.meta <- function(x,
                         LRT = FALSE,
                         ##
                         test.overall = gs("test.overall"),
-                        test.overall.fixed = comb.fixed & overall & test.overall,
-                        test.overall.random = comb.random & overall & test.overall,
+                        test.overall.fixed =
+                          comb.fixed & overall & test.overall,
+                        test.overall.random =
+                          comb.random & overall & test.overall,
                         label.test.overall.fixed,
                         label.test.overall.random,
                         ##
@@ -1165,8 +1174,10 @@ forest.meta <- function(x,
                         ##
                         scientific.pval = gs("scientific.pval"),
                         big.mark = gs("big.mark"),
-                        zero.pval = if (layout == "JAMA") FALSE else gs("zero.pval"),
-                        JAMA.pval = if (layout == "JAMA") TRUE else gs("JAMA.pval"),
+                        zero.pval =
+                          if (layout == "JAMA") FALSE else gs("zero.pval"),
+                        JAMA.pval =
+                          if (layout == "JAMA") TRUE else gs("JAMA.pval"),
                         ##
                         col.i = col.study,
                         weight = weight.study,
@@ -1230,12 +1241,28 @@ forest.meta <- function(x,
   ##
   slab <- TRUE
   missing.studlab <- missing(studlab)
-  if (length(studlab) == 1 & is.logical(studlab))
+  ##
+  if (!missing.studlab) {
+    error <- try(studlab <- eval(mf[[match("studlab", names(mf))]],
+                                 as.data.frame(x, stringsAsFactors = FALSE),
+                                 enclos = sys.frame(sys.parent())),
+                 silent = TRUE)
+    if (class(error) == "try-error") {
+      xd <- x$data
+      studlab <- eval(mf[[match("studlab", names(mf))]],
+                      xd, enclos = NULL)
+      if (isCol(x$data, ".subset"))
+        studlab <- studlab[x$data$.subset]
+    }
+  }
+  ##
+  if (length(studlab) == 1 & is.logical(studlab)) {
     if (studlab == FALSE) {
       studlab <- rep("", K.all)
       slab <- FALSE
     }
     else studlab <- x$studlab
+  }
   ##
   if (length(studlab) != (K.all - 2 * (metainf.metacum & !missing.studlab)))
     stop("Number of studies in object 'x' and argument 'studlab' have ",
@@ -1389,15 +1416,25 @@ forest.meta <- function(x,
     chklogical(overall.hetstat)
   }
   ##
-  chkchar(hetlab)
-  chklogical(resid.hetstat)
-  chkchar(resid.hetlab)
   chklogical(LRT)
   if (LRT & x$method != "GLMM") {
     warning("Likelihood-Ratio test of heterogeneity only ",
             "available for generalized linear mixed models.")
     LRT <- FALSE
   }
+  ##
+  chkchar(hetlab)
+  if (!missing(resid.hetstat))
+    chklogical(resid.hetstat)
+  else {
+    if (overall && (is.character(hetstat) || hetstat) && !LRT &&
+        !is.null(x$tau.common) && x$tau.common)
+      resid.hetstat <- TRUE
+    else
+      resid.hetstat <- FALSE
+  }
+  chkchar(resid.hetlab)
+  ##
   chklogical(test.overall.fixed)
   chklogical(test.overall.random)
   if (!missing(test.subgroup.fixed))
@@ -1869,13 +1906,17 @@ forest.meta <- function(x,
     study.results <- FALSE
   }
   ##
-  if (is.null(text.fixed)) {
+  missing.text.fixed <- missing(text.fixed)
+  if (missing.text.fixed | is.null(text.fixed)) {
     if (study.results & (x$level != x$level.comb | revman5)) {
       if (revman5.jama)
         text.fixed <- paste0("Total (",
                              if (fixed.random)
                                "fixed effect, ",
                              round(x$level.comb * 100), "% CI)")
+      else if (!is.null(text.fixed))
+        text.fixed <- paste0(text.fixed, " (",
+                             round(x$level.comb * 100), "%-CI)")
       else
         text.fixed <- paste0("Fixed effect model (",
                              round(x$level.comb * 100), "%-CI)")
@@ -1886,17 +1927,22 @@ forest.meta <- function(x,
         if (fixed.random)
           text.fixed <- paste(text.fixed, "(fixed effect)")
       }
-      else
+      else if (is.null(text.fixed))
         text.fixed <- "Fixed effect model"
     }
   }
-  if (is.null(text.random)) {
+  ##
+  missing.text.random <- missing(text.random)
+  if (missing.text.random | is.null(text.random)) {
     if (study.results & (x$level != x$level.comb | revman5)) {
       if (revman5.jama)
         text.random <- paste0("Total (",
                               if (fixed.random)
                                 "random effects, ",
                               round(x$level.comb * 100), "% CI)")
+      else if (!is.null(text.random))
+        text.random <- paste0(text.random, " (",
+                              round(x$level.comb * 100), "%-CI)")
       else
         text.random <- paste0("Random effects model (",
                               round(x$level.comb * 100), "%-CI)")
@@ -1907,17 +1953,20 @@ forest.meta <- function(x,
         if (fixed.random)
           text.random <- paste(text.random, "(random effects)")
       }
-      else
+      else if (is.null(text.random))
         text.random <- "Random effects model"
     }
   }
-  if (is.null(text.predict))
+  ##
+  missing.text.predict <- missing(text.predict)
+  if (missing.text.predict | is.null(text.predict)) {
+    if (is.null(text.predict))
+      text.predict <- "Prediction interval"
     if (!(length(x$level.predict) == 0) &&
         (study.results & (x$level != x$level.predict | x$level.comb != x$level.predict)))
-      text.predict <- paste0("Prediction interval (",
+      text.predict <- paste0(text.predict, " (",
                              round(x$level.predict * 100), "%-PI)")
-    else
-      text.predict <- "Prediction interval"
+  }
   ##
   if (metainf.metacum) {
     overall.hetstat <- FALSE
@@ -2139,6 +2188,8 @@ forest.meta <- function(x,
     }
     else if (sm == "proportion")
       sm.lab <- "Proportion"
+    else if (sm == "MLN")
+      sm.lab <- "Mean"
   }
   else 
     if (is.relative.effect(sm))
@@ -2236,6 +2287,22 @@ forest.meta <- function(x,
   else if (gs("CIbracket") == "")
     ci.lab.bracket <- ci.lab
   ##
+  if (!fixed.random) {
+    text.w.fixed <- "Weight"
+    text.w.random <- "Weight"
+  }
+  else {
+    if (is.null(text.w.fixed))
+      text.w.fixed <- paste0("Weight\n(", gs("text.w.fixed"), ")")
+    else
+      text.w.fixed <- paste0("Weight\n(", text.w.fixed, ")")
+    ##
+    if (is.null(text.w.random))
+      text.w.random <- paste0("Weight\n(", gs("text.w.random"), ")")
+    else
+      text.w.random <- paste0("Weight\n(", text.w.random, ")")
+  }
+  ##
   labnames <- c(lab.studlab,
                 "TE", if (revman5) "SE" else "seTE",
                 "Total", "Total", "Events", "Events",
@@ -2245,8 +2312,8 @@ forest.meta <- function(x,
                 sm.lab,
                 ci.lab,
                 if (revman5 & smlab.null) smlab else paste(sm.lab, ci.lab.bracket),
-                if (fixed.random) "Weight\n(fixed)" else "Weight",
-                if (fixed.random) "Weight\n(random)" else "Weight")
+                text.w.fixed,
+                text.w.random)
   ##
   ## If any of the following list elements is NULL, these 'special'
   ## variable names are searched for in original data set (i.e., list
@@ -2660,7 +2727,8 @@ forest.meta <- function(x,
   ##
   col.inside <- col.inside[sel]
   ##
-  if (!is.null(x$exclude))
+  null.exclude <- is.null(x$exclude)
+  if (!null.exclude)
     exclude <- x$exclude[sel]
   ##
   if (sort | by) {
@@ -2712,7 +2780,7 @@ forest.meta <- function(x,
     ##
     col.inside <- col.inside[o]
     ##
-    if (!is.null(x$exclude))
+    if (!null.exclude)
       exclude <- exclude[o]
     ##
     if (newcols) {
@@ -2800,15 +2868,31 @@ forest.meta <- function(x,
     tau2 <- x$tau2
     lower.tau2 <- x$lower.tau2
     upper.tau2 <- x$upper.tau2
+    ##
     if (is.null(tau2)) {
       tau2 <- x$tau^2
       lower.tau2 <- upper.tau2 <- NA
     }
+    ##
+    if (length(tau2) > 1) {
+      tau2 <- sum(tau2)
+      lower.tau2 <- NA
+      upper.tau2 <- NA
+    }
+    ##
     tau <- x$tau
     lower.tau <- x$lower.tau
     upper.tau <- x$upper.tau
+    ##
+    if (length(tau) > 1) {
+      tau <- sqrt(sum(tau^2))
+      lower.tau <- NA
+      upper.tau <- NA
+    }
+    ##
     sign.lower.tau <- x$sign.lower.tau
     sign.upper.tau <- x$sign.lower.tau
+    ##
     if (is.null(lower.tau)) {
       lower.tau <- upper.tau <- NA
       sign.lower.tau <- sign.upper.tau <- ""
@@ -2823,16 +2907,17 @@ forest.meta <- function(x,
     uppRb <- x$upper.Rb
     ##
     if (by) {
-      Q.b.fixed  <- x$Q.b.fixed
+      Q.b.fixed <- x$Q.b.fixed
       Q.b.random <- x$Q.b.random
-      df.Q.b     <- x$df.Q.b
-      pval.Q.b.fixed <- replaceNULL(x$pval.Q.b.fixed, pvalQ(Q.b.fixed, df.Q.b))
-      pval.Q.b.random <- replaceNULL(x$pval.Q.b.random, pvalQ(Q.b.random, df.Q.b))
+      df.Q.b <- x$df.Q.b
+      pval.Q.b.fixed <-
+        replaceNULL(x$pval.Q.b.fixed, pvalQ(Q.b.fixed, df.Q.b))
+      pval.Q.b.random <-
+        replaceNULL(x$pval.Q.b.random, pvalQ(Q.b.random, df.Q.b))
       ##
-      Q.resid    <- x$Q.w.fixed
-      df.Q.resid <- x$df.Q.w
-      pval.Q.resid <- replaceNULL(x$pval.Q.w.fixed,
-                                  pvalQ(x$Q.w.fixed, x$df.Q.w))
+      Q.resid <- x$Q.resid
+      df.Q.resid <- x$df.Q.resid
+      pval.Q.resid <- x$pval.Q.resid
       ##
       tau2.resid <- x$tau2.resid
       lower.tau2.resid <- x$lower.tau2.resid
@@ -4241,21 +4326,26 @@ forest.meta <- function(x,
     o <- order(factor(x$bylevs, levels = bylevs))
     k.w <- x$k.w[o]
     k.w.hetstat <- k.w.hetstat[o]
+    ##
     TE.fixed.w <- x$TE.fixed.w[o]
     lower.fixed.w <- x$lower.fixed.w[o]
     upper.fixed.w <- x$upper.fixed.w[o]
+    statistic.fixed.w <- x$statistic.fixed.w[o]
     pval.fixed.w <- x$pval.fixed.w[o]
+    ##
     TE.random.w <- x$TE.random.w[o]
     lower.random.w <- x$lower.random.w[o]
     upper.random.w <- x$upper.random.w[o]
+    statistic.random.w <- x$statistic.random.w[o]
     pval.random.w <- x$pval.random.w[o]
-    Q.w        <- x$Q.w[o]
-    I2.w       <- x$I2.w[o]
-    lowI2.w    <- x$lower.I2.w[o]
-    uppI2.w    <- x$upper.I2.w[o]
-    Rb.w       <- x$Rb.w[o]
-    lowRb.w    <- x$lower.Rb.w[o]
-    uppRb.w    <- x$upper.Rb.w[o]
+    ##
+    Q.w     <- x$Q.w[o]
+    I2.w    <- x$I2.w[o]
+    lowI2.w <- x$lower.I2.w[o]
+    uppI2.w <- x$upper.I2.w[o]
+    Rb.w    <- x$Rb.w[o]
+    lowRb.w <- x$lower.Rb.w[o]
+    uppRb.w <- x$upper.Rb.w[o]
     ##
     tau2.w <- x$tau2.w[o]
     lower.tau2.w <- x$lower.tau2.w[o]
@@ -4286,18 +4376,21 @@ forest.meta <- function(x,
     TE.fixed.w <- TE.fixed.w[sel]
     lower.fixed.w <- lower.fixed.w[sel]
     upper.fixed.w <- upper.fixed.w[sel]
+    statistic.fixed.w <- statistic.fixed.w[sel]
     pval.fixed.w <- pval.fixed.w[sel]
+    ##
     TE.random.w <- TE.random.w[sel]
     lower.random.w <- lower.random.w[sel]
     upper.random.w <- upper.random.w[sel]
+    statistic.random.w <- statistic.random.w[sel]
     pval.random.w <- pval.random.w[sel]
-    Q.w        <- Q.w[sel]
-    I2.w       <- I2.w[sel]
-    lowI2.w    <- lowI2.w[sel]
-    uppI2.w    <- uppI2.w[sel]
-    Rb.w       <- Rb.w[sel]
-    lowRb.w    <- lowRb.w[sel]
-    uppRb.w    <- uppRb.w[sel]
+    Q.w     <- Q.w[sel]
+    I2.w    <- I2.w[sel]
+    lowI2.w <- lowI2.w[sel]
+    uppI2.w <- uppI2.w[sel]
+    Rb.w    <- Rb.w[sel]
+    lowRb.w <- lowRb.w[sel]
+    uppRb.w <- uppRb.w[sel]
     ##
     tau2.w <- tau2.w[sel]
     lower.tau2.w <- lower.tau2.w[sel]
@@ -4968,13 +5061,14 @@ forest.meta <- function(x,
     ## Label of test for effect in subgroups
     ##
     if (test.effect.subgroup.fixed | test.effect.subgroup.random) {
-      pvals.effect.w <- formatPT(c(x$pval.fixed.w, x$pval.random.w),
+      pvals.effect.w <- formatPT(c(pval.fixed.w, pval.random.w),
                                  lab = TRUE, labval = "",
                                  digits = digits.pval,
                                  zero = zero.pval, JAMA = JAMA.pval,
                                  scientific = scientific.pval,
                                  lab.NA = "NA")
-      statistics.effect.w <- formatN(round(c(x$statistic.fixed.w, x$statistic.random.w),
+      statistics.effect.w <- formatN(round(c(statistic.fixed.w,
+                                             statistic.random.w),
                                            digits = digits.stat),
                                      digits.stat, "NA", big.mark = big.mark)
       ##
@@ -5290,7 +5384,7 @@ forest.meta <- function(x,
   lowTE.exclude <- lowTE
   uppTE.exclude <- uppTE
   ##
-  if (!is.null(x$exclude)) {
+  if (!null.exclude) {
     TE.exclude[exclude] <- NA
     lowTE.exclude[exclude] <- NA
     uppTE.exclude[exclude] <- NA
@@ -6005,12 +6099,35 @@ forest.meta <- function(x,
   ##
   ## Number of patients, events, and person times
   ##
-  sum.n.e <- sum(x$n.e, na.rm = TRUE)
-  sum.n.c <- sum(x$n.c, na.rm = TRUE)
-  sum.e.e <- sum(x$event.e, na.rm = TRUE)
-  sum.e.c <- sum(x$event.c, na.rm = TRUE)
-  sum.t.e <- sum(x$time.e, na.rm = TRUE)
-  sum.t.c <- sum(x$time.c, na.rm = TRUE)
+  if (!is.null(x$n.e.pooled))
+    sum.n.e <- x$n.e.pooled
+  else
+    sum.n.e <- sum(x$n.e, na.rm = TRUE)
+  ##
+  if (!is.null(x$n.c.pooled))
+    sum.n.c <- x$n.c.pooled
+  else
+    sum.n.c <- sum(x$n.c, na.rm = TRUE)
+  ##
+  if (!is.null(x$event.e.pooled))
+    sum.e.e <- x$event.e.pooled
+  else
+    sum.e.e <- sum(x$event.e, na.rm = TRUE)
+  ##
+  if (!is.null(x$event.c.pooled))
+    sum.e.c <- x$event.c.pooled
+  else
+    sum.e.c <- sum(x$event.c, na.rm = TRUE)
+  ##
+  if (!is.null(x$time.e.pooled))
+    sum.t.e <- x$time.e.pooled
+  else
+    sum.t.e <- sum(x$time.e, na.rm = TRUE)
+  ##
+  if (!is.null(x$time.c.pooled))
+    sum.t.c <- x$time.c.pooled
+  else
+    sum.t.c <- sum(x$time.c, na.rm = TRUE)
   ##
   if (by) {
     if (pooled.totals) {

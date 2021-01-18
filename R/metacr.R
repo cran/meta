@@ -51,6 +51,16 @@
 #'   printed as odds ratios rather than log odds ratios and results
 #'   for \code{sm="ZCOR"} are printed as correlations rather than
 #'   Fisher's z transformed correlations, for example.
+#' @param text.fixed A character string used in printouts and forest
+#'   plot to label the pooled fixed effect estimate.
+#' @param text.random A character string used in printouts and forest
+#'   plot to label the pooled random effects estimate.
+#' @param text.predict A character string used in printouts and forest
+#'   plot to label the prediction interval.
+#' @param text.w.fixed A character string used to label weights of
+#'   fixed effect model.
+#' @param text.w.random A character string used to label weights of
+#'   random effects model.
 #' @param title Title of meta-analysis / systematic review.
 #' @param complab Comparison label.
 #' @param outclab Outcome label.
@@ -91,9 +101,8 @@
 #'   \code{\link{settings.meta}}
 #' 
 #' @references
-#' \emph{Review Manager (RevMan)}
-#' [Computer program]. Version 5.3.
-#' Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
+#' \emph{Review Manager (RevMan)} [Computer program]. Version 5.4.
+#' The Cochrane Collaboration, 2020
 #' 
 #' @examples
 #' # Locate export data file "Fleiss1993_CR.csv"
@@ -137,7 +146,7 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                    ##
                    hakn = FALSE,
                    method.tau = "DL",
-                   method.tau.ci = if (method.tau == "DL") "J" else "QP",
+                   method.tau.ci = gs("method.tau.ci"),
                    tau.common = FALSE,
                    ##
                    prediction = gs("prediction"),
@@ -146,6 +155,13 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                    swap.events, logscale,
                    ##
                    backtransf = gs("backtransf"),
+                   ##
+                   text.fixed = gs("text.fixed"),
+                   text.random = gs("text.random"),
+                   text.predict = gs("text.predict"),
+                   text.w.fixed = gs("text.w.fixed"),
+                   text.w.random = gs("text.w.random"),
+                   ##
                    title, complab, outclab,
                    ##
                    keepdata = gs("keepdata"),
@@ -174,6 +190,8 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
   ##
   chklogical(hakn)
   method.tau <- setchar(method.tau, .settings$meth4tau)
+  if (is.null(method.tau.ci))
+    method.tau.ci <- if (method.tau == "DL") "J" else "QP"
   method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
   chklogical(tau.common)
   ##
@@ -184,6 +202,18 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
     chklogical(swap.events)
   ##
   chklogical(backtransf)
+  ##
+  if (!is.null(text.fixed))
+    chkchar(text.fixed, length = 1)
+  if (!is.null(text.random))
+    chkchar(text.random, length = 1)
+  if (!is.null(text.predict))
+    chkchar(text.predict, length = 1)
+  if (!is.null(text.w.fixed))
+    chkchar(text.w.fixed, length = 1)
+  if (!is.null(text.w.random))
+    chkchar(text.w.random, length = 1)
+  ##
   chklogical(keepdata)
   
   
@@ -333,6 +363,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       bylab = "grp",
                       print.byvar = FALSE,
                       backtransf = backtransf,
+                      ##
+                      text.fixed = text.fixed, text.random = text.random,
+                      text.predict = text.predict,
+                      text.w.fixed = text.w.fixed,
+                      text.w.random = text.w.random,
+                      ##
                       title = title,
                       complab = complab, outclab = outclab,
                       label.e = label.e, label.c = label.c,
@@ -355,6 +391,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       bylab = "grp",
                       print.byvar = FALSE,
                       backtransf = backtransf,
+                      ##
+                      text.fixed = text.fixed, text.random = text.random,
+                      text.predict = text.predict,
+                      text.w.fixed = text.w.fixed,
+                      text.w.random = text.w.random,
+                      ##
                       title = title,
                       complab = complab, outclab = outclab,
                       label.e = label.e, label.c = label.c,
@@ -379,6 +421,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                      byvar = grplab,
                      bylab = "grp",
                      print.byvar = FALSE,
+                     ##
+                     text.fixed = text.fixed, text.random = text.random,
+                     text.predict = text.predict,
+                     text.w.fixed = text.w.fixed,
+                     text.w.random = text.w.random,
+                     ##
                      title = title,
                      complab = complab, outclab = outclab,
                      label.e = label.e, label.c = label.c,
@@ -400,6 +448,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     bylab = "grp",
                     print.byvar = FALSE,
                     backtransf = backtransf,
+                    ##
+                    text.fixed = text.fixed, text.random = text.random,
+                    text.predict = text.predict,
+                    text.w.fixed = text.w.fixed,
+                    text.w.random = text.w.random,
+                    ##
                     title = title,
                     complab = complab, outclab = outclab,
                     label.e = label.e, label.c = label.c,
@@ -423,6 +477,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     n.e = n.e,
                     n.c = n.c,
                     backtransf = backtransf,
+                    ##
+                    text.fixed = text.fixed, text.random = text.random,
+                    text.predict = text.predict,
+                    text.w.fixed = text.w.fixed,
+                    text.w.random = text.w.random,
+                    ##
                     title = title,
                     complab = complab, outclab = outclab,
                     label.e = label.e, label.c = label.c,
@@ -444,6 +504,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     bylab = "grp",
                     print.byvar = FALSE,
                     backtransf = backtransf,
+                    ##
+                    text.fixed = text.fixed, text.random = text.random,
+                    text.predict = text.predict,
+                    text.w.fixed = text.w.fixed,
+                    text.w.random = text.w.random,
+                    ##
                     title = title,
                     complab = complab, outclab = outclab,
                     label.e = label.e, label.c = label.c,
@@ -470,6 +536,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       prediction = prediction, level.predict = level.predict,
                       overall = overall,
                       backtransf = backtransf,
+                      ##
+                      text.fixed = text.fixed, text.random = text.random,
+                      text.predict = text.predict,
+                      text.w.fixed = text.w.fixed,
+                      text.w.random = text.w.random,
+                      ##
                       title = title,
                       complab = complab, outclab = outclab,
                       label.e = label.e, label.c = label.c,
@@ -489,6 +561,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                       prediction = prediction, level.predict = level.predict,
                       overall = overall,
                       backtransf = backtransf,
+                      ##
+                      text.fixed = text.fixed, text.random = text.random,
+                      text.predict = text.predict,
+                      text.w.fixed = text.w.fixed,
+                      text.w.random = text.w.random,
+                      ##
                       title = title,
                       complab = complab, outclab = outclab,
                       label.e = label.e, label.c = label.c,
@@ -510,6 +588,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                      level = level, level.comb = level.comb,
                      prediction = prediction, level.predict = level.predict,
                      overall = overall,
+                     ##
+                     text.fixed = text.fixed, text.random = text.random,
+                     text.predict = text.predict,
+                     text.w.fixed = text.w.fixed,
+                     text.w.random = text.w.random,
+                     ##
                      title = title,
                      complab = complab, outclab = outclab,
                      label.e = label.e, label.c = label.c,
@@ -528,6 +612,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     prediction = prediction, level.predict = level.predict,
                     overall = overall,
                     backtransf = backtransf,
+                    ##
+                    text.fixed = text.fixed, text.random = text.random,
+                    text.predict = text.predict,
+                    text.w.fixed = text.w.fixed,
+                    text.w.random = text.w.random,
+                    ##
                     title = title,
                     complab = complab, outclab = outclab,
                     label.e = label.e, label.c = label.c,
@@ -548,6 +638,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     n.e = n.e,
                     n.c = n.c,
                     backtransf = backtransf,
+                    ##
+                    text.fixed = text.fixed, text.random = text.random,
+                    text.predict = text.predict,
+                    text.w.fixed = text.w.fixed,
+                    text.w.random = text.w.random,
+                    ##
                     title = title,
                     complab = complab, outclab = outclab,
                     label.e = label.e, label.c = label.c,
@@ -566,6 +662,12 @@ metacr <- function(x, comp.no = 1, outcome.no = 1,
                     prediction = prediction, level.predict = level.predict,
                     overall = overall,
                     backtransf = backtransf,
+                    ##
+                    text.fixed = text.fixed, text.random = text.random,
+                    text.predict = text.predict,
+                    text.w.fixed = text.w.fixed,
+                    text.w.random = text.w.random,
+                    ##
                     title = title,
                     complab = complab, outclab = outclab,
                     label.e = label.e, label.c = label.c,

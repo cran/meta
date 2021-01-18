@@ -68,6 +68,16 @@
 #'   transformed in printouts and plots. If TRUE (default), results
 #'   will be presented as correlations; otherwise Fisher's z
 #'   transformed correlations will be shown.
+#' @param text.fixed A character string used in printouts and forest
+#'   plot to label the pooled fixed effect estimate.
+#' @param text.random A character string used in printouts and forest
+#'   plot to label the pooled random effects estimate.
+#' @param text.predict A character string used in printouts and forest
+#'   plot to label the prediction interval.
+#' @param text.w.fixed A character string used to label weights of
+#'   fixed effect model.
+#' @param text.w.random A character string used to label weights of
+#'   random effects model.
 #' @param title Title of meta-analysis / systematic review.
 #' @param complab Comparison label.
 #' @param outclab Outcome label.
@@ -150,20 +160,32 @@
 #' In rare settings with very homogeneous treatment estimates, the
 #' Hartung-Knapp variance estimate can be arbitrarily small resulting
 #' in a very narrow confidence interval (Knapp and Hartung, 2003;
-#' Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
-#' correction has been proposed by utilising the variance estimate
-#' from the classic random effects model (Knapp and Hartung,
-#' 2003). Argument \code{adhoc.hakn} can be used to choose the
-#' \emph{ad hoc} method:
+#' Wiksten et al., 2016). In such cases, an
+#' \emph{ad hoc} variance correction has been proposed by utilising
+#' the variance estimate from the classic random effects model with
+#' the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+#' alternative approach is to use the wider confidence interval of
+#' classic fixed or random effects meta-analysis and the HK method
+#' (Wiksten et al., 2016; Jackson et al., 2017).
+#'
+#' Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+#' method:
 #' \tabular{ll}{
-#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 #' \code{adhoc.hakn = ""}\tab not used \cr
-#' \code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
-#'  standard error \cr
-#'  \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-#' \code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
-#'  narrower than CI from \cr
-#'  \tab classic random effects model with DL estimator (IQWiG, 2020)
+#' \code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+#'  error is smaller \cr
+#'  \tab than standard error from classic random effects
+#'  \cr
+#'  \tab meta-analysis (Knapp and Hartung, 2003) \cr
+#' \code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+#'  confidence interval \cr
+#'  \tab is narrower than CI from classic random effects model \cr
+#'  \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+#' \code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+#'  classic random effects \cr
+#'  \tab and HK meta-analysis \cr
+#'  \tab (Hybrid method 2 in Jackson et al., 2017)
 #' }
 #' }
 #' 
@@ -242,14 +264,14 @@
 #'   (fixed effect model).}
 #' \item{lower.fixed, upper.fixed}{Lower and upper confidence interval
 #'   limits (fixed effect model).}
-#' \item{zval.fixed, pval.fixed}{z-value and p-value for test of
+#' \item{statistic.fixed, pval.fixed}{z-value and p-value for test of
 #'   overall effect (fixed effect model).}
 #' \item{TE.random, seTE.random}{Estimated overall effect (Fisher's z
 #'   transformation of correlation or correlation) and standard error
 #'   (random effects model).}
 #' \item{lower.random, upper.random}{Lower and upper confidence
 #'   interval limits (random effects model).}
-#' \item{zval.random, pval.random}{z-value or t-value and
+#' \item{statistic.random, pval.random}{z-value or t-value and
 #'   corresponding p-value for test of overall effect (random effects
 #'   model).}
 #' \item{prediction, level.predict}{As defined above.}
@@ -288,16 +310,16 @@
 #' \item{lower.fixed.w, upper.fixed.w}{Lower and upper confidence
 #'   interval limits in subgroups (fixed effect model) - if
 #'   \code{byvar} is not missing.}
-#' \item{zval.fixed.w, pval.fixed.w}{z-value and p-value for test of
-#'   effect in subgroups (fixed effect model) - if \code{byvar} is not
-#'   missing.}
+#' \item{statistic.fixed.w, pval.fixed.w}{z-value and p-value for test
+#'   of effect in subgroups (fixed effect model) - if \code{byvar} is
+#'   not missing.}
 #' \item{TE.random.w, seTE.random.w}{Estimated effect and standard
 #'   error in subgroups (random effects model) - if \code{byvar} is
 #'   not missing.}
 #' \item{lower.random.w, upper.random.w}{Lower and upper confidence
 #'   interval limits in subgroups (random effects model) - if
 #'   \code{byvar} is not missing.}
-#' \item{zval.random.w, pval.random.w}{z-value or t-value and
+#' \item{statistic.random.w, pval.random.w}{z-value or t-value and
 #'   corresponding p-value for test of effect in subgroups (random
 #'   effects model) - if \code{byvar} is not missing.}
 #' \item{w.fixed.w, w.random.w}{Weight of subgroups (in fixed and
@@ -396,8 +418,14 @@
 #' \bold{14}, 25
 #' 
 #' IQWiG (2020):
-#' General Methods: Draft of Version 6.0.
-#' \url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
+#' General Methods: Version 6.0.
+#' \url{https://www.iqwig.de/en/about-us/methods/methods-paper/}
+#' 
+#' Jackson D, Law M, Rücker G, Schwarzer G (2017): 
+#' The Hartung-Knapp modification for random-effects meta-analysis: A
+#' useful refinement but are there any residual concerns?
+#' \emph{Statistics in Medicine},
+#' \bold{36}, 3923--34
 #' 
 #' Knapp G & Hartung J (2003):
 #' Improved tests for a random effects meta-regression with a single
@@ -468,7 +496,7 @@ metacor <- function(cor, n, studlab,
                     ##
                     hakn = gs("hakn"), adhoc.hakn = gs("adhoc.hakn"),
                     method.tau = gs("method.tau"),
-                    method.tau.ci = if (method.tau == "DL") "J" else "QP",
+                    method.tau.ci = gs("method.tau.ci"),
                     tau.preset = NULL, TE.tau = NULL,
                     tau.common = gs("tau.common"),
                     ##
@@ -480,6 +508,13 @@ metacor <- function(cor, n, studlab,
                     method.bias = gs("method.bias"),
                     ##
                     backtransf = gs("backtransf"),
+                    ##
+                    text.fixed = gs("text.fixed"),
+                    text.random = gs("text.random"),
+                    text.predict = gs("text.predict"),
+                    text.w.fixed = gs("text.w.fixed"),
+                    text.w.random = gs("text.w.random"),
+                    ##
                     title = gs("title"), complab = gs("complab"),
                     outclab = "",
                     ##
@@ -508,6 +543,8 @@ metacor <- function(cor, n, studlab,
   chklogical(hakn)
   adhoc.hakn <- setchar(adhoc.hakn, .settings$adhoc4hakn)
   method.tau <- setchar(method.tau, .settings$meth4tau)
+  if (is.null(method.tau.ci))
+    method.tau.ci <- if (method.tau == "DL") "J" else "QP"
   method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
   chklogical(tau.common)
   ##
@@ -519,6 +556,18 @@ metacor <- function(cor, n, studlab,
   method.bias <- setchar(method.bias, .settings$meth4bias)
   ##
   chklogical(backtransf)
+  ##
+  if (!is.null(text.fixed))
+    chkchar(text.fixed, length = 1)
+  if (!is.null(text.random))
+    chkchar(text.random, length = 1)
+  if (!is.null(text.predict))
+    chkchar(text.predict, length = 1)
+  if (!is.null(text.w.fixed))
+    chkchar(text.w.fixed, length = 1)
+  if (!is.null(text.w.random))
+    chkchar(text.w.random, length = 1)
+  ##
   chklogical(keepdata)
   ##
   ## Additional arguments / checks for metacor objects
@@ -739,6 +788,11 @@ metacor <- function(cor, n, studlab,
                method.bias = method.bias,
                ##
                backtransf = backtransf,
+               ##
+               text.fixed = text.fixed, text.random = text.random,
+               text.predict = text.predict,
+               text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+               ##
                title = title, complab = complab, outclab = outclab,
                ##
                keepdata = FALSE,
@@ -795,51 +849,40 @@ metacor <- function(cor, n, studlab,
     res$byseparator <- byseparator
     res$tau.common <- tau.common
     ##
-    if (!tau.common) {
+    if (!tau.common)
       res <- c(res, subgroup(res))
-      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
-      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
-    }
-    else if (!is.null(tau.preset)) {
+    else if (!is.null(tau.preset))
       res <- c(res, subgroup(res, tau.preset))
+    else
+      res <- c(res, subgroup(res, hcc$tau.resid))
+    ##
+    if (!tau.common || !is.null(tau.preset)) {
       res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
       res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
-    }
-    else {
-      res <- c(res, subgroup(res, hcc$tau))
-      res$Q.w.random <- hcc$Q
-      res$df.Q.w.random <- hcc$df.Q
-      res$tau2.resid <- hcc$tau2
-      res$lower.tau2.resid <- hcc$lower.tau2
-      res$upper.tau2.resid <- hcc$upper.tau2
-      res$tau.resid <- hcc$tau
-      res$lower.tau.resid <- hcc$lower.tau
-      res$upper.tau.resid <- hcc$upper.tau
-      res$sign.lower.tau.resid <- hcc$sign.lower.tau
-      res$sign.upper.tau.resid <- hcc$sign.upper.tau
-    }
-    ##
-    if (!tau.common || method.tau == "DL") {
-      ci.H.resid <- calcH(res$Q.w.fixed, res$df.Q.w, level.comb)
       ##
-      res$H.resid <- ci.H.resid$TE
-      res$lower.H.resid <- ci.H.resid$lower
-      res$upper.H.resid <- ci.H.resid$upper
+      res$Q.resid <- res$df.Q.resid <- res$pval.Q.resid <- NA
+      res$H.resid <- res$lower.H.resid <- res$upper.H.resid <- NA
+      res$I2.resid <- res$lower.I2.resid <- res$upper.I2.resid <- NA
     }
     else {
+      res$tau2.resid <- hcc$tau2.resid
+      res$lower.tau2.resid <- hcc$lower.tau2.resid
+      res$upper.tau2.resid <- hcc$upper.tau2.resid
+      ##
+      res$tau.resid <- hcc$tau.resid
+      res$lower.tau.resid <- hcc$lower.tau.resid
+      res$upper.tau.resid <- hcc$upper.tau.resid
+      res$sign.lower.tau.resid <- hcc$sign.lower.tau.resid
+      res$sign.upper.tau.resid <- hcc$sign.upper.tau.resid
+      ##
+      res$Q.w.random <- hcc$Q.resid
+      res$df.Q.w.random <- hcc$df.Q.resid
+      res$pval.Q.w.random <- hcc$pval.Q.resid
+      ##
       res$H.resid <- hcc$H.resid
       res$lower.H.resid <- hcc$lower.H.resid
       res$upper.H.resid <- hcc$upper.H.resid
-    }
-    ##
-    if (!tau.common || method.tau == "DL") {
-      ci.I2.resid <- isquared(res$Q.w.fixed, res$df.Q.w, level.comb)
       ##
-      res$I2.resid <- ci.I2.resid$TE
-      res$lower.I2.resid <- ci.I2.resid$lower
-      res$upper.I2.resid <- ci.I2.resid$upper
-    }
-    else {
       res$I2.resid <- hcc$I2.resid
       res$lower.I2.resid <- hcc$lower.I2.resid
       res$upper.I2.resid <- hcc$upper.I2.resid

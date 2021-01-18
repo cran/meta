@@ -248,10 +248,12 @@ trimfill.meta <- function(x, left = NULL, ma.fixed = TRUE,
   ##
   ##
   chkclass(x, "meta")
+  ##
   if (inherits(x, "metacum"))
     stop("This function is not usable for an object of class \"metacum\"")
   if (inherits(x, "metainf"))
     stop("This function is not usable for an object of class \"metainf\"")
+  ##
   x <- updateversion(x)
   
   
@@ -695,6 +697,11 @@ trimfill.meta <- function(x, left = NULL, ma.fixed = TRUE,
               df.hakn = m$df.hakn,
               method.tau = m$method.tau,
               prediction = prediction,
+              ##
+              text.fixed = x$text.fixed, text.random = x$text.random,
+              text.predict = x$text.predict,
+              text.w.fixed = x$text.w.fixed, text.w.random = x$text.w.random,
+              ##
               title = x$title,
               complab = x$complab,
               outclab = x$outclab,

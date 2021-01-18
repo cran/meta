@@ -1,3 +1,114 @@
+## meta, version 4.16-0 (2021-01-18)
+
+### Major changes
+
+* Three-level meta-analysis models can be fitted for generic and
+  continuous outcomes ([Van den Noortgate et.,
+  2013](https://doi.org/10.3758/s13428-012-0261-6)) by calling
+  rma.mv() from R package **metafor** internally
+
+* Measures I2 and H for residual heterogeneity are based on Q
+  statistic for residual heterogeneity (instead of taken directly from
+  **metafor** package)
+
+* Additional *ad hoc* method implemented if confidence interval of
+  Hartung-Knapp method is smaller than classic random effects
+  meta-analysis ([Hybrid method 2 in Jackson et al.,
+  2017](https://doi.org/10.1002/sim.7411))
+
+* For funnel plot of a diagnostic test accuracy meta-analysis, use
+  *effective sample size* ([Deeks et.,
+  2005](https://doi.org/10.1016/j.jclinepi.2005.01.016)) by default on
+  the y-axis
+
+* New function metamerge() to merge pooled results of two
+  meta-analyses into a single meta-analysis object
+
+### Bug fixes
+
+* metabin():
+  - Mantel-Haenszel method of risk differences did not use continuity
+    correction in case of studies with a zero cell count (argument
+    MH.exact = FALSE)
+
+* metabin(), metainc(), metaprop(), metarate():
+  - for GLMMs, confidence limits for classic random effects
+    meta-analysis were calculated instead of confidence limits for
+    Hartung-Knapp if argument 'hakn = TRUE'
+
+* metabin(), metainc(), metaprop(), metarate():
+  - works for GLMMs with zero events or number of events equal to
+    number of patients in all studies
+
+* forest.meta():
+  - print results for test of subgroup effect in correct order if
+    argument bysort = TRUE
+
+* read.rm5():
+  - list elements 'method' and 'sm' had been encoded as a factor
+    instead of character under R-versions below 4.0 which resulted in
+    an error using metacr()
+   
+
+### User-visible changes
+
+* Do not print empty confidence intervals for heterogeneity statistics
+
+* metacont(), metagen(), update.meta():
+  - new argument 'id' to specify which estimates belong to the same
+    study (or laboratory) in order to use three-level model
+
+* metabind():
+  - argument '...' can be a single list of meta-analysis objects
+  - meta-analyses can use different methods, e.g., different
+    estimators of the between-study variance
+  
+* All meta-analysis functions:
+  - argument 'adhoc.hakn = "iqwig6"' instead of 'adhoc.hakn = "ci"'
+    uses the *ad hoc* method for Hartung-Knapp method described in
+    General Methods 6.0 (IQWiG, 2020)
+  - argument 'adhoc.hakn = "ci"' uses the *ad hoc* method described in
+    Jackson et al. (2017)
+
+* forest.meta():
+  - column heading "Mean" instead of "MLN" for meta-analysis object
+    created with metamean() with arguments 'sm = "MLN"' and
+    'backtransf = TRUE'
+  - study labels specified by argument 'studlab' tried to catch from
+    meta-analysis object
+  - do not print statistic for residual heterogeneity if argument
+    'tau.common = FALSE' was used to conduct subgroup meta-analysis
+
+* metainc():
+  - square root transformed incidence rate difference added as new
+    summary measure (sm = "IRSD")
+
+* New arguments 'text.fixed', 'text.random', 'text.predict',
+  'text.w.fixed' and 'text.w,random' in meta-analysis functions
+
+* settings.meta():
+  - new general setting "geneexpr" to print scientific p-values and
+    not calculate confidence interval for between-study heterogeneity
+    variance tau2
+  - argument 'method.tau.ci' can be specified as a global setting
+  - text for fixed effect and random effects model as well as
+    prediction interval can be specified (arguments 'text.fixed',
+    'text.random', 'text.predict', 'text.w.fixed', 'text.w.randon')
+
+* print.meta(), print.summary.meta():
+  - do not print information on continuity correction for exact
+    Mantel-Haenszel method with single study
+
+* metareg() can be used in loops to provide argument 'formula'
+
+* New auxiliary function JAMAlabels() to create study labels in JAMA
+  layout
+
+### Internal changes
+
+* Calculate measures of residual heterogeneity in hetcalc()
+
+
 ## meta, version 4.15-1 (2020-09-30)
 
 ### Bug fixes
@@ -196,15 +307,15 @@
   ratio as summary measure implemented ([Bakbergenuly et al.,
   2020](https://www.doi.org/10.1002/jrsm.1404))
 
-* Ad hoc variance correction for Hartung-Knapp method in the case of
+* *Ad hoc* variance correction for Hartung-Knapp method in the case of
   very homogeneous study results implemented ([Knapp and Hartung,
-  2003](https://www.doi.org/10.1002/sim.1482); [IQWiG, General Methods:
-  Draft of Version
-  6.0](https://www.iqwig.de/en/methods/methods-paper.3020.html))
+  2003](https://www.doi.org/10.1002/sim.1482); [IQWiG, General
+  Methods: Draft of Version
+  6.0](https://www.iqwig.de/en/about-us/methods/methods-paper/))
 
 * Default settings according to recommendations in [General Methods of
   the Institute for Quality and Efficiency in Health Care (IQWIG),
-  Germany](https://www.iqwig.de/en/methods/methods-paper.3020.html)
+  Germany](https://www.iqwig.de/en/about-us/methods/methods-paper/)
   
 * Do not use predict.rma() from **metafor** package to calculate
   prediction intervals for generalized linear mixed models
@@ -1143,7 +1254,7 @@
 * forest.meta():
   - argument layout:
       - new layouts: "JAMA" to produce forest plots with [JAMA
-        style](http://jamanetwork.com/journals/jama/pages/instructions-for-authors)
+        style](https://jamanetwork.com/journals/jama/pages/instructions-for-authors/)
       - RevMan 5 layout extended
   - arguments can be specified without using grid::unit(): plotwidth,
     colgap, colgap.left, colgap.right, colgap.studlab, colgap.forest,

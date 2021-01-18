@@ -19,6 +19,9 @@
 #' @param exclude An optional vector specifying studies to exclude
 #'   from meta-analysis, however, to include in printouts and forest
 #'   plots.
+#' @param id An optional vector specifying which estimates come from
+#'   the same study resulting in the use of a three-level
+#'   meta-analysis model.
 #' @param median.e Median in experimental group (used to estimate the
 #'   mean and standard deviation).
 #' @param q1.e First quartile in experimental group (used to estimate
@@ -104,6 +107,16 @@
 #'   means (\code{sm="ROM"}) should be back transformed in printouts
 #'   and plots. If TRUE (default), results will be presented as ratio
 #'   of means; otherwise log ratio of means will be shown.
+#' @param text.fixed A character string used in printouts and forest
+#'   plot to label the pooled fixed effect estimate.
+#' @param text.random A character string used in printouts and forest
+#'   plot to label the pooled random effects estimate.
+#' @param text.predict A character string used in printouts and forest
+#'   plot to label the prediction interval.
+#' @param text.w.fixed A character string used to label weights of
+#'   fixed effect model.
+#' @param text.w.random A character string used to label weights of
+#'   random effects model.
 #' @param title Title of meta-analysis / systematic review.
 #' @param complab Comparison label.
 #' @param outclab Outcome label.
@@ -341,9 +354,12 @@
 #' \eqn{\tau^2} and \eqn{\tau} are available.
 #' \tabular{ll}{
 #' \bold{Argument}\tab \bold{Method} \cr 
-#' \code{method.tau.ci = "J"}\tab Method by Jackson \cr
-#' \code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson \cr
-#' \code{method.tau.ci = "QP"}\tab Q-Profile method
+#' \code{method.tau.ci = "J"}\tab Method by Jackson (2013) \cr
+#' \code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson (2008) \cr
+#' \code{method.tau.ci = "QP"}\tab Q-Profile method (Viechtbauer, 2007) \cr
+#' \code{method.tau.ci = "PL"}\tab Profile-Likelihood method for
+#'  three-level meta-analysis model \cr
+#' \tab (Van den Noortgate et al., 2013)
 #' }
 #' See \code{\link{metagen}} for more information on these methods. No
 #' confidence intervals for \eqn{\tau^2} and \eqn{\tau} are calculated
@@ -362,20 +378,32 @@
 #' In rare settings with very homogeneous treatment estimates, the
 #' Hartung-Knapp variance estimate can be arbitrarily small resulting
 #' in a very narrow confidence interval (Knapp and Hartung, 2003;
-#' Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
-#' correction has been proposed by utilising the variance estimate
-#' from the classic random effects model (Knapp and Hartung,
-#' 2003). Argument \code{adhoc.hakn} can be used to choose the
-#' \emph{ad hoc} method:
+#' Wiksten et al., 2016). In such cases, an
+#' \emph{ad hoc} variance correction has been proposed by utilising
+#' the variance estimate from the classic random effects model with
+#' the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+#' alternative approach is to use the wider confidence interval of
+#' classic fixed or random effects meta-analysis and the HK method
+#' (Wiksten et al., 2016; Jackson et al., 2017).
+#'
+#' Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+#' method:
 #' \tabular{ll}{
-#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 #' \code{adhoc.hakn = ""}\tab not used \cr
-#' \code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
-#'  standard error \cr
-#'  \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-#' \code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
-#'  narrower than CI from \cr
-#'  \tab classic random effects model with DL estimator (IQWiG, 2020)
+#' \code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+#'  error is smaller \cr
+#'  \tab than standard error from classic random effects
+#'  \cr
+#'  \tab meta-analysis (Knapp and Hartung, 2003) \cr
+#' \code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+#'  confidence interval \cr
+#'  \tab is narrower than CI from classic random effects model \cr
+#'  \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+#' \code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+#'  classic random effects \cr
+#'  \tab and HK meta-analysis \cr
+#'  \tab (Hybrid method 2 in Jackson et al., 2017)
 #' }
 #' }
 #' 
@@ -644,8 +672,14 @@
 #' \bold{14}, 25
 #' 
 #' IQWiG (2020):
-#' General Methods: Draft of Version 6.0.
-#' \url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
+#' General Methods: Version 6.0.
+#' \url{https://www.iqwig.de/en/about-us/methods/methods-paper/}
+#' 
+#' Jackson D, Law M, Rücker G, Schwarzer G (2017): 
+#' The Hartung-Knapp modification for random-effects meta-analysis: A
+#' useful refinement but are there any residual concerns?
+#' \emph{Statistics in Medicine},
+#' \bold{36}, 3923--34
 #' 
 #' Knapp G & Hartung J (2003):
 #' Improved tests for a random effects meta-regression with a single
@@ -666,9 +700,13 @@
 #' \emph{Statistical Methods in Medical Research},
 #' \bold{27}, 1785--805
 #' 
-#' \emph{Review Manager (RevMan)}
-#' [Computer program]. Version 5.3.
-#' Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
+#' \emph{Review Manager (RevMan)} [Computer program]. Version 5.4.
+#' The Cochrane Collaboration, 2020
+#'
+#' Van den Noortgate W, López-López JA, Marín-Martínez F, Sánchez-Meca J (2013):
+#' Three-level meta-analysis of dependent effect sizes.
+#' \emph{Behavior Research Methods},
+#' \bold{45}, 576--94
 #' 
 #' Viechtbauer W (2010):
 #' Conducting Meta-Analyses in R with the Metafor Package.
@@ -743,7 +781,7 @@
 
 metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                      ##
-                     data = NULL, subset = NULL, exclude = NULL,
+                     data = NULL, subset = NULL, exclude = NULL, id = NULL,
                      ##
                      median.e, q1.e, q3.e, min.e, max.e,
                      median.c, q1.c, q3.c, min.c, max.c,
@@ -767,7 +805,7 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                      ##
                      hakn = gs("hakn"), adhoc.hakn = gs("adhoc.hakn"),
                      method.tau = gs("method.tau"),
-                     method.tau.ci = if (method.tau == "DL") "J" else "QP",
+                     method.tau.ci = gs("method.tau.ci"),
                      tau.preset = NULL, TE.tau = NULL,
                      tau.common = gs("tau.common"),
                      ##
@@ -777,6 +815,13 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                      method.bias = gs("method.bias"),
                      ##
                      backtransf = gs("backtransf"),
+                     ##
+                     text.fixed = gs("text.fixed"),
+                     text.random = gs("text.random"),
+                     text.predict = gs("text.predict"),
+                     text.w.fixed = gs("text.w.fixed"),
+                     text.w.random = gs("text.w.random"),
+                     ##
                      title = gs("title"), complab = gs("complab"),
                      outclab = "",
                      label.e = gs("label.e"), label.c = gs("label.c"),
@@ -809,13 +854,34 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   chklogical(hakn)
   adhoc.hakn <- setchar(adhoc.hakn, .settings$adhoc4hakn)
   method.tau <- setchar(method.tau, .settings$meth4tau)
+  ##
+  missing.id <- missing(id)
+  if (is.null(method.tau.ci))
+    if (method.tau == "DL")
+      method.tau.ci <- "J"
+    else if (!missing.id)
+      method.tau.ci <- "PL"
+    else
+      method.tau.ci <- "QP"
   method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
+  ##
   chklogical(tau.common)
   ##
   chklogical(prediction)
   chklevel(level.predict)
   ##
   method.bias <- setchar(method.bias, .settings$meth4bias)
+  ##
+  if (!is.null(text.fixed))
+    chkchar(text.fixed, length = 1)
+  if (!is.null(text.random))
+    chkchar(text.random, length = 1)
+  if (!is.null(text.predict))
+    chkchar(text.predict, length = 1)
+  if (!is.null(text.w.fixed))
+    chkchar(text.w.fixed, length = 1)
+  if (!is.null(text.w.random))
+    chkchar(text.w.random, length = 1)
   ##
   chklogical(keepdata)
   ##
@@ -848,7 +914,8 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##
   mf <- match.call()
   ##
-  ## Catch 'n.e', 'mean.e', 'sd.e', 'n.c', 'mean.c', and 'sd.c' from data:
+  ## Catch 'n.e', 'mean.e', 'sd.e', 'n.c', 'mean.c', 'sd.c', and 'id'
+  ## from data:
   ##
   missing.mean.e <- missing(mean.e)
   missing.sd.e <- missing(sd.e)
@@ -866,6 +933,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   missing.q3.c <- missing(q3.c)
   missing.min.c <- missing(min.c)
   missing.max.c <- missing(max.c)
+  ##
+  if (!missing.id & is.null(id))
+    missing.id <- TRUE
   ##
   if (missing.mean.e & missing.median.e)
     stop("Provide either argument 'mean.e' or 'median.e'.",
@@ -925,6 +995,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     chknull(sd.c)
   else
     sd.c <- rep(NA, k.All)
+  ##
+  id <- eval(mf[[match("id", names(mf))]],
+             data, enclos = sys.frame(sys.parent()))
   ##
   ## Catch 'studlab', 'byvar', 'subset' and 'exclude' from data:
   ##
@@ -1013,6 +1086,8 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   chklength(mean.c, k.All, arg)
   chklength(sd.c, k.All, arg)
   chklength(studlab, k.All, arg)
+  if (!missing.id)
+    chklength(id, k.All, arg)
   ##
   if (!missing.median.e)
     chklength(median.e, k.All, arg)
@@ -1175,6 +1250,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     ##
     if (!missing.exclude)
       data$.exclude <- exclude
+    ##
+    if (!missing.id)
+      data$.id <- id
   }
   
   
@@ -1191,6 +1269,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     mean.c <- mean.c[subset]
     sd.c <- sd.c[subset]
     studlab <- studlab[subset]
+    ##
+    if (!missing.id)
+      id <- id[subset]
     ##
     exclude <- exclude[subset]
     ##
@@ -1667,7 +1748,7 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     ##
     if (any(npn.mean) & warn)
       warning("Note, studies with negative or zero means get no weight in meta-analysis.")
-
+    
     TE <- ifelse(npn.n | npn.mean, NA, log(mean.e / mean.c))
     ##
     if (pooledvar)
@@ -1691,6 +1772,32 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##
   if (sm == "SMD")
     TE[sel] <- NA
+  ##
+  ## No three-level meta-analysis conducted if variable 'id' contains
+  ## different values for each estimate
+  ##
+  multi.level <- FALSE
+  ##
+  sel.ni <- !is.infinite(TE) & !is.infinite(seTE)
+  if (!missing.id && length(unique(id[sel.ni])) != length(id[sel.ni]))
+    multi.level <- TRUE
+  ##
+  if (multi.level) {
+    if (!(method.tau %in% c("REML", "ML"))) {
+      if (!missing(method.tau))
+        warning("For three-level model, argument 'method.tau' set to \"REML\".",
+                call. = FALSE)
+      method.tau <- "REML"
+    }
+    ##
+    if (by & !tau.common) {
+      if (!missing(tau.common))
+        warning("For three-level model, argument 'tau.common' set to ",
+                "\"TRUE\".",
+                call. = FALSE)
+      tau.common <- TRUE
+    }
+  }
   
   
   ##
@@ -1700,6 +1807,7 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##
   m <- metagen(TE, seTE, studlab,
                exclude = if (missing.exclude) NULL else exclude,
+               id = id,
                ##
                sm = sm,
                level = level,
@@ -1721,6 +1829,11 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                method.bias = method.bias,
                ##
                backtransf = backtransf,
+               ##
+               text.fixed = text.fixed, text.random = text.random,
+               text.predict = text.predict,
+               text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+               ##
                title = title, complab = complab, outclab = outclab,
                label.e = label.e, label.c = label.c,
                label.left = label.left, label.right = label.right,
@@ -1785,6 +1898,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##
   ## Add data
   ##
+  res$n.e.pooled <- sum(res$n.e, na.rm = TRUE)
+  res$n.c.pooled <- sum(res$n.c, na.rm = TRUE)
+  ##
   res$method.mean <- method.mean
   res$method.sd <- method.sd
   res$call <- match.call()
@@ -1833,51 +1949,40 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     res$byseparator <- byseparator
     res$tau.common <- tau.common
     ##
-    if (!tau.common) {
+    if (!tau.common)
       res <- c(res, subgroup(res))
-      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
-      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
-    }
-    else if (!is.null(tau.preset)) {
+    else if (!is.null(tau.preset))
       res <- c(res, subgroup(res, tau.preset))
+    else
+      res <- c(res, subgroup(res, hcc$tau.resid))
+    ##
+    if (!tau.common || !is.null(tau.preset)) {
       res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
       res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
-    }
-    else {
-      res <- c(res, subgroup(res, hcc$tau))
-      res$Q.w.random <- hcc$Q
-      res$df.Q.w.random <- hcc$df.Q
-      res$tau2.resid <- hcc$tau2
-      res$lower.tau2.resid <- hcc$lower.tau2
-      res$upper.tau2.resid <- hcc$upper.tau2
-      res$tau.resid <- hcc$tau
-      res$lower.tau.resid <- hcc$lower.tau
-      res$upper.tau.resid <- hcc$upper.tau
-      res$sign.lower.tau.resid <- hcc$sign.lower.tau
-      res$sign.upper.tau.resid <- hcc$sign.upper.tau
-    }
-    ##
-    if (!tau.common || method.tau == "DL") {
-      ci.H.resid <- calcH(res$Q.w.fixed, res$df.Q.w, level.comb)
       ##
-      res$H.resid <- ci.H.resid$TE
-      res$lower.H.resid <- ci.H.resid$lower
-      res$upper.H.resid <- ci.H.resid$upper
+      res$Q.resid <- res$df.Q.resid <- res$pval.Q.resid <- NA
+      res$H.resid <- res$lower.H.resid <- res$upper.H.resid <- NA
+      res$I2.resid <- res$lower.I2.resid <- res$upper.I2.resid <- NA
     }
     else {
+      res$tau2.resid <- hcc$tau2.resid
+      res$lower.tau2.resid <- hcc$lower.tau2.resid
+      res$upper.tau2.resid <- hcc$upper.tau2.resid
+      ##
+      res$tau.resid <- hcc$tau.resid
+      res$lower.tau.resid <- hcc$lower.tau.resid
+      res$upper.tau.resid <- hcc$upper.tau.resid
+      res$sign.lower.tau.resid <- hcc$sign.lower.tau.resid
+      res$sign.upper.tau.resid <- hcc$sign.upper.tau.resid
+      ##
+      res$Q.w.random <- hcc$Q.resid
+      res$df.Q.w.random <- hcc$df.Q.resid
+      res$pval.Q.w.random <- hcc$pval.Q.resid
+      ##
       res$H.resid <- hcc$H.resid
       res$lower.H.resid <- hcc$lower.H.resid
       res$upper.H.resid <- hcc$upper.H.resid
-    }
-    ##
-    if (!tau.common || method.tau == "DL") {
-      ci.I2.resid <- isquared(res$Q.w.fixed, res$df.Q.w, level.comb)
       ##
-      res$I2.resid <- ci.I2.resid$TE
-      res$lower.I2.resid <- ci.I2.resid$lower
-      res$upper.I2.resid <- ci.I2.resid$upper
-    }
-    else {
       res$I2.resid <- hcc$I2.resid
       res$lower.I2.resid <- hcc$lower.I2.resid
       res$upper.I2.resid <- hcc$upper.I2.resid

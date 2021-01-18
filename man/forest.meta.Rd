@@ -13,14 +13,16 @@
   comb.fixed = x$comb.fixed,
   comb.random = x$comb.random,
   overall = x$overall,
-  text.fixed = NULL,
-  text.random = NULL,
+  text.fixed = x$text.fixed,
+  text.random = x$text.random,
   lty.fixed = 2,
   lty.random = 3,
   col.fixed = "black",
   col.random = "black",
+  text.w.fixed = x$text.w.fixed,
+  text.w.random = x$text.w.random,
   prediction = x$prediction,
-  text.predict = NULL,
+  text.predict = x$text.predict,
   subgroup = TRUE,
   print.subgroup.labels = TRUE,
   bylab = x$bylab,
@@ -93,7 +95,7 @@
   hetstat = print.I2 | print.tau2 | print.tau | print.Q | print.pval.Q | print.Rb,
   overall.hetstat = x$overall.hetstat,
   hetlab = "Heterogeneity: ",
-  resid.hetstat = overall & (is.character(hetstat) || hetstat) & !LRT,
+  resid.hetstat,
   resid.hetlab = "Residual heterogeneity: ",
   print.I2 = comb.fixed | comb.random,
   print.I2.ci = FALSE,
@@ -256,6 +258,12 @@ pooled random effects estimate.}
 \item{col.fixed}{Line colour (pooled fixed effect estimate).}
 
 \item{col.random}{Line colour (pooled random effects estimate).}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
 
 \item{prediction}{A logical indicating whether a prediction
 interval should be printed.}
@@ -1095,7 +1103,7 @@ is reproduced:
 If argument \code{layout = "JAMA"} (and arguments \code{leftcols} and
 \code{rightcols} are \code{NULL}), instructions for authors of the
 \emph{Journal of the American Medical Association}, see
-\url{http://jamanetwork.com/journals/jama/pages/instructions-for-authors},
+\url{https://jamanetwork.com/journals/jama/pages/instructions-for-authors/},
 are taken into account:
 \enumerate{
 \item Graph labels on right and left side are printed in bold font

@@ -29,6 +29,7 @@
 #' \item \code{settings.meta("jama")}
 #' \item \code{settings.meta("iqwig5")}
 #' \item \code{settings.meta("iqwig6")}
+#' \item \code{settings.meta("geneexpr")}
 #' }
 #'
 #' The first command can be used to reproduce meta-analyses from
@@ -38,11 +39,14 @@
 #' command can be used to generate forest plots following instructions
 #' for authors of the \emph{Journal of the American Medical
 #' Association}
-#' (\url{http://jamanetwork.com/journals/jama/pages/instructions-for-authors}). The
-#' other two commands implement the recommendations of the Institute
-#' for Quality and Efficiency in Health Care, Germany (IQWiG)
-#' accordinging to General Methods 5 and 6, respectively
-#' (\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}).
+#' (\url{https://jamanetwork.com/journals/jama/pages/instructions-for-authors/}). The
+#' next commands implement the recommendations of the Institute for
+#' Quality and Efficiency in Health Care, Germany (IQWiG) accordinging
+#' to General Methods 5 and 6, respectively
+#' (\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}). The
+#' last setting can be used to print p-values in scientific notation
+#' and to suppress the calculation of confidence intervals for the
+#' between-study variance.
 #' 
 #' RevMan 5 settings, in detail:
 #' \tabular{lll}{
@@ -100,6 +104,14 @@
 #' \code{method.tau} \tab "PM" \tab Paule-Mandel estimator for
 #'   between-study variance \cr
 #' \code{prediction} \tab TRUE \tab Prediction interval \cr
+#' }
+#' 
+#' Settings for gene expression data:
+#' \tabular{lll}{
+#' \bold{Argument} \tab \bold{Value} \tab \bold{Comment} \cr
+#' \code{scientific.pval} \tab TRUE \tab Scientific notation for p-values \cr
+#' \code{method.tau.ci} \tab FALSE \tab no confidence interval for \cr
+#'  \tab between-study heterogeneity variance \cr
 #' }
 #' 
 #' A list of all arguments with current settings is printed using the
@@ -210,7 +222,8 @@ settings.meta <- function(...) {
   res$sm4bin <- res$sm4cont <- res$sm4cor <- res$sm4inc <-
     res$sm4mean <- res$sm4prop <- res$sm4rate <- NULL
   res$ci4cont <- res$ci4prop <- NULL
-  res$meth4bin <- res$meth4tau <- res$meth4tau.ci <- NULL
+  res$meth4bin <- res$meth4inc <- res$meth4prop <- res$meth4rate <- NULL
+  res$meth4tau <- res$meth4tau.ci <- NULL
   res$adhoc4hakn <- res$meth4bias <- NULL
   res$argslist <- NULL
   res$Wan2014.Table1 <- res$Wan2014.Table2 <- NULL
@@ -224,7 +237,9 @@ settings.meta <- function(...) {
     if (newline)
       cat("- ")
     ##
-    if (is.character(.settings[[x]]))
+    if (is.null(.settings[[x]]))
+      cat(paste0(xname, ' = NULL', end, '\n'))
+    else if (is.character(.settings[[x]]))
       cat(paste0(xname, ' = "', .settings[[x]], '"', end, '\n'))
     else
       cat(paste0(xname, ' = ', .settings[[x]], end, "\n"))
@@ -232,13 +247,17 @@ settings.meta <- function(...) {
   }
   
   
-  specificSetting <- function(args, new, setting) {
+  specificSettings <- function(args, new, setting) {
+    isnull.old <- as.vector(unlist(lapply(.settings[args], is.null)))
+    ischar.old <- as.vector(unlist(lapply(.settings[args], is.character)))
     old <- as.vector(unlist(.settings[args]))
-    ischar <- as.vector(unlist(lapply(new, is.character)))
+    ##
+    ischar.new <- as.vector(unlist(lapply(new, is.character)))
     new <- as.vector(unlist(new))
     ##
-    label.old <- ifelse(ischar, paste0("\"", old, "\""), old)
-    label.new <- ifelse(ischar, paste0("\"", new, "\""), new)
+    label.old <- ifelse(isnull.old, "NULL",
+                        ifelse(ischar.old, paste0("\"", old, "\""), old))
+    label.new <- ifelse(ischar.new, paste0("\"", new, "\""), new)
     ##
     sel <- new != old
     if (any(sel)) {
@@ -263,7 +282,7 @@ settings.meta <- function(...) {
       ##
       for (i in seq(along = args)) {
         new.i <- new[i]
-        if (!ischar[i]) {
+        if (!ischar.new[i]) {
           if (new.i %in% c("TRUE", "FALSE"))
             new.i <- as.logical(new.i)
           else
@@ -280,7 +299,7 @@ settings.meta <- function(...) {
   }
   
   
-  settings <- c("RevMan5", "JAMA", "IQWiG5", "IQWiG6", "meta4")
+  settings <- c("RevMan5", "JAMA", "IQWiG5", "IQWiG6", "geneexpr", "meta4")
   layouts <- c(settings[1:2], "meta")
   
   
@@ -373,10 +392,16 @@ settings.meta <- function(...) {
     catarg("hakn           ")
     catarg("adhoc.hakn     ")
     catarg("method.tau     ")
+    catarg("method.tau.ci  ")
     catarg("tau.common     ")
     catarg("prediction     ")
     catarg("level.predict  ")
     catarg("method.bias    ")
+    catarg("text.fixed     ")
+    catarg("text.random    ")
+    catarg("text.predict   ")
+    catarg("text.w.fixed   ")
+    catarg("text.w.random  ")
     catarg("title          ")
     catarg("complab        ")
     catarg("CIbracket      ")
@@ -474,10 +499,16 @@ settings.meta <- function(...) {
     setOption("hakn", FALSE)
     setOption("adhoc.hakn", "")
     setOption("method.tau", "DL")
+    setOption("method.tau.ci", NULL)
     setOption("tau.common", FALSE)
     setOption("prediction", FALSE)
     setOption("level.predict", 0.95)
     setOption("method.bias", "linreg")
+    setOption("text.fixed", "Fixed effect model")
+    setOption("text.random", "Random effects model")
+    setOption("text.predict", "Prediction interval")
+    setOption("text.w.fixed", "fixed")
+    setOption("text.w.random", "random")
     setOption("title", "")
     setOption("complab", "")
     setOption("CIbracket", "[")
@@ -543,6 +574,8 @@ settings.meta <- function(...) {
     setOption("label.left", "")
     setOption("label.right", "")
     ##
+    ## Forest plots
+    ##
     setOption("layout", "meta")
     setOption("test.overall", FALSE)
     setOption("test.subgroup", FALSE)
@@ -552,59 +585,65 @@ settings.meta <- function(...) {
   else if (specific.settings) {
     ##
     ## Remember:
-    ## settings <- c("RevMan5", "JAMA", "IQWiG5", "IQWiG6", "meta4")
+    ## settings <- c("RevMan5", "JAMA", "IQWiG5", "IQWiG6", "geneexpr", "meta4")
     ##
     if (setting == "RevMan5") {
-      specificSetting(args = c("hakn", "method.tau", "tau.common",
-                               "MH.exact", "RR.Cochrane", "Q.Cochrane",
-                               "layout", "test.overall",
-                               "test.subgroup", "test.effect.subgroup",
-                               "digits.I2", "digits.tau2", "digits.tau",
-                               "CIbracket", "CIseparator"),
-                      new = list(FALSE, "DL", FALSE,
-                                 FALSE, TRUE, TRUE,
-                                 "RevMan5", TRUE,
-                                 TRUE, TRUE,
-                                 0, 2, 4,
-                                 "[", ", "),
-                      setting = "RevMan 5 settings")
+      specificSettings(args = c("hakn", "method.tau", "tau.common",
+                                "MH.exact", "RR.Cochrane", "Q.Cochrane",
+                                "layout", "test.overall",
+                                "test.subgroup", "test.effect.subgroup",
+                                "digits.I2", "digits.tau2", "digits.tau",
+                                "CIbracket", "CIseparator"),
+                       new = list(FALSE, "DL", FALSE,
+                                  FALSE, TRUE, TRUE,
+                                  "RevMan5", TRUE,
+                                  TRUE, TRUE,
+                                  0, 2, 4,
+                                  "[", ", "),
+                       setting = "RevMan 5 settings")
     }
     ##
     else if (setting == "JAMA") {
-      specificSetting(args = c("layout", "test.overall",
-                               "test.subgroup", "test.effect.subgroup",
-                               "digits.I2", "digits.pval",
-                               "CIbracket", "CIseparator",
-                               "zero.pval", "JAMA.pval"),
-                      new = list("JAMA", TRUE,
-                                 FALSE, FALSE,
-                                 0, 3,
-                                 "(", "-",
-                                 FALSE, TRUE),
-                      setting = "JAMA settings")
+      specificSettings(args = c("layout", "test.overall",
+                                "test.subgroup", "test.effect.subgroup",
+                                "digits.I2", "digits.pval",
+                                "CIbracket", "CIseparator",
+                                "zero.pval", "JAMA.pval"),
+                       new = list("JAMA", TRUE,
+                                  FALSE, FALSE,
+                                  0, 3,
+                                  "(", "-",
+                                  FALSE, TRUE),
+                       setting = "JAMA settings")
     }
     ##
     else if (setting == "IQWiG5") {
-      specificSetting(args = c("hakn", "prediction"),
-                      new = list(TRUE, TRUE),
-                      setting = "IQWiG 5 settings")
+      specificSettings(args = c("hakn", "prediction"),
+                       new = list(TRUE, TRUE),
+                       setting = "IQWiG 5 settings")
     }
     ##
     else if (setting == "IQWiG6") {
-      specificSetting(args = c("hakn", "adhoc.hakn",
-                               "method.tau", "prediction"),
-                      new = list(TRUE, "ci", "PM", TRUE),
-                      setting = "IQWiG 6 settings")
+      specificSettings(args = c("hakn", "adhoc.hakn",
+                                "method.tau", "prediction"),
+                       new = list(TRUE, "iqwig6", "PM", TRUE),
+                       setting = "IQWiG 6 settings")
     }
     ##
     else if (setting == "meta4") {
-      specificSetting(args = c("hakn", "method.tau",
-                               "RR.Cochrane", "Q.Cochrane",
-                               "CIbracket", "CIseparator"),
-                      new = list(FALSE, "DL",
-                                 FALSE, TRUE,
-                                 "[", "; "),
-                      setting = "settings from R package meta (version 4.y-z and older)")
+      specificSettings(args = c("hakn", "method.tau",
+                                "RR.Cochrane", "Q.Cochrane",
+                                "CIbracket", "CIseparator"),
+                       new = list(FALSE, "DL",
+                                  FALSE, TRUE,
+                                  "[", "; "),
+                       setting = "Settings from R package meta (version 4.y-z and older)")
+    }
+    ##
+    else if (setting == "geneexpr") {
+      specificSettings(args = c("scientific.pval", "method.tau.ci"),
+                       new = list(TRUE, ""),
+                       setting = "Settings for gene expression data")
     }
   }
   else {
@@ -623,10 +662,16 @@ settings.meta <- function(...) {
     idhakn <- argid(names, "hakn")
     idadhoc.hakn <- argid(names, "adhoc.hakn")
     idmethod.tau <- argid(names, "method.tau")
+    idmethod.tau.ci <- argid(names, "method.tau.ci")
     idtau.common <- argid(names, "tau.common")
     idprediction <- argid(names, "prediction")
     idlevel.predict <- argid(names, "level.predict")
     idmethod.bias <- argid(names, "method.bias")
+    idtext.fixed <- argid(names, "text.fixed")
+    idtext.random <- argid(names, "text.random")
+    idtext.predict <- argid(names, "text.predict")
+    idtext.w.fixed <- argid(names, "text.w.fixed")
+    idtext.w.random <- argid(names, "text.w.random")
     idtitle <- argid(names, "title")
     idcomplab <- argid(names, "complab")
     idCIbracket <- argid(names, "CIbracket")
@@ -735,6 +780,11 @@ settings.meta <- function(...) {
       method.tau <- setchar(method.tau, .settings$meth4tau)
       setOption("method.tau", method.tau)
     }
+    if (!is.na(idmethod.tau.ci)) {
+      method.tau.ci <- args[[idmethod.tau.ci]]
+      method.tau.ci <- setchar(method.tau.ci, c("J", "BJ", "QP", "PL", ""))
+      setOption("method.tau.ci", method.tau.ci)
+    }
     if (!is.na(idtau.common)) {
       tau.common <- args[[idtau.common]]
       chklogical(tau.common)
@@ -754,6 +804,41 @@ settings.meta <- function(...) {
       method.bias <- args[[idmethod.bias]]
       method.bias <- setchar(method.bias, .settings$meth4bias)
       setOption("method.bias", method.bias)
+    }
+    if (!is.na(idtext.fixed)) {
+      text.fixed <- args[[idtext.fixed]]
+      if (length(text.fixed) != 1)
+        stop("Argument 'text.fixed' must be a character string.")
+      ##
+      setOption("text.fixed", text.fixed)
+    }
+    if (!is.na(idtext.random)) {
+      text.random <- args[[idtext.random]]
+      if (length(text.random) != 1)
+        stop("Argument 'text.random' must be a character string.")
+      ##
+      setOption("text.random", text.random)
+    }
+    if (!is.na(idtext.predict)) {
+      text.predict <- args[[idtext.predict]]
+      if (length(text.predict) != 1)
+        stop("Argument 'text.predict' must be a character string.")
+      ##
+      setOption("text.predict", text.predict)
+    }
+    if (!is.na(idtext.w.fixed)) {
+      text.w.fixed <- args[[idtext.w.fixed]]
+      if (length(text.w.fixed) != 1)
+        stop("Argument 'text.w.fixed' must be a character string.")
+      ##
+      setOption("text.w.fixed", text.w.fixed)
+    }
+    if (!is.na(idtext.w.random)) {
+      text.w.random <- args[[idtext.w.random]]
+      if (length(text.w.random) != 1)
+        stop("Argument 'text.w.random' must be a character string.")
+      ##
+      setOption("text.w.random", text.w.random)
     }
     if (!is.na(idtitle)) {
       title <- args[[idtitle]]

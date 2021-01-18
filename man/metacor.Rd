@@ -21,7 +21,7 @@ metacor(
   hakn = gs("hakn"),
   adhoc.hakn = gs("adhoc.hakn"),
   method.tau = gs("method.tau"),
-  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  method.tau.ci = gs("method.tau.ci"),
   tau.preset = NULL,
   TE.tau = NULL,
   tau.common = gs("tau.common"),
@@ -30,6 +30,11 @@ metacor(
   null.effect = 0,
   method.bias = gs("method.bias"),
   backtransf = gs("backtransf"),
+  text.fixed = gs("text.fixed"),
+  text.random = gs("text.random"),
+  text.predict = gs("text.predict"),
+  text.w.fixed = gs("text.w.fixed"),
+  text.w.random = gs("text.w.random"),
   title = gs("title"),
   complab = gs("complab"),
   outclab = "",
@@ -131,6 +136,21 @@ transformed in printouts and plots. If TRUE (default), results
 will be presented as correlations; otherwise Fisher's z
 transformed correlations will be shown.}
 
+\item{text.fixed}{A character string used in printouts and forest
+plot to label the pooled fixed effect estimate.}
+
+\item{text.random}{A character string used in printouts and forest
+plot to label the pooled random effects estimate.}
+
+\item{text.predict}{A character string used in printouts and forest
+plot to label the prediction interval.}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
+
 \item{title}{Title of meta-analysis / systematic review.}
 
 \item{complab}{Comparison label.}
@@ -182,14 +202,14 @@ object is a list containing the following components:
   (fixed effect model).}
 \item{lower.fixed, upper.fixed}{Lower and upper confidence interval
   limits (fixed effect model).}
-\item{zval.fixed, pval.fixed}{z-value and p-value for test of
+\item{statistic.fixed, pval.fixed}{z-value and p-value for test of
   overall effect (fixed effect model).}
 \item{TE.random, seTE.random}{Estimated overall effect (Fisher's z
   transformation of correlation or correlation) and standard error
   (random effects model).}
 \item{lower.random, upper.random}{Lower and upper confidence
   interval limits (random effects model).}
-\item{zval.random, pval.random}{z-value or t-value and
+\item{statistic.random, pval.random}{z-value or t-value and
   corresponding p-value for test of overall effect (random effects
   model).}
 \item{prediction, level.predict}{As defined above.}
@@ -228,16 +248,16 @@ object is a list containing the following components:
 \item{lower.fixed.w, upper.fixed.w}{Lower and upper confidence
   interval limits in subgroups (fixed effect model) - if
   \code{byvar} is not missing.}
-\item{zval.fixed.w, pval.fixed.w}{z-value and p-value for test of
-  effect in subgroups (fixed effect model) - if \code{byvar} is not
-  missing.}
+\item{statistic.fixed.w, pval.fixed.w}{z-value and p-value for test
+  of effect in subgroups (fixed effect model) - if \code{byvar} is
+  not missing.}
 \item{TE.random.w, seTE.random.w}{Estimated effect and standard
   error in subgroups (random effects model) - if \code{byvar} is
   not missing.}
 \item{lower.random.w, upper.random.w}{Lower and upper confidence
   interval limits in subgroups (random effects model) - if
   \code{byvar} is not missing.}
-\item{zval.random.w, pval.random.w}{z-value or t-value and
+\item{statistic.random.w, pval.random.w}{z-value or t-value and
   corresponding p-value for test of effect in subgroups (random
   effects model) - if \code{byvar} is not missing.}
 \item{w.fixed.w, w.random.w}{Weight of subgroups (in fixed and
@@ -370,20 +390,32 @@ classic random effects method.
 In rare settings with very homogeneous treatment estimates, the
 Hartung-Knapp variance estimate can be arbitrarily small resulting
 in a very narrow confidence interval (Knapp and Hartung, 2003;
-Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
-correction has been proposed by utilising the variance estimate
-from the classic random effects model (Knapp and Hartung,
-2003). Argument \code{adhoc.hakn} can be used to choose the
-\emph{ad hoc} method:
+Wiksten et al., 2016). In such cases, an
+\emph{ad hoc} variance correction has been proposed by utilising
+the variance estimate from the classic random effects model with
+the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+alternative approach is to use the wider confidence interval of
+classic fixed or random effects meta-analysis and the HK method
+(Wiksten et al., 2016; Jackson et al., 2017).
+
+Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+method:
 \tabular{ll}{
-\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 \code{adhoc.hakn = ""}\tab not used \cr
-\code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
- standard error \cr
- \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-\code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
- narrower than CI from \cr
- \tab classic random effects model with DL estimator (IQWiG, 2020)
+\code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+ error is smaller \cr
+ \tab than standard error from classic random effects
+ \cr
+ \tab meta-analysis (Knapp and Hartung, 2003) \cr
+\code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+ confidence interval \cr
+ \tab is narrower than CI from classic random effects model \cr
+ \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+\code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+ classic random effects \cr
+ \tab and HK meta-analysis \cr
+ \tab (Hybrid method 2 in Jackson et al., 2017)
 }
 }
 
@@ -495,8 +527,14 @@ standard DerSimonian-Laird method.
 \bold{14}, 25
 
 IQWiG (2020):
-General Methods: Draft of Version 6.0.
-\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
+General Methods: Version 6.0.
+\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}
+
+Jackson D, Law M, Rücker G, Schwarzer G (2017): 
+The Hartung-Knapp modification for random-effects meta-analysis: A
+useful refinement but are there any residual concerns?
+\emph{Statistics in Medicine},
+\bold{36}, 3923--34
 
 Knapp G & Hartung J (2003):
 Improved tests for a random effects meta-regression with a single

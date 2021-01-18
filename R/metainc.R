@@ -26,8 +26,8 @@
 #'   \code{"Inverse"}, \code{"Cochran"}, or \code{"GLMM"} can be
 #'   abbreviated.
 #' @param sm A character string indicating which summary measure
-#'   (\code{"IRR"} or \code{"IRD"}) is to be used for pooling of
-#'   studies, see Details.
+#'   (\code{"IRR"}, \code{"IRD"} or \code{"IRSD"}) is to be used for
+#'   pooling of studies, see Details.
 #' @param incr A numerical value which is added to each cell frequency
 #'   for studies with a zero cell count, see Details.
 #' @param allincr A logical indicating if \code{incr} is added to each
@@ -88,13 +88,23 @@
 #' @param n.c Number of observations in control group (optional).
 #' @param backtransf A logical indicating whether results for
 #'   incidence rate ratio (\code{sm = "IRR"}) should be back
-#'   transformed in printouts and plots.  If TRUE (default), results
+#'   transformed in printouts and plots. If TRUE (default), results
 #'   will be presented as incidence rate ratios; otherwise log
 #'   incidence rate ratios will be shown.
 #' @param irscale A numeric defining a scaling factor for printing of
 #'   incidence rate differences.
 #' @param irunit A character string specifying the time unit used to
 #'   calculate rates, e.g. person-years.
+#' @param text.fixed A character string used in printouts and forest
+#'   plot to label the pooled fixed effect estimate.
+#' @param text.random A character string used in printouts and forest
+#'   plot to label the pooled random effects estimate.
+#' @param text.predict A character string used in printouts and forest
+#'   plot to label the prediction interval.
+#' @param text.w.fixed A character string used to label weights of
+#'   fixed effect model.
+#' @param text.w.random A character string used to label weights of
+#'   random effects model.
 #' @param title Title of meta-analysis / systematic review.
 #' @param complab Comparison label.
 #' @param outclab Outcome label.
@@ -130,6 +140,8 @@
 #' \itemize{
 #' \item Incidence Rate Ratio (\code{sm = "IRR"})
 #' \item Incidence Rate Difference (\code{sm = "IRD"})
+#' \item Square root transformed Incidence Rate Difference (\code{sm =
+#'   "IRSD"})
 #' }
 #' 
 #' Default settings are utilised for several arguments (assignments
@@ -251,20 +263,32 @@
 #' In rare settings with very homogeneous treatment estimates, the
 #' Hartung-Knapp variance estimate can be arbitrarily small resulting
 #' in a very narrow confidence interval (Knapp and Hartung, 2003;
-#' Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
-#' correction has been proposed by utilising the variance estimate
-#' from the classic random effects model (Knapp and Hartung,
-#' 2003). Argument \code{adhoc.hakn} can be used to choose the
-#' \emph{ad hoc} method:
+#' Wiksten et al., 2016). In such cases, an
+#' \emph{ad hoc} variance correction has been proposed by utilising
+#' the variance estimate from the classic random effects model with
+#' the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+#' alternative approach is to use the wider confidence interval of
+#' classic fixed or random effects meta-analysis and the HK method
+#' (Wiksten et al., 2016; Jackson et al., 2017).
+#'
+#' Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+#' method:
 #' \tabular{ll}{
-#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+#' \bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 #' \code{adhoc.hakn = ""}\tab not used \cr
-#' \code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
-#'  standard error \cr
-#'  \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-#' \code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
-#'  narrower than CI from \cr
-#'  \tab classic random effects model with DL estimator (IQWiG, 2020)
+#' \code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+#'  error is smaller \cr
+#'  \tab than standard error from classic random effects
+#'  \cr
+#'  \tab meta-analysis (Knapp and Hartung, 2003) \cr
+#' \code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+#'  confidence interval \cr
+#'  \tab is narrower than CI from classic random effects model \cr
+#'  \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+#' \code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+#'  classic random effects \cr
+#'  \tab and HK meta-analysis \cr
+#'  \tab (Hybrid method 2 in Jackson et al., 2017)
 #' }
 #' }
 #' 
@@ -344,13 +368,13 @@
 #'   standard error (fixed effect model).}
 #' \item{lower.fixed, upper.fixed}{Lower and upper confidence interval
 #'   limits (fixed effect model).}
-#' \item{zval.fixed, pval.fixed}{z-value and p-value for test of
+#' \item{statistic.fixed, pval.fixed}{z-value and p-value for test of
 #'   overall treatment effect (fixed effect model).}
 #' \item{TE.random, seTE.random}{Estimated overall treatment effect
 #'   and standard error (random effects model).}
 #' \item{lower.random, upper.random}{Lower and upper confidence
 #'   interval limits (random effects model).}
-#' \item{zval.random, pval.random}{z-value or t-value and
+#' \item{statistic.random, pval.random}{z-value or t-value and
 #'   corresponding p-value for test of overall treatment effect
 #'   (random effects model).}
 #' \item{prediction, level.predict}{As defined above.}
@@ -397,7 +421,7 @@
 #' \item{lower.fixed.w, upper.fixed.w}{Lower and upper confidence
 #'   interval limits in subgroups (fixed effect model) - if
 #'   \code{byvar} is not missing.}
-#' \item{zval.fixed.w, pval.fixed.w}{z-value and p-value for test of
+#' \item{statistic.fixed.w, pval.fixed.w}{z-value and p-value for test of
 #'   treatment effect in subgroups (fixed effect model) - if
 #'   \code{byvar} is not missing.}
 #' \item{TE.random.w, seTE.random.w}{Estimated treatment effect and
@@ -406,7 +430,7 @@
 #' \item{lower.random.w, upper.random.w}{Lower and upper confidence
 #'   interval limits in subgroups (random effects model) - if
 #'   \code{byvar} is not missing.}
-#' \item{zval.random.w, pval.random.w}{z-value or t-value and
+#' \item{statistic.random.w, pval.random.w}{z-value or t-value and
 #'   corresponding p-value for test of treatment effect in subgroups
 #'   (random effects model) - if \code{byvar} is not missing.}
 #' \item{w.fixed.w, w.random.w}{Weight of subgroups (in fixed and
@@ -511,6 +535,12 @@
 #' \emph{Journal of the Royal Statistical Society: Series A},
 #' \bold{172}, 137--59
 #' 
+#' Jackson D, Law M, Rücker G, Schwarzer G (2017): 
+#' The Hartung-Knapp modification for random-effects meta-analysis: A
+#' useful refinement but are there any residual concerns?
+#' \emph{Statistics in Medicine},
+#' \bold{36}, 3923--34
+#' 
 #' Knapp G & Hartung J (2003):
 #' Improved tests for a random effects meta-regression with a single
 #' covariate.
@@ -598,7 +628,7 @@
 metainc <- function(event.e, time.e, event.c, time.c, studlab,
                     ##
                     data = NULL, subset = NULL, exclude = NULL,
-                    method = "MH",
+                    method = if (sm == "IRSD") "Inverse" else "MH",
                     ##
                     sm = gs("sminc"),
                     ##
@@ -617,7 +647,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                       ifelse(!is.na(charmatch(tolower(method), "glmm",
                                               nomatch = NA)),
                              "ML", gs("method.tau")),
-                    method.tau.ci = if (method.tau == "DL") "J" else "QP",
+                    method.tau.ci = gs("method.tau.ci"),
                     tau.preset = NULL, TE.tau = NULL,
                     tau.common = gs("tau.common"),
                     ##
@@ -628,8 +658,15 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                     ##
                     n.e = NULL, n.c = NULL,
                     ##
-                    backtransf = gs("backtransf"),
+                    backtransf = if (sm == "IRSD") FALSE else gs("backtransf"),
                     irscale = 1, irunit = "person-years",
+                    ##
+                    text.fixed = gs("text.fixed"),
+                    text.random = gs("text.random"),
+                    text.predict = gs("text.predict"),
+                    text.w.fixed = gs("text.w.fixed"),
+                    text.w.random = gs("text.w.random"),
+                    ##
                     title = gs("title"), complab = gs("complab"),
                     outclab = "",
                     label.e = gs("label.e"), label.c = gs("label.c"),
@@ -653,7 +690,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   ##
   chknull(sm)
-  sm <- setchar(sm, c("IRR", "IRD"))
+  sm <- setchar(sm, .settings$sm4inc)
   ##
   chklevel(level)
   chklevel(level.comb)
@@ -665,6 +702,8 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   chklogical(hakn)
   adhoc.hakn <- setchar(adhoc.hakn, .settings$adhoc4hakn)
   method.tau <- setchar(method.tau, .settings$meth4tau)
+  if (is.null(method.tau.ci))
+    method.tau.ci <- if (method.tau == "DL") "J" else "QP"
   method.tau.ci <- setchar(method.tau.ci, .settings$meth4tau.ci)
   chklogical(tau.common)
   ##
@@ -678,6 +717,17 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   chknumeric(irscale, length = 1)
   chkchar(irunit)
   ##
+  if (!is.null(text.fixed))
+    chkchar(text.fixed, length = 1)
+  if (!is.null(text.random))
+    chkchar(text.random, length = 1)
+  if (!is.null(text.predict))
+    chkchar(text.predict, length = 1)
+  if (!is.null(text.w.fixed))
+    chkchar(text.w.fixed, length = 1)
+  if (!is.null(text.w.random))
+    chkchar(text.w.random, length = 1)
+  ##
   chklogical(keepdata)
   ##
   ## Additional arguments / checks for metainc objects
@@ -689,7 +739,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     irscale <- 1
   }
   ##
-  method <- setchar(method, c("Inverse", "MH", "Cochran", "GLMM"))
+  method <- setchar(method, .settings$meth4inc)
   is.glmm <- method == "GLMM"
   ##
   chklogical(allincr)
@@ -947,7 +997,8 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   sel <- switch(sm,
                 IRD = event.e == 0 | event.c == 0,
-                IRR = event.e == 0 | event.c == 0)
+                IRR = event.e == 0 | event.c == 0,
+                IRSD = event.e == 0 | event.c == 0)
   ##
   ## Sparse computation
   ##
@@ -979,6 +1030,10 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     TE <- event.e / time.e - event.c / time.c
     seTE <- sqrt((event.e + incr.event) / time.e^2 + (event.c + incr.event) / time.c^2)
   }
+  else if (sm == "IRSD") {
+    TE <- sqrt(event.e / time.e) - sqrt(event.c / time.c)
+    seTE <- sqrt(0.25 / time.e + 0.25 / time.c)
+  }
   
   
   ##
@@ -988,6 +1043,9 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   ##
   k <- sum(!is.na(event.e[!exclude]) & !is.na(event.c[!exclude]) &
            !is.na(time.e[!exclude]) & !is.na(time.c[!exclude]))
+  ##
+  if (k == 1 & hakn)
+    hakn <- FALSE
   ##
   if (method == "MH") {
     ##
@@ -1043,13 +1101,24 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     }
   }
   else if (is.glmm) {
-    glmm.fixed <- rma.glmm(x1i = event.e[!exclude], t1i = time.e[!exclude],
-                           x2i = event.c[!exclude], t2i = time.c[!exclude],
-                           method = "FE", test = ifelse(hakn, "t", "z"),
-                           level = 100 * level.comb,
-                           measure = "IRR", model = model.glmm,
-                           control = control,
-                           ...)
+    zero.all <-
+      (sum(event.e[!exclude], na.rm = TRUE) == 0 &
+       sum(event.c[!exclude], na.rm = TRUE) == 0) |
+      (!any(event.e[!exclude] != time.e[!exclude]) |
+       !any(event.c[!exclude] != time.c[!exclude]))
+    ##
+    if (!zero.all)
+      glmm.fixed <- rma.glmm(x1i = event.e[!exclude], t1i = time.e[!exclude],
+                             x2i = event.c[!exclude], t2i = time.c[!exclude],
+                             method = "FE", test = ifelse(hakn, "t", "z"),
+                             level = 100 * level.comb,
+                             measure = "IRR", model = model.glmm,
+                             control = control,
+                             ...)
+    else
+      glmm.fixed <- list(b = NA, se = NA,
+                         QE.Wld = NA, QE.df = NA, QE.LRT = NA,
+                         tau2 = NA, se.tau2 = NA)
     ##
     TE.fixed   <- as.numeric(glmm.fixed$b)
     seTE.fixed <- as.numeric(glmm.fixed$se)
@@ -1080,6 +1149,11 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                method.bias = method.bias,
                ##
                backtransf = backtransf,
+               ##
+               text.fixed = text.fixed, text.random = text.random,
+               text.predict = text.predict,
+               text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+               ##
                title = title, complab = complab, outclab = outclab,
                label.e = label.e, label.c = label.c,
                label.left = label.left, label.right = label.right,
@@ -1089,7 +1163,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                ##
                control = control)
   ##
-  if (by & tau.common) {
+  if (by & tau.common & !is.glmm) {
     ## Estimate common tau-squared across subgroups
     hcc <- hetcalc(TE, seTE, method.tau, "",
                    if (method == "Inverse") TE.tau else TE.fixed,
@@ -1142,11 +1216,12 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$upper.fixed <- ci.f$upper
     res$statistic.fixed <- ci.f$statistic
     res$pval.fixed <- ci.f$p
+    res$zval.fixed <- ci.f$statistic
   }
   ##
   if (is.glmm) {
     ##
-    if (sum(!exclude) > 1)
+    if (sum(!exclude) > 1 & !zero.all)
       glmm.random <- rma.glmm(x1i = event.e[!exclude], t1i = time.e[!exclude],
                               x2i = event.c[!exclude], t2i = time.c[!exclude],
                               method = method.tau,
@@ -1158,6 +1233,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     else {
       ##
       ## Fallback to fixed effect model due to small number of studies
+      ## or zero events
       ##
       glmm.random <- glmm.fixed
     }
@@ -1165,7 +1241,8 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     TE.random   <- as.numeric(glmm.random$b)
     seTE.random <- as.numeric(glmm.random$se)
     ##
-    ci.r <- ci(TE.random, seTE.random, level = level.comb)
+    ci.r <- ci(TE.random, seTE.random, level = level.comb,
+               df = if (hakn) k - 1)
     ##
     res$w.random <- rep(NA, length(event.e))
     ##
@@ -1175,6 +1252,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$upper.random <- ci.r$upper
     res$statistic.random <- ci.r$statistic
     res$pval.random <- ci.r$p
+    res$zval.random <- ci.r$statistic
     ##
     ## Prediction interval
     ##
@@ -1220,13 +1298,15 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$sign.lower.tau <- ""
     res$sign.upper.tau <- ""
     ##
-    res$H <- sqrt(glmm.random$H2)
-    res$lower.H <- NA
-    res$upper.H <- NA
+    H <- calcH(res$Q, res$df.Q, level.comb)
+    res$H <- H$TE
+    res$lower.H <- H$lower
+    res$upper.H <- H$upper
     ##
-    res$I2 <- glmm.random$I2 / 100
-    res$lower.I2 <- NA
-    res$upper.I2 <- NA
+    I2 <- isquared(res$Q, res$df.Q, level.comb)
+    res$I2 <- I2$TE
+    res$lower.I2 <- I2$lower
+    res$upper.I2 <- I2$upper
     ##
     res$Rb <- NA
     res$lower.Rb <- NA
@@ -1235,6 +1315,77 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$.glmm.fixed  <- glmm.fixed
     res$.glmm.random <- glmm.random
     res$version.metafor <- packageDescription("metafor")$Version
+    ##
+    if (by) {
+      n.by <- length(unique(byvar[!exclude]))
+      if (n.by > 1)
+        byvar.glmm <- factor(byvar[!exclude], bylevs(byvar[!exclude]))
+      ##
+      glmm.random.by <-
+        try(suppressWarnings(rma.glmm(x1i = event.e[!exclude],
+                                      t1i = time.e[!exclude],
+                                      x2i = event.c[!exclude],
+                                      t2i = time.c[!exclude],
+                                      mods =
+                                        if (n.by > 1) ~ byvar.glmm else NULL,
+                                      method = method.tau,
+                              test = ifelse(hakn, "t", "z"),
+                              level = 100 * level.comb,
+                              measure = "IRR", model = model.glmm,
+                              control = control,
+                              ...)),
+            silent = TRUE)
+      ##
+      if ("try-error" %in% class(glmm.random.by))
+        if (grepl(paste0("Number of parameters to be estimated is ",
+                         "larger than the number of observations"),
+                  glmm.random.by)) {
+          glmm.random.by <-
+            suppressWarnings(rma.glmm(x1i = event.e[!exclude],
+                                      t1i = time.e[!exclude],
+                                      x2i = event.c[!exclude],
+                                      t2i = time.c[!exclude],
+                                      mods =
+                                        if (n.by > 1) ~ byvar.glmm else NULL,
+                                      method = "FE",
+                                      test = ifelse(hakn, "t", "z"),
+                                      level = 100 * level.comb,
+                                      measure = "IRR", model = model.glmm,
+                                      control = control,
+                                      ...))
+        }
+        else
+          stop(glmm.random.by)
+      ##
+      Q.r <- glmm.random.by$QE.Wld
+      df.Q.r <- glmm.random.by$k - glmm.random.by$p
+      ##
+      H.r  <- calcH(Q.r, df.Q.r, level.comb)
+      I2.r <- isquared(Q.r, df.Q.r, level.comb)
+      ##
+      hcc <- list(tau2.resid = glmm.random.by$tau2,
+                  lower.tau2.resid = NA,
+                  upper.tau2.resid = NA,
+                  ##
+                  tau.resid = sqrt(glmm.random.by$tau2),
+                  lower.tau.resid = NA,
+                  upper.tau.resid = NA,
+                  sign.lower.tau.resid = "",
+                  sign.upper.tau.resid = "",
+                  ##
+                  Q.resid = NA,
+                  df.Q.resid = NA,
+                  pval.Q.resid = NA,
+                  ##
+                  H.resid = H.r$TE,
+                  lower.H.resid = H.r$lower,
+                  upper.H.resid = H.r$upper,
+                  ##
+                  I2.resid = I2.r$TE,
+                  lower.I2.resid = I2.r$lower,
+                  upper.I2.resid = I2.r$upper
+                  )
+    }
   }
   ##
   if (keepdata) {
@@ -1254,74 +1405,48 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     res$byseparator <- byseparator
     res$tau.common <- tau.common
     ##
-    if (!tau.common) {
+    if (!tau.common)
       res <- c(res, subgroup(res))
-      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
-      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
-    }
-    else if (!is.null(tau.preset)) {
+    else if (!is.null(tau.preset))
       res <- c(res, subgroup(res, tau.preset))
-      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
-      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
-    }
     else {
-      if (is.glmm) {
+      if (is.glmm)
         res <- c(res, subgroup(res, NULL,
                                factor(res$byvar, bylevs(res$byvar)), ...))
-        res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
-        res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
-      }
-      else {
-        res <- c(res, subgroup(res, hcc$tau))
-        res$Q.w.random <- hcc$Q
-        res$df.Q.w.random <- hcc$df.Q
-        res$tau2.resid <- hcc$tau2
-        res$lower.tau2.resid <- hcc$lower.tau2
-        res$upper.tau2.resid <- hcc$upper.tau2
-        res$tau.resid <- hcc$tau
-        res$lower.tau.resid <- hcc$lower.tau
-        res$upper.tau.resid <- hcc$upper.tau
-        res$sign.lower.tau.resid <- hcc$sign.lower.tau
-        res$sign.upper.tau.resid <- hcc$sign.upper.tau
-      }
+      else
+        res <- c(res, subgroup(res, hcc$tau.resid))
     }
     ##
-    if (!tau.common || method.tau == "DL") {
-      ci.H.resid <- calcH(res$Q.w.fixed, res$df.Q.w, level.comb)
+    if (!tau.common || !is.null(tau.preset)) {
+      res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA
+      res$tau.resid <- res$lower.tau.resid <- res$upper.tau.resid <- NA
       ##
-      res$H.resid <- ci.H.resid$TE
-      res$lower.H.resid <- ci.H.resid$lower
-      res$upper.H.resid <- ci.H.resid$upper
-      ##
-      ci.I2.resid <- isquared(res$Q.w.fixed, res$df.Q.w, level.comb)
-      ##
-      res$I2.resid <- ci.I2.resid$TE
-      res$lower.I2.resid <- ci.I2.resid$lower
-      res$upper.I2.resid <- ci.I2.resid$upper
+      res$Q.resid <- res$df.Q.resid <- res$pval.Q.resid <- NA
+      res$H.resid <- res$lower.H.resid <- res$upper.H.resid <- NA
+      res$I2.resid <- res$lower.I2.resid <- res$upper.I2.resid <- NA
     }
     else {
-      if (is.glmm) {
-        ci.H.resid <- calcH(res$Q.w.fixed, res$df.Q.w, level.comb)
-        ##
-        res$H.resid <- ci.H.resid$TE
-        res$lower.H.resid <- ci.H.resid$lower
-        res$upper.H.resid <- ci.H.resid$upper
-        ##
-        ci.I2.resid <- isquared(res$Q.w.fixed, res$df.Q.w, level.comb)
-        ##
-        res$I2.resid <- ci.I2.resid$TE
-        res$lower.I2.resid <- ci.I2.resid$lower
-        res$upper.I2.resid <- ci.I2.resid$upper
-      }
-      else {
-        res$H.resid <- hcc$H.resid
-        res$lower.H.resid <- hcc$lower.H.resid
-        res$upper.H.resid <- hcc$upper.H.resid
-        ##
-        res$I2.resid <- hcc$I2.resid
-        res$lower.I2.resid <- hcc$lower.I2.resid
-        res$upper.I2.resid <- hcc$upper.I2.resid
-      }
+      res$tau2.resid <- hcc$tau2.resid
+      res$lower.tau2.resid <- hcc$lower.tau2.resid
+      res$upper.tau2.resid <- hcc$upper.tau2.resid
+      ##
+      res$tau.resid <- hcc$tau.resid
+      res$lower.tau.resid <- hcc$lower.tau.resid
+      res$upper.tau.resid <- hcc$upper.tau.resid
+      res$sign.lower.tau.resid <- hcc$sign.lower.tau.resid
+      res$sign.upper.tau.resid <- hcc$sign.upper.tau.resid
+      ##
+      res$Q.w.random <- hcc$Q.resid
+      res$df.Q.w.random <- hcc$df.Q.resid
+      res$pval.Q.w.random <- hcc$pval.Q.resid
+      ##
+      res$H.resid <- hcc$H.resid
+      res$lower.H.resid <- hcc$lower.H.resid
+      res$upper.H.resid <- hcc$upper.H.resid
+      ##
+      res$I2.resid <- hcc$I2.resid
+      res$lower.I2.resid <- hcc$lower.I2.resid
+      res$upper.I2.resid <- hcc$upper.I2.resid
     }
     ##
     res$event.w <- NULL

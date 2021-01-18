@@ -16,13 +16,18 @@ metacr(
   comb.random,
   hakn = FALSE,
   method.tau = "DL",
-  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  method.tau.ci = gs("method.tau.ci"),
   tau.common = FALSE,
   prediction = gs("prediction"),
   level.predict = gs("level.predict"),
   swap.events,
   logscale,
   backtransf = gs("backtransf"),
+  text.fixed = gs("text.fixed"),
+  text.random = gs("text.random"),
+  text.predict = gs("text.predict"),
+  text.w.fixed = gs("text.w.fixed"),
+  text.w.random = gs("text.w.random"),
   title,
   complab,
   outclab,
@@ -95,6 +100,21 @@ back transformed in printouts and plots. If
 printed as odds ratios rather than log odds ratios and results
 for \code{sm="ZCOR"} are printed as correlations rather than
 Fisher's z transformed correlations, for example.}
+
+\item{text.fixed}{A character string used in printouts and forest
+plot to label the pooled fixed effect estimate.}
+
+\item{text.random}{A character string used in printouts and forest
+plot to label the pooled random effects estimate.}
+
+\item{text.predict}{A character string used in printouts and forest
+plot to label the prediction interval.}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
 
 \item{title}{Title of meta-analysis / systematic review.}
 
@@ -169,9 +189,8 @@ settings.meta(oldset)
 
 }
 \references{
-\emph{Review Manager (RevMan)}
-[Computer program]. Version 5.3.
-Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
+\emph{Review Manager (RevMan)} [Computer program]. Version 5.4.
+The Cochrane Collaboration, 2020
 }
 \seealso{
 \code{\link{metabin}}, \code{\link{metacont}},

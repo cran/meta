@@ -1,11 +1,13 @@
-#' Combine meta-analysis objects
+#' Combine and summarize meta-analysis objects
 #' 
 #' @description
 #' This function can be used to combine meta-analysis objects and is,
-#' for example, useful to generate a forest plot with results of
+#' for example, useful to summarize results of various meta-analysis
+#' methods or to generate a forest plot with results of several
 #' subgroup analyses.
 #' 
-#' @param ... Any number of meta-analysis objects (see Details).
+#' @param ... Any number of meta-analysis objects or a single list
+#'   with meta-analyses.
 #' @param name An optional character vector providing descriptive
 #'   names for the meta-analysis objects.
 #' @param pooled A character string indicating whether results of a
@@ -18,9 +20,15 @@
 #' @param outclab Outcome label for all meta-analyis objects.
 #' 
 #' @details
-#' This function can be used to combine meta-analysis objects and is,
-#' for example, useful to generate a forest plot with results of
-#' subgroup analyses.
+#' This function can be used to combine any number of meta-analysis
+#' objects which is useful, for example, to summarize results of
+#' various meta-analysis methods or to generate a forest plot with
+#' results of several subgroup analyses (see Examples).
+#'
+#' Individual study results are not retained with
+#' \code{metabind}. This is possible using R function
+#' \code{\link{metamerge}} which, however, can only be used to combine
+#' results of two meta-analyses.
 #' 
 #' @return
 #' An object of class \code{c("metabind", "meta")} with corresponding
@@ -29,7 +37,8 @@
 #' 
 #' @author Guido Schwarzer \email{sc@@imbi.uni-freiburg.de}
 #' 
-#' @seealso \code{\link{metagen}}, \code{\link{forest.metabind}}
+#' @seealso \code{\link{metagen}}, \code{\link{forest.metabind}},
+#'   \code{\link{metamerge}}
 #' 
 #' @examples
 #' data(Fleiss1993cont)
@@ -53,6 +62,33 @@
 #' mb1 <- metabind(mu1, mu2)
 #' mb1
 #' forest(mb1)
+#'
+#' # Use various estimation methods for between-study heterogeneity
+#' # variance
+#' #
+#' m1.pm <- update(m1, method.tau = "PM")
+#' m1.reml <- update(m1, method.tau = "REML")
+#' m1.ml <- update(m1, method.tau = "ML")
+#' m1.hs <- update(m1, method.tau = "HS")
+#' m1.sj <- update(m1, method.tau = "SJ")
+#' m1.he <- update(m1, method.tau = "HE")
+#' m1.eb <- update(m1, method.tau = "EB")
+#'
+#' # Combine meta-analyses and show results
+#' #
+#' taus <- c("DerSimonian-Laird estimator",
+#'           "Paule-Mandel estimator",
+#'           "Restricted maximum-likelihood estimator",
+#'           "Maximum-likelihood estimator",
+#'           "Hunter-Schmidt estimator",
+#'           "Sidik-Jonkman estimator",
+#'           "Hedges estimator",
+#'           "Empirical Bayes estimator")
+#' #
+#' m1.taus <- metabind(m1, m1.pm, m1.reml, m1.ml, m1.hs, m1.sj, m1.he, m1.eb,
+#'                     name = taus, pooled = "random")
+#' m1.taus
+#' forest(m1.taus, print.I2 = FALSE, print.pval.Q = FALSE)
 #' 
 #' @export metabind
 
@@ -79,16 +115,39 @@ metabind <- function(..., name, pooled, backtransf, outclab) {
 
   args <- list(...)
   ##
-  if (length(args) == 1 & inherits(args[[1]], "meta.rm5")) {
-    args <- args[[1]]
-    if (missing(name))
-      name <- unlist(lapply(args, "[[" , "outclab"))
-  }
-  ##
   n.meta <- length(args)
   n.i <- seq_len(n.meta)
-
-
+  ##
+  if (length(args) == 1) {
+    if (inherits(args[[1]], "meta.rm5")) {
+      args <- args[[1]]
+      if (missing(name))
+        name <- unlist(lapply(args, "[[" , "outclab"))
+    }
+    else if (!is.list(args[[1]]))
+      stop("All elements of argument '...' must be of ",
+           "class 'meta'.",
+           call. = FALSE)
+    ##
+    if (!inherits(args[[1]], "meta")) {
+      n.meta <- length(args[[1]])
+      n.i <- seq_len(n.meta)
+      ##
+      args2 <- list()
+      for (i in n.i)
+        args2[[i]] <- args[[1]][[i]]
+    }
+    args <- args2
+  }
+  ##  
+  for (i in n.i) {
+    if (!inherits(args[[i]], "meta"))
+      stop("All elements of argument '...' must be of ",
+           "class 'meta'.",
+           call. = FALSE)
+  }
+  
+  
   is.subgroup <- rep(FALSE, n.meta)
   ##
   for (i in n.i) {
@@ -184,7 +243,11 @@ metabind <- function(..., name, pooled, backtransf, outclab) {
                              ##
                              tau2.w = m.i$tau2,
                              se.tau2.w = m.i$se.tau2,
+                             lower.tau2.w = m.i$lower.tau2,
+                             upper.tau2.w = m.i$upper.tau2,
                              tau.w = m.i$tau,
+                             lower.tau.w = m.i$lower.tau,
+                             upper.tau.w = m.i$upper.tau,
                              H.w = m.i$H,
                              lower.H.w = m.i$lower.H,
                              upper.H.w = m.i$upper.H,
@@ -229,7 +292,11 @@ metabind <- function(..., name, pooled, backtransf, outclab) {
                            pval.Q = pvalQ(m.i$Q.w, m.i$k.w - 1),
                            ##
                            tau2 = m.i$tau.w^2,
+                           lower.tau2 = m.i$lower.tau2.w,
+                           upper.tau2 = m.i$upper.tau2.w,
                            tau = m.i$tau.w,
+                           lower.tau = m.i$lower.tau.w,
+                           upper.tau = m.i$upper.tau.w,
                            H = m.i$H.w,
                            lower.H = m.i$lower.H.w,
                            upper.H = m.i$upper.H.w,
@@ -263,7 +330,11 @@ metabind <- function(..., name, pooled, backtransf, outclab) {
                            pval.Q = pvalQ(m.i$Q, m.i$df.Q),
                            ##
                            tau = m.i$tau,
+                           lower.tau = m.i$lower.tau,
+                           upper.tau = m.i$upper.tau,
                            tau2 = m.i$tau^2,
+                           lower.tau2 = m.i$lower.tau2,
+                           upper.tau2 = m.i$upper.tau2,
                            H = m.i$H,
                            lower.H = m.i$lower.H,
                            upper.H = m.i$upper.H,
@@ -309,8 +380,12 @@ metabind <- function(..., name, pooled, backtransf, outclab) {
                             Q = m.i$Q,
                             df.Q = m.i$df.Q,
                             tau2 = m.i$tau2,
+                            lower.tau2 = m.i$lower.tau2,
+                            upper.tau2 = m.i$upper.tau2,
                             se.tau2 = replace.NULL(m.i$se.tau2),
                             tau = m.i$tau,
+                            lower.tau = m.i$lower.tau,
+                            upper.tau = m.i$upper.tau,
                             ##
                             H = m.i$H,
                             lower.H = m.i$lower.H,
@@ -431,20 +506,70 @@ metabind <- function(..., name, pooled, backtransf, outclab) {
     if (length(tau.common.uniq) == 1)
       meth$tau.common[!is.subgroup] <- tau.common.uniq
   }
+  ##
+  show.studies <- TRUE
+  overall.hetstat <- TRUE
+  ##
+  if (length(unique(meth$method)) != 1) {
+    meth$method <- ""
+    show.studies <- FALSE
+    overall.hetstat <- FALSE
+  }
+  ##
+  if (length(unique(meth$method.tau)) != 1) {
+    meth$method.tau <- ""
+    show.studies <- FALSE
+    overall.hetstat <- FALSE
+  }
+  ##
+  if (length(unique(meth$method.bias)) != 1)
+    meth$method.bias <- ""
+  ##
+  if (length(unique(meth$title)) != 1)
+    meth$title <- ""
+  ##
+  if (length(unique(meth$complab)) != 1)
+    meth$complab <- ""
+  ##
+  if (length(unique(meth$outclab)) != 1)
+    meth$outclab <- ""
+  ##
+  if (length(unique(meth$label.e)) != 1)
+    meth$label.e <- ""
+  ##
+  if (length(unique(meth$label.c)) != 1)
+    meth$label.c <- ""
+  ##
+  if (length(unique(meth$label.left)) != 1)
+    meth$label.left <- ""
+  ##
+  if (length(unique(meth$label.right)) != 1)
+    meth$label.right <- ""
+  ##
+  if (length(unique(meth$pscale)) != 1)
+    meth$pscale <- min(meth$pscale)
+  ##
+  if (length(unique(meth$irscale)) != 1)
+    meth$irscale <- min(meth$irscale)
+  ##
+  if (length(unique(meth$irunit)) != 1)
+    meth$irunit <- NA
   
   
   ## Check whether settings are unique
   ##
-  n.meth <- apply(meth, 2,
+  meth2 <- meth
+  meth2$level <- NULL
+  n.meth <- apply(meth2, 2,
                   function(x)
                     length(unique(x)))
   ##
   if (any(n.meth != 1))
-    stop("All meta-analyses must use the same basic settings ",
-         "which differ for the following argument",
+    stop("Setting for the following argument",
          if (sum(n.meth != 1) > 1) "s",
+         " must be the same for all meta-analyses",
          ": ",
-         paste0(paste0("'", names(meth)[n.meth != 1], "'"),
+         paste0(paste0("'", names(meth2)[n.meth != 1], "'"),
                 collapse = " - "))
   
   
@@ -596,8 +721,11 @@ metabind <- function(..., name, pooled, backtransf, outclab) {
   res$pval.Q.b.random <-
     makeunique(makeunique(res$pval.Q.b.random,
                           pvalQ(res$Q.b.random, res$df.Q.b)))
-
-
+  ##
+  res$show.studies <- show.studies
+  res$overall.hetstat <- overall.hetstat
+  
+  
   res$is.subgroup <- is.subgroup
 
 

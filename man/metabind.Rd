@@ -2,12 +2,13 @@
 % Please edit documentation in R/metabind.R
 \name{metabind}
 \alias{metabind}
-\title{Combine meta-analysis objects}
+\title{Combine and summarize meta-analysis objects}
 \usage{
 metabind(..., name, pooled, backtransf, outclab)
 }
 \arguments{
-\item{...}{Any number of meta-analysis objects (see Details).}
+\item{...}{Any number of meta-analysis objects or a single list
+with meta-analyses.}
 
 \item{name}{An optional character vector providing descriptive
 names for the meta-analysis objects.}
@@ -30,13 +31,20 @@ An object of class \code{c("metabind", "meta")} with corresponding
 }
 \description{
 This function can be used to combine meta-analysis objects and is,
-for example, useful to generate a forest plot with results of
+for example, useful to summarize results of various meta-analysis
+methods or to generate a forest plot with results of several
 subgroup analyses.
 }
 \details{
-This function can be used to combine meta-analysis objects and is,
-for example, useful to generate a forest plot with results of
-subgroup analyses.
+This function can be used to combine any number of meta-analysis
+objects which is useful, for example, to summarize results of
+various meta-analysis methods or to generate a forest plot with
+results of several subgroup analyses (see Examples).
+
+Individual study results are not retained with
+\code{metabind}. This is possible using R function
+\code{\link{metamerge}} which, however, can only be used to combine
+results of two meta-analyses.
 }
 \examples{
 data(Fleiss1993cont)
@@ -61,9 +69,37 @@ mb1 <- metabind(mu1, mu2)
 mb1
 forest(mb1)
 
+# Use various estimation methods for between-study heterogeneity
+# variance
+#
+m1.pm <- update(m1, method.tau = "PM")
+m1.reml <- update(m1, method.tau = "REML")
+m1.ml <- update(m1, method.tau = "ML")
+m1.hs <- update(m1, method.tau = "HS")
+m1.sj <- update(m1, method.tau = "SJ")
+m1.he <- update(m1, method.tau = "HE")
+m1.eb <- update(m1, method.tau = "EB")
+
+# Combine meta-analyses and show results
+#
+taus <- c("DerSimonian-Laird estimator",
+          "Paule-Mandel estimator",
+          "Restricted maximum-likelihood estimator",
+          "Maximum-likelihood estimator",
+          "Hunter-Schmidt estimator",
+          "Sidik-Jonkman estimator",
+          "Hedges estimator",
+          "Empirical Bayes estimator")
+#
+m1.taus <- metabind(m1, m1.pm, m1.reml, m1.ml, m1.hs, m1.sj, m1.he, m1.eb,
+                    name = taus, pooled = "random")
+m1.taus
+forest(m1.taus, print.I2 = FALSE, print.pval.Q = FALSE)
+
 }
 \seealso{
-\code{\link{metagen}}, \code{\link{forest.metabind}}
+\code{\link{metagen}}, \code{\link{forest.metabind}},
+  \code{\link{metamerge}}
 }
 \author{
 Guido Schwarzer \email{sc@imbi.uni-freiburg.de}

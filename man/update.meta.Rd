@@ -7,9 +7,10 @@
 \method{update}{meta}(
   object,
   data = object$data,
-  subset = object$subset,
-  studlab = object$data$.studlab,
-  exclude = object$data$.exclude,
+  subset,
+  studlab,
+  exclude,
+  id,
   method = object$method,
   sm = object$sm,
   incr,
@@ -41,6 +42,11 @@
   pscale = object$pscale,
   irscale = object$irscale,
   irunit = object$irunit,
+  text.fixed = object$text.fixed,
+  text.random = object$text.random,
+  text.predict = object$text.predict,
+  text.w.fixed = object$text.w.fixed,
+  text.w.random = object$text.w.random,
   title = object$title,
   complab = object$complab,
   outclab = object$outclab,
@@ -55,7 +61,7 @@
   sd.glass = object$sd.glass,
   exact.smd = object$exact.smd,
   method.ci = object$method.ci,
-  byvar = object$byvar,
+  byvar,
   bylab = object$bylab,
   print.byvar = object$print.byvar,
   byseparator = object$byseparator,
@@ -82,6 +88,10 @@
 \item{exclude}{An optional vector specifying studies to exclude
 from meta-analysis, however, to include in printouts and forest
 plots.}
+
+\item{id}{An optional vector specifying which estimates come from
+the same study resulting in the use of a three-level
+meta-analysis model.}
 
 \item{method}{A character string indicating which method is to be
 used for pooling of studies; see \code{\link{metabin}} and
@@ -155,7 +165,7 @@ intervals.}
 
 \item{adhoc.hakn}{A character string indicating whether an \emph{ad
 hoc} variance correction should be applied in the case of an
-arbitrarily small Hartung-Knapp variance estimate, see Details.}
+arbitrarily small Hartung-Knapp variance estimate.}
 
 \item{method.tau}{A character string indicating which method is
 used to estimate the between-study variance \eqn{\tau^2} and its
@@ -212,6 +222,21 @@ argument \code{sm} is equal to \code{"IR"}, \code{"IRLN"},
 
 \item{irunit}{A character specifying the time unit used to
 calculate rates, e.g. person-years.}
+
+\item{text.fixed}{A character string used in printouts and forest
+plot to label the pooled fixed effect estimate.}
+
+\item{text.random}{A character string used in printouts and forest
+plot to label the pooled random effects estimate.}
+
+\item{text.predict}{A character string used in printouts and forest
+plot to label the prediction interval.}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
 
 \item{title}{Title of meta-analysis / systematic review.}
 

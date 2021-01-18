@@ -12,9 +12,7 @@ al. (2015), \url{http://meta-analysis-with-r.org/}.
 }
 \details{
 R package \bold{meta} (Schwarzer, 2007; Balduzzi et al., 2019)
-provides the following
-
-statistical methods for meta-analysis.
+provides the following statistical methods for meta-analysis.
 \enumerate{
 \item Fixed effect and random effects model:
 \itemize{
@@ -85,7 +83,9 @@ example, the function can be used to specify general settings:
 \item \code{settings.meta("jama")}
 \item \code{settings.meta("iqwig5")}
 \item \code{settings.meta("iqwig6")}
+\item \code{settings.meta("geneexpr")}
 }
+
 The first command can be used to reproduce meta-analyses from
 Cochrane reviews conducted with \emph{Review Manager 5} (RevMan 5,
 \url{https://training.cochrane.org/online-learning/core-software-cochrane-reviews/revman})
@@ -93,11 +93,14 @@ and specifies to use a RevMan 5 layout in forest plots. The second
 command can be used to generate forest plots following instructions
 for authors of the \emph{Journal of the American Medical
 Association}
-(\url{http://jamanetwork.com/journals/jama/pages/instructions-for-authors}). The
-other two commands implement the recommendations of the Institute
+(\url{https://jamanetwork.com/journals/jama/pages/instructions-for-authors/}). The
+next two commands implement the recommendations of the Institute
 for Quality and Efficiency in Health Care (IQWiG), Germany
 accordinging to General Methods 5 and 6, respectively
-(\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}).
+(\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}). The
+last setting can be used to print p-values in scientific notation
+and to suppress the calculation of confidence intervals for the
+between-study variance.
 
 In addition, \code{\link{settings.meta}} can be used to change
 individual settings. For example, the following R command specifies
@@ -139,7 +142,7 @@ R package \bold{meta} imports R functions from \bold{metafor}
 Balduzzi S, Rücker G, Schwarzer G (2019):
 How to perform a meta-analysis with R: a practical tutorial.
 \emph{Evidence-Based Mental Health},
-\bold{22}, 153--160.
+\bold{22}, 153--160
 
 Hartung J, Knapp G (2001a):
 On tests of the overall treatment effect in meta-analysis with

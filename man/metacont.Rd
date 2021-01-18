@@ -15,6 +15,7 @@ metacont(
   data = NULL,
   subset = NULL,
   exclude = NULL,
+  id = NULL,
   median.e,
   q1.e,
   q3.e,
@@ -46,7 +47,7 @@ metacont(
   hakn = gs("hakn"),
   adhoc.hakn = gs("adhoc.hakn"),
   method.tau = gs("method.tau"),
-  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  method.tau.ci = gs("method.tau.ci"),
   tau.preset = NULL,
   TE.tau = NULL,
   tau.common = gs("tau.common"),
@@ -54,6 +55,11 @@ metacont(
   level.predict = gs("level.predict"),
   method.bias = gs("method.bias"),
   backtransf = gs("backtransf"),
+  text.fixed = gs("text.fixed"),
+  text.random = gs("text.random"),
+  text.predict = gs("text.predict"),
+  text.w.fixed = gs("text.w.fixed"),
+  text.w.random = gs("text.w.random"),
   title = gs("title"),
   complab = gs("complab"),
   outclab = "",
@@ -94,6 +100,10 @@ be used.}
 \item{exclude}{An optional vector specifying studies to exclude
 from meta-analysis, however, to include in printouts and forest
 plots.}
+
+\item{id}{An optional vector specifying which estimates come from
+the same study resulting in the use of a three-level
+meta-analysis model.}
 
 \item{median.e}{Median in experimental group (used to estimate the
 mean and standard deviation).}
@@ -238,6 +248,21 @@ can be abbreviated.  See function \code{\link{metabias}}}
 means (\code{sm="ROM"}) should be back transformed in printouts
 and plots. If TRUE (default), results will be presented as ratio
 of means; otherwise log ratio of means will be shown.}
+
+\item{text.fixed}{A character string used in printouts and forest
+plot to label the pooled fixed effect estimate.}
+
+\item{text.random}{A character string used in printouts and forest
+plot to label the pooled random effects estimate.}
+
+\item{text.predict}{A character string used in printouts and forest
+plot to label the prediction interval.}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
 
 \item{title}{Title of meta-analysis / systematic review.}
 
@@ -625,9 +650,12 @@ The following methods to calculate a confidence interval for
 \eqn{\tau^2} and \eqn{\tau} are available.
 \tabular{ll}{
 \bold{Argument}\tab \bold{Method} \cr 
-\code{method.tau.ci = "J"}\tab Method by Jackson \cr
-\code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson \cr
-\code{method.tau.ci = "QP"}\tab Q-Profile method
+\code{method.tau.ci = "J"}\tab Method by Jackson (2013) \cr
+\code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson (2008) \cr
+\code{method.tau.ci = "QP"}\tab Q-Profile method (Viechtbauer, 2007) \cr
+\code{method.tau.ci = "PL"}\tab Profile-Likelihood method for
+ three-level meta-analysis model \cr
+\tab (Van den Noortgate et al., 2013)
 }
 See \code{\link{metagen}} for more information on these methods. No
 confidence intervals for \eqn{\tau^2} and \eqn{\tau} are calculated
@@ -646,20 +674,32 @@ method.
 In rare settings with very homogeneous treatment estimates, the
 Hartung-Knapp variance estimate can be arbitrarily small resulting
 in a very narrow confidence interval (Knapp and Hartung, 2003;
-Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
-correction has been proposed by utilising the variance estimate
-from the classic random effects model (Knapp and Hartung,
-2003). Argument \code{adhoc.hakn} can be used to choose the
-\emph{ad hoc} method:
+Wiksten et al., 2016). In such cases, an
+\emph{ad hoc} variance correction has been proposed by utilising
+the variance estimate from the classic random effects model with
+the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+alternative approach is to use the wider confidence interval of
+classic fixed or random effects meta-analysis and the HK method
+(Wiksten et al., 2016; Jackson et al., 2017).
+
+Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+method:
 \tabular{ll}{
-\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 \code{adhoc.hakn = ""}\tab not used \cr
-\code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
- standard error \cr
- \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-\code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
- narrower than CI from \cr
- \tab classic random effects model with DL estimator (IQWiG, 2020)
+\code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+ error is smaller \cr
+ \tab than standard error from classic random effects
+ \cr
+ \tab meta-analysis (Knapp and Hartung, 2003) \cr
+\code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+ confidence interval \cr
+ \tab is narrower than CI from classic random effects model \cr
+ \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+\code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+ classic random effects \cr
+ \tab and HK meta-analysis \cr
+ \tab (Hybrid method 2 in Jackson et al., 2017)
 }
 }
 
@@ -818,8 +858,14 @@ standard DerSimonian-Laird method.
 \bold{14}, 25
 
 IQWiG (2020):
-General Methods: Draft of Version 6.0.
-\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
+General Methods: Version 6.0.
+\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}
+
+Jackson D, Law M, Rücker G, Schwarzer G (2017): 
+The Hartung-Knapp modification for random-effects meta-analysis: A
+useful refinement but are there any residual concerns?
+\emph{Statistics in Medicine},
+\bold{36}, 3923--34
 
 Knapp G & Hartung J (2003):
 Improved tests for a random effects meta-regression with a single
@@ -840,9 +886,13 @@ mid-range, and/or mid-quartile range.
 \emph{Statistical Methods in Medical Research},
 \bold{27}, 1785--805
 
-\emph{Review Manager (RevMan)}
-[Computer program]. Version 5.3.
-Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
+\emph{Review Manager (RevMan)} [Computer program]. Version 5.4.
+The Cochrane Collaboration, 2020
+
+Van den Noortgate W, López-López JA, Marín-Martínez F, Sánchez-Meca J (2013):
+Three-level meta-analysis of dependent effect sizes.
+\emph{Behavior Research Methods},
+\bold{45}, 576--94
 
 Viechtbauer W (2010):
 Conducting Meta-Analyses in R with the Metafor Package.

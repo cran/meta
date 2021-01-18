@@ -10,6 +10,9 @@
 #' @param exclude An optional vector specifying studies to exclude
 #'   from meta-analysis, however, to include in printouts and forest
 #'   plots.
+#' @param id An optional vector specifying which estimates come from
+#'   the same study resulting in the use of a three-level
+#'   meta-analysis model.
 #' @param method A character string indicating which method is to be
 #'   used for pooling of studies; see \code{\link{metabin}} and
 #'   \code{\link{metainc}} function for admissible values.
@@ -65,7 +68,7 @@
 #'   intervals.
 #' @param adhoc.hakn A character string indicating whether an \emph{ad
 #'   hoc} variance correction should be applied in the case of an
-#'   arbitrarily small Hartung-Knapp variance estimate, see Details.
+#'   arbitrarily small Hartung-Knapp variance estimate.
 #' @param method.tau A character string indicating which method is
 #'   used to estimate the between-study variance \eqn{\tau^2} and its
 #'   square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
@@ -109,6 +112,16 @@
 #'   \code{"IRS"}, \code{"IRFT"}, or \code{"IRD"}.
 #' @param irunit A character specifying the time unit used to
 #'   calculate rates, e.g. person-years.
+#' @param text.fixed A character string used in printouts and forest
+#'   plot to label the pooled fixed effect estimate.
+#' @param text.random A character string used in printouts and forest
+#'   plot to label the pooled random effects estimate.
+#' @param text.predict A character string used in printouts and forest
+#'   plot to label the prediction interval.
+#' @param text.w.fixed A character string used to label weights of
+#'   fixed effect model.
+#' @param text.w.random A character string used to label weights of
+#'   random effects model.
 #' @param title Title of meta-analysis / systematic review.
 #' @param complab Comparison label.
 #' @param outclab Outcome label.
@@ -230,9 +243,8 @@
 
 update.meta <- function(object, 
                         data = object$data,
-                        subset = object$subset,
-                        studlab = object$data$.studlab,
-                        exclude = object$data$.exclude,
+                        subset, studlab, exclude, id,
+                        ##
                         method = object$method,
                         sm = object$sm,
                         incr,
@@ -265,6 +277,13 @@ update.meta <- function(object,
                         pscale = object$pscale,
                         irscale = object$irscale,
                         irunit = object$irunit,
+                        ##
+                        text.fixed = object$text.fixed,
+                        text.random = object$text.random,
+                        text.predict = object$text.predict,
+                        text.w.fixed = object$text.w.fixed,
+                        text.w.random = object$text.w.random,
+                        ##
                         title = object$title,
                         complab = object$complab,
                         outclab = object$outclab,
@@ -279,7 +298,7 @@ update.meta <- function(object,
                         sd.glass = object$sd.glass,
                         exact.smd = object$exact.smd,
                         method.ci = object$method.ci,
-                        byvar = object$byvar,
+                        byvar,
                         bylab = object$bylab,
                         print.byvar = object$print.byvar,
                         byseparator = object$byseparator,
@@ -341,8 +360,9 @@ update.meta <- function(object,
   ##
   RR.Cochrane <- replacemiss(RR.Cochrane, object$RR.cochrane)
   Q.Cochrane <- replacemiss(Q.Cochrane, TRUE)
-  if (Q.Cochrane &
-      (!(sm %in% c("OR", "RR", "RD", "DOR")) | method.tau != "DL"))
+  if (method != "MH" |
+      method.tau != "DL" |
+      !(sm %in% c("OR", "RR", "RD", "DOR")))
     Q.Cochrane <- FALSE
   ##
   model.glmm <- replacemiss(model.glmm)
@@ -353,7 +373,7 @@ update.meta <- function(object,
   hakn <- replacemiss(hakn)
   adhoc.hakn <- replacemiss(adhoc.hakn)
   method.tau <- replacemiss(method.tau)
-  method.tau.ci <- replacemiss(method.tau.ci)
+  method.tau.ci <- replacemiss(method.tau.ci, "")
   tau.preset <- replacemiss(tau.preset, NULL)
   TE.tau <- replacemiss(TE.tau, NULL)
   null.effect <- replacemiss(null.effect, NA)
@@ -531,24 +551,84 @@ update.meta <- function(object,
     return(invisible(NULL))
   }
   ##
-  missing.subset  <- missing(subset)
-  missing.incr    <- missing(incr)
-  missing.byvar   <- missing(byvar)
-  missing.studlab <- missing(studlab)
-  missing.exclude <- missing(exclude)
-  ##
   mf <- match.call()
   ##
-  subset <- eval(mf[[match("subset", names(mf))]],
-                 data, enclos = sys.frame(sys.parent()))
+  ## Catch argument 'subset'
   ##
-  incr <- eval(mf[[match("incr", names(mf))]],
+  missing.subset  <- missing(subset)
+  ##
+  if (!missing.subset)
+    subset <- eval(mf[[match("subset", names(mf))]],
+                   data, enclos = sys.frame(sys.parent()))
+  else {
+    if (!is.null(object$subset))
+      subset <- object$subset
+    else if (isCol(object$data, ".subset"))
+      subset <- object$data$.subset
+    else
+      subset <- NULL
+  }
+  ##
+  ## Catch argument 'studlab'
+  ##
+  missing.studlab <- missing(studlab)
+  ##
+  if (!missing.studlab)
+    studlab <- eval(mf[[match("studlab", names(mf))]],
+                    data, enclos = sys.frame(sys.parent()))
+  else if (isCol(object$data, ".studlab"))
+    studlab <- object$data$.studlab
+  else
+    studlab <- NULL
+  ##
+  ## Catch argument 'exclude'
+  ##
+  missing.exclude <- missing(exclude)
+  ##
+  if (!missing.exclude)
+    exclude <- eval(mf[[match("exclude", names(mf))]],
+                    data, enclos = sys.frame(sys.parent()))
+  else if (isCol(object$data, ".exclude"))
+    exclude <- object$data$.exclude
+  else
+    exclude <- NULL
+  ##
+  ## Catch argument 'id'
+  ##
+  missing.id <- missing(id)
+  ##
+  if (!missing.id)
+    id <- eval(mf[[match("id", names(mf))]],
                data, enclos = sys.frame(sys.parent()))
+  else {
+    if (isCol(object$data, ".id"))
+      id <- object$data$.id
+    else
+      id <- NULL
+  }
   ##
-  byvar <- eval(mf[[match("byvar", names(mf))]],
-                data, enclos = sys.frame(sys.parent()))
+  ## Catch argument 'incr'
+  ##
+  missing.incr <- missing(incr)
+  ##
+  if (!missing.incr)
+    incr <- eval(mf[[match("incr", names(mf))]],
+                 data, enclos = sys.frame(sys.parent()))
+  else {
+    if (isCol(object$data, ".incr"))
+      incr <- object$data$.incr
+    else
+      incr <- gs("incr")
+  }
+  ##
+  ## Catch argument 'byvar'
+  ##
+  missing.byvar <- missing(byvar)
   ##
   if (!missing.byvar) {
+    byvar <- eval(mf[[match("byvar", names(mf))]],
+                  data, enclos = sys.frame(sys.parent()))
+    ##
     byvar.name <- as.character(mf[[match("byvar", names(mf))]])
     if (length(byvar.name) > 1 & byvar.name[1] == "$")
       byvar.name <- byvar.name[length(byvar.name)]
@@ -559,45 +639,12 @@ update.meta <- function(object,
     ##
     data$.byvar <- byvar
   }
-  ##
-  studlab <- eval(mf[[match("studlab", names(mf))]],
-                  data, enclos = sys.frame(sys.parent()))
-  ##
-  exclude <- eval(mf[[match("exclude", names(mf))]],
-                  data, enclos = sys.frame(sys.parent()))
-  ##
-  if (missing.subset) {
-    if (!is.null(object$subset))
-      subset <- object$subset
-    else if (isCol(object$data, ".subset"))
-      subset <- object$data$.subset
-  }
-  ##
-  if (missing.incr) {
-    if (isCol(object$data, ".incr"))
-      incr <- object$data$.incr
-    else
-      incr <- gs("incr")
-  }
-  ##
-  if (missing.byvar & isCol(object$data, ".byvar"))
+  else if (isCol(object$data, ".byvar"))
     byvar <- object$data$.byvar
+  else
+    byvar <- NULL
   ##
-  if (missing.studlab & isCol(object$data, ".studlab"))
-    studlab <- object$data$.studlab
-  ##
-  if (missing.exclude & isCol(object$data, ".exclude"))
-    exclude <- object$data$.exclude
-  ##
-  if (method == "GLMM")
-    if (metabin & !missing(sm) & sm != "OR")
-      warning("Summary measure 'sm = \"OR\" used as 'method = \"GLMM\".")
-    else if (metainc & !missing(sm) & sm != "IRR")
-      warning("Summary measure 'sm = \"IRR\" used as 'method = \"GLMM\".")
-    else if (metaprop & !missing(sm) & sm != "PLOGIT")
-      warning("Summary measure 'sm = \"PLOGIT\" used as 'method = \"GLMM\".")
-    else if (metarate & !missing(sm) & sm != "IRLN")
-      warning("Summary measure 'sm = \"IRLN\" used as 'method = \"GLMM\".")
+  missing.sm <- missing(sm)
   
   
   ##
@@ -608,8 +655,12 @@ update.meta <- function(object,
   if (metabin) {
     sm <- setchar(sm, .settings$sm4bin)
     method <- setchar(method, .settings$meth4bin)
+    ##
+    if (method == "GLMM" & !missing.sm & sm != "OR")
+      warning("Summary measure 'sm = \"OR\" used as 'method = \"GLMM\".")
+    ##
     if (sm == "ASD") {
-      if (!missing.incr)
+      if (!missing.incr && any(incr != 0))
         warning("Note, no continuity correction considered for ",
                 "arcsine difference (sm = \"ASD\").")
       incr <- 0
@@ -617,7 +668,7 @@ update.meta <- function(object,
     }
     ##
     if (method == "Peto") {
-      if (!missing.incr)
+      if (!missing.incr && any(incr != 0))
         warning("Note, no continuity correction considered for method = \"Peto\".")
       incr <- 0
       object$data$.incr <- 0
@@ -655,6 +706,11 @@ update.meta <- function(object,
                  method.bias = method.bias,
                  ##
                  backtransf = backtransf, pscale = pscale,
+                 ##
+                 text.fixed = text.fixed, text.random = text.random,
+                 text.predict = text.predict,
+                 text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+                 ##
                  title = title, complab = complab, outclab = outclab,
                  label.e = label.e, label.c = label.c,
                  label.right = label.right, label.left = label.left,
@@ -680,6 +736,7 @@ update.meta <- function(object,
                   ##
                   studlab = studlab,
                   exclude = exclude,
+                  id = id,
                   ##
                   data = data, subset = subset,
                   ##
@@ -700,6 +757,10 @@ update.meta <- function(object,
                   prediction = prediction, level.predict = level.predict,
                   ##
                   method.bias = method.bias,
+                  ##
+                  text.fixed = text.fixed, text.random = text.random,
+                  text.predict = text.predict,
+                  text.w.fixed = text.w.fixed, text.w.random = text.w.random,
                   ##
                   title = title, complab = complab, outclab = outclab,
                   label.e = label.e, label.c = label.c,
@@ -740,6 +801,11 @@ update.meta <- function(object,
                  method.bias = method.bias,
                  ##
                  backtransf = backtransf,
+                 ##
+                 text.fixed = text.fixed, text.random = text.random,
+                 text.predict = text.predict,
+                 text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+                 ##
                  title = title, complab = complab, outclab = outclab,
                  byvar = byvar, bylab = bylab, print.byvar = print.byvar,
                  byseparator = byseparator,
@@ -767,6 +833,7 @@ update.meta <- function(object,
                  ##
                  studlab = studlab,
                  exclude = exclude,
+                 id = id,
                  ##
                  data = data.m, subset = subset,
                  ##
@@ -788,6 +855,11 @@ update.meta <- function(object,
                  n.e = n.e, n.c = n.c,
                  ##
                  backtransf = backtransf,
+                 ##
+                 text.fixed = text.fixed, text.random = text.random,
+                 text.predict = text.predict,
+                 text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+                 ##
                  title = title, complab = complab, outclab = outclab,
                  label.e = label.e, label.c = label.c,
                  label.right = label.right, label.left = label.left,
@@ -808,6 +880,12 @@ update.meta <- function(object,
   }
   ##
   if (metainc) {
+    sm <- setchar(sm, .settings$sm4inc)
+    method <- setchar(method, .settings$meth4inc)
+    ##
+    if (method == "GLMM" & !missing.sm & sm != "IRR")
+      warning("Summary measure 'sm = \"IRR\" used as 'method = \"GLMM\".")
+    ##
     data.m <- data
     add.e <- FALSE
     add.c <- FALSE
@@ -854,6 +932,11 @@ update.meta <- function(object,
                  n.e = n.e, n.c = n.c,
                  ##
                  backtransf = backtransf, irscale = irscale, irunit = irunit,
+                 ##
+                 text.fixed = text.fixed, text.random = text.random,
+                 text.predict = text.predict,
+                 text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+                 ##
                  title = title, complab = complab, outclab = outclab,
                  label.e = label.e, label.c = label.c,
                  label.right = label.right, label.left = label.left,
@@ -904,6 +987,11 @@ update.meta <- function(object,
                   method.bias = method.bias,
                   ##
                   backtransf = backtransf,
+                  ##
+                  text.fixed = text.fixed, text.random = text.random,
+                  text.predict = text.predict,
+                  text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+                  ##
                   title = title, complab = complab, outclab = outclab,
                   ##
                   byvar = byvar, bylab = bylab, print.byvar = print.byvar,
@@ -914,7 +1002,13 @@ update.meta <- function(object,
                   ##
                   control = control)
   ##
-  if (metaprop)
+  if (metaprop) {
+    sm <- setchar(sm, .settings$sm4prop)
+    method <- setchar(method, .settings$meth4prop)
+    ##
+    if (method == "GLMM" & !missing.sm & sm != "PLOGIT")
+      warning("Summary measure 'sm = \"PLOGIT\" used as 'method = \"GLMM\".")
+    ##
     m <- metaprop(event = object$data$.event,
                   n = object$data$.n,
                   ##
@@ -946,6 +1040,11 @@ update.meta <- function(object,
                   method.bias = method.bias,
                   ##
                   backtransf = backtransf, pscale = pscale,
+                  ##
+                  text.fixed = text.fixed, text.random = text.random,
+                  text.predict = text.predict,
+                  text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+                  ##
                   title = title, complab = complab, outclab = outclab,
                   byvar = byvar, bylab = bylab, print.byvar = print.byvar,
                   byseparator = byseparator,
@@ -955,8 +1054,15 @@ update.meta <- function(object,
                   ##
                   control = control,
                   ...)
+  }
   ##
-  if (metarate)
+  if (metarate) {
+    sm <- setchar(sm, .settings$sm4rate)
+    method <- setchar(method, .settings$meth4rate)
+    ##
+    if (method == "GLMM" & !missing.sm & sm != "IRLN")
+      warning("Summary measure 'sm = \"IRLN\" used as 'method = \"GLMM\".")
+    ##
     m <- metarate(event = object$data$.event,
                   time = object$data$.time,
                   ##
@@ -986,6 +1092,11 @@ update.meta <- function(object,
                   method.bias = method.bias,
                   ##
                   backtransf = backtransf, irscale = irscale, irunit = irunit,
+                  ##
+                  text.fixed = text.fixed, text.random = text.random,
+                  text.predict = text.predict,
+                  text.w.fixed = text.w.fixed, text.w.random = text.w.random,
+                  ##
                   title = title, complab = complab, outclab = outclab,
                   byvar = byvar, bylab = bylab, print.byvar = print.byvar,
                   byseparator = byseparator,
@@ -995,6 +1106,7 @@ update.meta <- function(object,
                   ##
                   control = control,
                   ...)
+  }
   ##  
   m$call.object <- object$call
   m$call <- match.call()

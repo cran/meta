@@ -13,7 +13,7 @@ metainc(
   data = NULL,
   subset = NULL,
   exclude = NULL,
-  method = "MH",
+  method = if (sm == "IRSD") "Inverse" else "MH",
   sm = gs("sminc"),
   incr = gs("incr"),
   allincr = gs("allincr"),
@@ -29,7 +29,7 @@ metainc(
   adhoc.hakn = gs("adhoc.hakn"),
   method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch = NA)), "ML",
     gs("method.tau")),
-  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  method.tau.ci = gs("method.tau.ci"),
   tau.preset = NULL,
   TE.tau = NULL,
   tau.common = gs("tau.common"),
@@ -38,9 +38,14 @@ metainc(
   method.bias = gs("method.bias"),
   n.e = NULL,
   n.c = NULL,
-  backtransf = gs("backtransf"),
+  backtransf = if (sm == "IRSD") FALSE else gs("backtransf"),
   irscale = 1,
   irunit = "person-years",
+  text.fixed = gs("text.fixed"),
+  text.random = gs("text.random"),
+  text.predict = gs("text.predict"),
+  text.w.fixed = gs("text.w.fixed"),
+  text.w.random = gs("text.w.random"),
   title = gs("title"),
   complab = gs("complab"),
   outclab = "",
@@ -85,8 +90,8 @@ used for pooling of studies. One of \code{"MH"},
 abbreviated.}
 
 \item{sm}{A character string indicating which summary measure
-(\code{"IRR"} or \code{"IRD"}) is to be used for pooling of
-studies, see Details.}
+(\code{"IRR"}, \code{"IRD"} or \code{"IRSD"}) is to be used for
+pooling of studies, see Details.}
 
 \item{incr}{A numerical value which is added to each cell frequency
 for studies with a zero cell count, see Details.}
@@ -170,7 +175,7 @@ funnel plot asymmetry is to be used. Either \code{"linreg"} or
 
 \item{backtransf}{A logical indicating whether results for
 incidence rate ratio (\code{sm = "IRR"}) should be back
-transformed in printouts and plots.  If TRUE (default), results
+transformed in printouts and plots. If TRUE (default), results
 will be presented as incidence rate ratios; otherwise log
 incidence rate ratios will be shown.}
 
@@ -179,6 +184,21 @@ incidence rate differences.}
 
 \item{irunit}{A character string specifying the time unit used to
 calculate rates, e.g. person-years.}
+
+\item{text.fixed}{A character string used in printouts and forest
+plot to label the pooled fixed effect estimate.}
+
+\item{text.random}{A character string used in printouts and forest
+plot to label the pooled random effects estimate.}
+
+\item{text.predict}{A character string used in printouts and forest
+plot to label the prediction interval.}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
 
 \item{title}{Title of meta-analysis / systematic review.}
 
@@ -250,13 +270,13 @@ object is a list containing the following components:
   standard error (fixed effect model).}
 \item{lower.fixed, upper.fixed}{Lower and upper confidence interval
   limits (fixed effect model).}
-\item{zval.fixed, pval.fixed}{z-value and p-value for test of
+\item{statistic.fixed, pval.fixed}{z-value and p-value for test of
   overall treatment effect (fixed effect model).}
 \item{TE.random, seTE.random}{Estimated overall treatment effect
   and standard error (random effects model).}
 \item{lower.random, upper.random}{Lower and upper confidence
   interval limits (random effects model).}
-\item{zval.random, pval.random}{z-value or t-value and
+\item{statistic.random, pval.random}{z-value or t-value and
   corresponding p-value for test of overall treatment effect
   (random effects model).}
 \item{prediction, level.predict}{As defined above.}
@@ -303,7 +323,7 @@ object is a list containing the following components:
 \item{lower.fixed.w, upper.fixed.w}{Lower and upper confidence
   interval limits in subgroups (fixed effect model) - if
   \code{byvar} is not missing.}
-\item{zval.fixed.w, pval.fixed.w}{z-value and p-value for test of
+\item{statistic.fixed.w, pval.fixed.w}{z-value and p-value for test of
   treatment effect in subgroups (fixed effect model) - if
   \code{byvar} is not missing.}
 \item{TE.random.w, seTE.random.w}{Estimated treatment effect and
@@ -312,7 +332,7 @@ object is a list containing the following components:
 \item{lower.random.w, upper.random.w}{Lower and upper confidence
   interval limits in subgroups (random effects model) - if
   \code{byvar} is not missing.}
-\item{zval.random.w, pval.random.w}{z-value or t-value and
+\item{statistic.random.w, pval.random.w}{z-value or t-value and
   corresponding p-value for test of treatment effect in subgroups
   (random effects model) - if \code{byvar} is not missing.}
 \item{w.fixed.w, w.random.w}{Weight of subgroups (in fixed and
@@ -407,6 +427,8 @@ The following measures of treatment effect are available:
 \itemize{
 \item Incidence Rate Ratio (\code{sm = "IRR"})
 \item Incidence Rate Difference (\code{sm = "IRD"})
+\item Square root transformed Incidence Rate Difference (\code{sm =
+  "IRSD"})
 }
 
 Default settings are utilised for several arguments (assignments
@@ -528,20 +550,32 @@ method.
 In rare settings with very homogeneous treatment estimates, the
 Hartung-Knapp variance estimate can be arbitrarily small resulting
 in a very narrow confidence interval (Knapp and Hartung, 2003;
-Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
-correction has been proposed by utilising the variance estimate
-from the classic random effects model (Knapp and Hartung,
-2003). Argument \code{adhoc.hakn} can be used to choose the
-\emph{ad hoc} method:
+Wiksten et al., 2016). In such cases, an
+\emph{ad hoc} variance correction has been proposed by utilising
+the variance estimate from the classic random effects model with
+the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+alternative approach is to use the wider confidence interval of
+classic fixed or random effects meta-analysis and the HK method
+(Wiksten et al., 2016; Jackson et al., 2017).
+
+Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+method:
 \tabular{ll}{
-\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 \code{adhoc.hakn = ""}\tab not used \cr
-\code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
- standard error \cr
- \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-\code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
- narrower than CI from \cr
- \tab classic random effects model with DL estimator (IQWiG, 2020)
+\code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+ error is smaller \cr
+ \tab than standard error from classic random effects
+ \cr
+ \tab meta-analysis (Knapp and Hartung, 2003) \cr
+\code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+ confidence interval \cr
+ \tab is narrower than CI from classic random effects model \cr
+ \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+\code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+ classic random effects \cr
+ \tab and HK meta-analysis \cr
+ \tab (Hybrid method 2 in Jackson et al., 2017)
 }
 }
 
@@ -666,6 +700,12 @@ Higgins JPT, Thompson SG, Spiegelhalter DJ (2009):
 A re-evaluation of random-effects meta-analysis.
 \emph{Journal of the Royal Statistical Society: Series A},
 \bold{172}, 137--59
+
+Jackson D, Law M, Rücker G, Schwarzer G (2017): 
+The Hartung-Knapp modification for random-effects meta-analysis: A
+useful refinement but are there any residual concerns?
+\emph{Statistics in Medicine},
+\bold{36}, 3923--34
 
 Knapp G & Hartung J (2003):
 Improved tests for a random effects meta-regression with a single

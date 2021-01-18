@@ -36,6 +36,7 @@ Examples) or use one of the following general settings:
 \item \code{settings.meta("jama")}
 \item \code{settings.meta("iqwig5")}
 \item \code{settings.meta("iqwig6")}
+\item \code{settings.meta("geneexpr")}
 }
 
 The first command can be used to reproduce meta-analyses from
@@ -45,11 +46,14 @@ and specifies to use a RevMan 5 layout in forest plots. The second
 command can be used to generate forest plots following instructions
 for authors of the \emph{Journal of the American Medical
 Association}
-(\url{http://jamanetwork.com/journals/jama/pages/instructions-for-authors}). The
-other two commands implement the recommendations of the Institute
-for Quality and Efficiency in Health Care, Germany (IQWiG)
-accordinging to General Methods 5 and 6, respectively
-(\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}).
+(\url{https://jamanetwork.com/journals/jama/pages/instructions-for-authors/}). The
+next commands implement the recommendations of the Institute for
+Quality and Efficiency in Health Care, Germany (IQWiG) accordinging
+to General Methods 5 and 6, respectively
+(\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}). The
+last setting can be used to print p-values in scientific notation
+and to suppress the calculation of confidence intervals for the
+between-study variance.
 
 RevMan 5 settings, in detail:
 \tabular{lll}{
@@ -107,6 +111,14 @@ IQWiG, General Methods 6 settings:
 \code{method.tau} \tab "PM" \tab Paule-Mandel estimator for
   between-study variance \cr
 \code{prediction} \tab TRUE \tab Prediction interval \cr
+}
+
+Settings for gene expression data:
+\tabular{lll}{
+\bold{Argument} \tab \bold{Value} \tab \bold{Comment} \cr
+\code{scientific.pval} \tab TRUE \tab Scientific notation for p-values \cr
+\code{method.tau.ci} \tab FALSE \tab no confidence interval for \cr
+ \tab between-study heterogeneity variance \cr
 }
 
 A list of all arguments with current settings is printed using the

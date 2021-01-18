@@ -11,6 +11,7 @@ metagen(
   data = NULL,
   subset = NULL,
   exclude = NULL,
+  id = NULL,
   sm = "",
   method.ci = if (missing(df)) "z" else "t",
   level = gs("level"),
@@ -22,10 +23,11 @@ metagen(
   hakn = gs("hakn"),
   adhoc.hakn = gs("adhoc.hakn"),
   method.tau = gs("method.tau"),
-  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  method.tau.ci = gs("method.tau.ci"),
   tau.preset = NULL,
   TE.tau = NULL,
   tau.common = gs("tau.common"),
+  detail.tau = "",
   prediction = gs("prediction"),
   level.predict = gs("level.predict"),
   null.effect = 0,
@@ -50,6 +52,11 @@ metagen(
   pscale = 1,
   irscale = 1,
   irunit = "person-years",
+  text.fixed = gs("text.fixed"),
+  text.random = gs("text.random"),
+  text.predict = gs("text.predict"),
+  text.w.fixed = gs("text.w.fixed"),
+  text.w.random = gs("text.w.random"),
   title = gs("title"),
   complab = gs("complab"),
   outclab = "",
@@ -83,6 +90,10 @@ be used (see Details).}
 \item{exclude}{An optional vector specifying studies to exclude
 from meta-analysis, however, to include in printouts and forest
 plots (see Details).}
+
+\item{id}{An optional vector specifying which estimates come from
+the same study resulting in the use of a three-level
+meta-analysis model.}
 
 \item{sm}{A character string indicating underlying summary measure,
 e.g., \code{"RD"}, \code{"RR"}, \code{"OR"}, \code{"ASD"},
@@ -121,8 +132,8 @@ intervals.}
 \item{adhoc.hakn}{A character string indicating whether an \emph{ad
 hoc} variance correction should be applied in the case of an
 arbitrarily small Hartung-Knapp variance estimate. Either
-\code{""}, \code{"se"}, or \code{"ci"} (see Details), can be
-abbreviated.}
+\code{""}, \code{"se"}, \code{"ci"}, or \code{"iqwig6"} (see
+Details), can be abbreviated.}
 
 \item{method.tau}{A character string indicating which method is
 used to estimate the between-study variance \eqn{\tau^2} and its
@@ -132,8 +143,8 @@ square root \eqn{\tau}. Either \code{"DL"}, \code{"PM"},
 
 \item{method.tau.ci}{A character string indicating which method is
 used to estimate the confidence interval of \eqn{\tau^2} and
-\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, or \code{"J"}, or
-\code{""}, can be abbreviated.}
+\eqn{\tau}. Either \code{"QP"}, \code{"BJ"}, \code{"J"},
+\code{"PL"}, or \code{""}, can be abbreviated.}
 
 \item{tau.preset}{Prespecified value for the square root of the
 between-study variance \eqn{\tau^2}.}
@@ -143,6 +154,8 @@ between-study variance tau-squared.}
 
 \item{tau.common}{A logical indicating whether tau-squared should
 be the same across subgroups.}
+
+\item{detail.tau}{Detail on between-study variance estimate.}
 
 \item{prediction}{A logical indicating whether a prediction
 interval should be printed.}
@@ -224,6 +237,21 @@ argument \code{sm} is equal to \code{"IR"}, \code{"IRLN"},
 \item{irunit}{A character specifying the time unit used to
 calculate rates, e.g. person-years.}
 
+\item{text.fixed}{A character string used in printouts and forest
+plot to label the pooled fixed effect estimate.}
+
+\item{text.random}{A character string used in printouts and forest
+plot to label the pooled random effects estimate.}
+
+\item{text.predict}{A character string used in printouts and forest
+plot to label the prediction interval.}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
+
 \item{title}{Title of meta-analysis / systematic review.}
 
 \item{complab}{Comparison label.}
@@ -259,14 +287,15 @@ standard errors).}
 
 \item{control}{An optional list to control the iterative process to
 estimate the between-study variance \eqn{\tau^2}. This argument
-is passed on to \code{\link[metafor]{rma.uni}}.}
+is passed on to \code{\link[metafor]{rma.uni}} or
+\code{\link[metafor]{rma.mv}}.}
 }
 \value{
 An object of class \code{c("metagen", "meta")} with corresponding
 \code{print}, \code{summary}, and \code{forest} functions. The
 object is a list containing the following components:
 \item{TE, seTE, studlab, exclude, n.e, n.c}{As defined above.}
-\item{sm, method.ci, level, level.comb,}{As defined above.}
+\item{id, sm, method.ci, level, level.comb,}{As defined above.}
 \item{comb.fixed, comb.random,}{As defined above.}
 \item{overall, overall.hetstat,}{As defined above.}
 \item{hakn, adhoc.hakn, method.tau, method.tau.ci,}{As defined above.}
@@ -562,14 +591,22 @@ The following methods are available to estimate the between-study
 variance \eqn{\tau^2}.
 \tabular{ll}{
 \bold{Argument}\tab \bold{Method} \cr 
-\code{method.tau = "DL"}\tab DerSimonian-Laird estimator (DerSimonian and Laird, 1986) \cr
-\code{method.tau = "PM"}\tab Paule-Mandel estimator (Paule and Mandel, 1982) \cr
-\code{method.tau = "REML"}\tab Restricted maximum-likelihood estimator (Viechtbauer, 2005) \cr
-\code{method.tau = "ML"}\tab Maximum-likelihood estimator (Viechtbauer, 2005) \cr
-\code{method.tau = "HS"}\tab Hunter-Schmidt estimator (Hunter and Schmidt, 2015) \cr
-\code{method.tau = "SJ"}\tab Sidik-Jonkman estimator (Sidik and Jonkman, 2005) \cr
-\code{method.tau = "HE"}\tab Hedges estimator (Hedges and Olkin, 1985) \cr
-\code{method.tau = "EB"}\tab Empirical Bayes estimator (Morris, 1983)
+\code{method.tau = "DL"}
+ \tab DerSimonian-Laird estimator (DerSimonian and Laird, 1986) \cr
+\code{method.tau = "PM"}
+ \tab Paule-Mandel estimator (Paule and Mandel, 1982) \cr
+\code{method.tau = "REML"}
+ \tab Restricted maximum-likelihood estimator (Viechtbauer, 2005) \cr
+\code{method.tau = "ML"}
+ \tab Maximum-likelihood estimator (Viechtbauer, 2005) \cr
+\code{method.tau = "HS"}
+ \tab Hunter-Schmidt estimator (Hunter and Schmidt, 2015) \cr
+\code{method.tau = "SJ"}
+ \tab Sidik-Jonkman estimator (Sidik and Jonkman, 2005) \cr
+\code{method.tau = "HE"}
+ \tab Hedges estimator (Hedges and Olkin, 1985) \cr
+\code{method.tau = "EB"}
+ \tab Empirical Bayes estimator (Morris, 1983)
 }
 
 Historically, the DerSimonian-Laird method was the de facto
@@ -591,12 +628,17 @@ The following methods to calculate a confidence interval for
 \bold{Argument}\tab \bold{Method} \cr 
 \code{method.tau.ci = "J"}\tab Method by Jackson (2013) \cr
 \code{method.tau.ci = "BJ"}\tab Method by Biggerstaff and Jackson (2008) \cr
-\code{method.tau.ci = "QP"}\tab Q-Profile method (Viechtbauer, 2007)
+\code{method.tau.ci = "QP"}\tab Q-Profile method (Viechtbauer, 2007) \cr
+\code{method.tau.ci = "PL"}\tab Profile-Likelihood method for
+ three-level meta-analysis model \cr
+\tab (Van den Noortgate et al., 2013)
 }
-These methods have been recommended by Veroniki et al. (2016). By
-default, the Jackson method is used for the DerSimonian-Laird
-estimator of \eqn{\tau^2} and the Q-profile method for all other
-estimators of \eqn{\tau^2}. No confidence intervals for
+The first three methods have been recommended by Veroniki et
+al. (2016). By default, the Jackson method is used for the
+DerSimonian-Laird estimator of \eqn{\tau^2} and the Q-profile
+method for all other estimators of \eqn{\tau^2}. The
+Profile-Likelihood method is the only method available for the
+three-level meta-analysis model. No confidence intervals for
 \eqn{\tau^2} and \eqn{\tau} are calculated if \code{method.tau.ci =
 ""}.
 }
@@ -613,18 +655,30 @@ estimates, the Hartung-Knapp (HK) variance estimate can be
 arbitrarily small resulting in a very narrow confidence interval
 (Knapp and Hartung, 2003; Wiksten et al., 2016). In such cases, an
 \emph{ad hoc} variance correction has been proposed by utilising
-the variance estimate from the classic random effects model (Knapp
-and Hartung, 2003). Argument \code{adhoc.hakn} can be used to
-choose the \emph{ad hoc} method:
+the variance estimate from the classic random effects model with
+the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+alternative approach is to use the wider confidence interval of
+classic fixed or random effects meta-analysis and the HK method
+(Wiksten et al., 2016; Jackson et al., 2017).
+
+Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+method:
 \tabular{ll}{
-\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 \code{adhoc.hakn = ""}\tab not used \cr
-\code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
- standard error \cr
- \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-\code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
- narrower than CI from \cr
- \tab classic random effects model with DL estimator (IQWiG, 2020)
+\code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+ error is smaller \cr
+ \tab than standard error from classic random effects
+ \cr
+ \tab meta-analysis (Knapp and Hartung, 2003) \cr
+\code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+ confidence interval \cr
+ \tab is narrower than CI from classic random effects model \cr
+ \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+\code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+ classic random effects \cr
+ \tab and HK meta-analysis \cr
+ \tab (Hybrid method 2 in Jackson et al., 2017)
 }
 }
 
@@ -864,8 +918,8 @@ standard DerSimonian-Laird method.
 \bold{14}, 25
 
 IQWiG (2020):
-General Methods: Draft of Version 6.0.
-\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
+General Methods: Version 6.0.
+\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}
 
 Jackson D (2013):
 Confidence intervals for the between-study variance in random
@@ -873,6 +927,12 @@ effects meta-analysis using generalised Cochran heterogeneity
 statistics.
 \emph{Research Synthesis Methods},
 \bold{4}, 220--229
+
+Jackson D, Law M, Rücker G, Schwarzer G (2017): 
+The Hartung-Knapp modification for random-effects meta-analysis: A
+useful refinement but are there any residual concerns?
+\emph{Statistics in Medicine},
+\bold{36}, 3923--34
 
 Knapp G & Hartung J (2003):
 Improved tests for a random effects meta-regression with a single
@@ -904,8 +964,8 @@ Consensus values and weighting factors.
 \emph{Journal of Research of the National Bureau of Standards},
 \bold{87}, 377--85
 
-\emph{Review Manager (RevMan)} [Computer program]. Version 5.3.
-Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
+\emph{Review Manager (RevMan)} [Computer program]. Version 5.4.
+The Cochrane Collaboration, 2020
 
 Shi J, Luo D, Weng H, Zeng X-T, Lin L, Chu H, et al. (2020):
 Optimally estimating the sample standard deviation from the
@@ -940,6 +1000,11 @@ Viechtbauer W (2010):
 Conducting Meta-Analyses in R with the metafor Package.
 \emph{Journal of Statistical Software},
 \bold{36}, 1--48
+
+Van den Noortgate W, López-López JA, Marín-Martínez F, Sánchez-Meca J (2013):
+Three-level meta-analysis of dependent effect sizes.
+\emph{Behavior Research Methods},
+\bold{45}, 576--94
 
 Wan X, Wang W, Liu J, Tong T (2014):
 Estimating the sample mean and standard deviation from the sample

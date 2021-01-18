@@ -34,7 +34,7 @@ metabin(
   adhoc.hakn = gs("adhoc.hakn"),
   method.tau = ifelse(!is.na(charmatch(tolower(method), "glmm", nomatch = NA)), "ML",
     gs("method.tau")),
-  method.tau.ci = if (method.tau == "DL") "J" else "QP",
+  method.tau.ci = gs("method.tau.ci"),
   tau.preset = NULL,
   TE.tau = NULL,
   tau.common = gs("tau.common"),
@@ -44,6 +44,11 @@ metabin(
     gs("method.bias"))),
   backtransf = gs("backtransf"),
   pscale = 1,
+  text.fixed = gs("text.fixed"),
+  text.random = gs("text.random"),
+  text.predict = gs("text.predict"),
+  text.w.fixed = gs("text.w.fixed"),
+  text.w.random = gs("text.w.random"),
   title = gs("title"),
   complab = gs("complab"),
   outclab = "",
@@ -206,6 +211,21 @@ odds ratios and log risk ratios will be shown.}
 \item{pscale}{A numeric defining a scaling factor for printing of
 risk differences.}
 
+\item{text.fixed}{A character string used in printouts and forest
+plot to label the pooled fixed effect estimate.}
+
+\item{text.random}{A character string used in printouts and forest
+plot to label the pooled random effects estimate.}
+
+\item{text.predict}{A character string used in printouts and forest
+plot to label the prediction interval.}
+
+\item{text.w.fixed}{A character string used to label weights of
+fixed effect model.}
+
+\item{text.w.random}{A character string used to label weights of
+random effects model.}
+
 \item{title}{Title of meta-analysis / systematic review.}
 
 \item{complab}{Comparison label.}
@@ -283,17 +303,17 @@ object is a list containing the following components:
   (fixed effect model).}
 \item{lower.fixed, upper.fixed}{Lower and upper confidence interval
   limits (fixed effect model).}
-\item{zval.fixed, pval.fixed}{z-value and p-value for test of
+\item{statistic.fixed, pval.fixed}{z-value and p-value for test of
   overall treatment effect (fixed effect model).}
 \item{TE.random, seTE.random}{Estimated overall treatment effect,
   e.g., log risk ratio or risk difference, and standard error
   (random effects model).}
 \item{lower.random, upper.random}{Lower and upper confidence
   interval limits (random effects model).}
-\item{zval.random, pval.random}{z-value or t-value and
+\item{statistic.random, pval.random}{z-value or t-value and
   corresponding p-value for test of overall treatment effect
-  (random effects model).}
-\item{prediction, level.predict}{As defined above.}
+  (random effects model).}  \item{prediction, level.predict}{As
+  defined above.}
 \item{seTE.predict}{Standard error utilised for prediction
   interval.}
 \item{lower.predict, upper.predict}{Lower and upper limits of
@@ -344,8 +364,9 @@ object is a list containing the following components:
   \code{byvar} is not missing.}  \item{lower.fixed.w,
   upper.fixed.w}{Lower and upper confidence interval limits in
   subgroups (fixed effect model) - if \code{byvar} is not missing.}
-\item{zval.fixed.w, pval.fixed.w}{z-value and p-value for test of
-  treatment effect in subgroups (fixed effect model) - if
+
+\item{statistic.fixed.w, pval.fixed.w}{z-value and p-value for test
+  of treatment effect in subgroups (fixed effect model) - if
   \code{byvar} is not missing.}  \item{TE.random.w,
   seTE.random.w}{Estimated treatment effect and standard error in
   subgroups (random effects model) - if \code{byvar} is not
@@ -353,79 +374,68 @@ object is a list containing the following components:
 \item{lower.random.w, upper.random.w}{Lower and upper confidence
   interval limits in subgroups (random effects model) - if
   \code{byvar} is not missing.}
-\item{zval.random.w, pval.random.w}{z-value or t-value and
+\item{statistic.random.w, pval.random.w}{z-value or t-value and
   corresponding p-value for test of treatment effect in subgroups
   (random effects model) - if \code{byvar} is not missing.}
 \item{w.fixed.w, w.random.w}{Weight of subgroups (in fixed and
   random effects model) - if \code{byvar} is not missing.}
-\item{df.hakn.w}{Degrees of freedom for test of treatment effect
+  \item{df.hakn.w}{Degrees of freedom for test of treatment effect
   for Hartung-Knapp method in subgroups - if \code{byvar} is not
-  missing and \code{hakn = TRUE}.}
-\item{event.e.w}{Number of events in experimental group in
+  missing and \code{hakn = TRUE}.}  \item{event.e.w}{Number of
+  events in experimental group in subgroups - if \code{byvar} is
+  not missing.}  \item{n.e.w}{Number of observations in
+  experimental group in subgroups - if \code{byvar} is not
+  missing.}  \item{event.c.w}{Number of events in control group in
+  subgroups - if \code{byvar} is not missing.}  \item{n.c.w}{Number
+  of observations in control group in subgroups - if \code{byvar}
+  is not missing.}  \item{k.w}{Number of studies combined within
   subgroups - if \code{byvar} is not missing.}
-\item{n.e.w}{Number of observations in experimental group in
+  \item{k.all.w}{Number of all studies in subgroups - if
+  \code{byvar} is not missing.}  \item{Q.w.fixed}{Overall within
+  subgroups heterogeneity statistic Q (based on fixed effect model)
+  - if \code{byvar} is not missing.}  \item{Q.w.random}{Overall
+  within subgroups heterogeneity statistic Q (based on random
+  effects model) - if \code{byvar} is not missing (only calculated
+  if argument \code{tau.common} is TRUE).}  \item{df.Q.w}{Degrees
+  of freedom for test of overall within subgroups heterogeneity -
+  if \code{byvar} is not missing.}  \item{pval.Q.w.fixed}{P-value
+  of within subgroups heterogeneity statistic Q (based on fixed
+  effect model) - if \code{byvar} is not missing.}
+  \item{pval.Q.w.random}{P-value of within subgroups heterogeneity
+  statistic Q (based on random effects model) - if \code{byvar} is
+  not missing.}  \item{Q.b.fixed}{Overall between subgroups
+  heterogeneity statistic Q (based on fixed effect model) - if
+  \code{byvar} is not missing.}  \item{Q.b.random}{Overall between
+  subgroups heterogeneity statistic Q (based on random effects
+  model) - if \code{byvar} is not missing.}  \item{df.Q.b}{Degrees
+  of freedom for test of overall between subgroups heterogeneity -
+  if \code{byvar} is not missing.}  \item{pval.Q.b.fixed}{P-value
+  of between subgroups heterogeneity statistic Q (based on fixed
+  effect model) - if \code{byvar} is not missing.}
+  \item{pval.Q.b.random}{P-value of between subgroups heterogeneity
+  statistic Q (based on random effects model) - if \code{byvar} is
+  not missing.}  \item{tau.w}{Square-root of between-study variance
+  within subgroups - if \code{byvar} is not missing.}
+  \item{H.w}{Heterogeneity statistic H within subgroups - if
+  \code{byvar} is not missing.}  \item{lower.H.w, upper.H.w}{Lower
+  and upper confidence limit for heterogeneity statistic H within
   subgroups - if \code{byvar} is not missing.}
-\item{event.c.w}{Number of events in control group in subgroups -
-  if \code{byvar} is not missing.}
-\item{n.c.w}{Number of observations in control group in subgroups -
-  if \code{byvar} is not missing.}
-\item{k.w}{Number of studies combined within subgroups - if
-  \code{byvar} is not missing.}
-\item{k.all.w}{Number of all studies in subgroups - if \code{byvar}
-  is not missing.}
-\item{Q.w.fixed}{Overall within subgroups heterogeneity statistic Q
-  (based on fixed effect model) - if \code{byvar} is not missing.}
-\item{Q.w.random}{Overall within subgroups heterogeneity statistic
-  Q (based on random effects model) - if \code{byvar} is not
-  missing (only calculated if argument \code{tau.common} is TRUE).}
-\item{df.Q.w}{Degrees of freedom for test of overall within
-  subgroups heterogeneity - if \code{byvar} is not missing.}
-\item{pval.Q.w.fixed}{P-value of within subgroups heterogeneity
-  statistic Q (based on fixed effect model) - if \code{byvar} is
-  not missing.}
-\item{pval.Q.w.random}{P-value of within subgroups heterogeneity
-  statistic Q (based on random effects model) - if \code{byvar} is
-  not missing.}
-\item{Q.b.fixed}{Overall between subgroups heterogeneity statistic
-  Q (based on fixed effect model) - if \code{byvar} is not
-  missing.}
-\item{Q.b.random}{Overall between subgroups heterogeneity statistic
-  Q (based on random effects model) - if \code{byvar} is not
-  missing.}
-\item{df.Q.b}{Degrees of freedom for test of overall between
-  subgroups heterogeneity - if \code{byvar} is not missing.}
-\item{pval.Q.b.fixed}{P-value of between subgroups heterogeneity
-  statistic Q (based on fixed effect model) - if \code{byvar} is
-  not missing.}
-\item{pval.Q.b.random}{P-value of between subgroups heterogeneity
-  statistic Q (based on random effects model) - if \code{byvar} is
-  not missing.}
-\item{tau.w}{Square-root of between-study variance within subgroups
-  - if \code{byvar} is not missing.}
-\item{H.w}{Heterogeneity statistic H within subgroups - if
-  \code{byvar} is not missing.}
-\item{lower.H.w, upper.H.w}{Lower and upper confidence limit for
-  heterogeneity statistic H within subgroups - if \code{byvar} is
-  not missing.}
-\item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups - if
-  \code{byvar} is not missing.}
-\item{lower.I2.w, upper.I2.w}{Lower and upper confidence limit for
-  heterogeneity statistic I\eqn{^2} within subgroups - if \code{byvar} is
-  not missing.}
-\item{keepdata}{As defined above.}
-\item{data}{Original data (set) used in function call (if
-  \code{keepdata = TRUE}).}
-\item{subset}{Information on subset of original data used in
-  meta-analysis (if \code{keepdata = TRUE}).}
-\item{.glmm.fixed}{GLMM object generated by call of
+  \item{I2.w}{Heterogeneity statistic I\eqn{^2} within subgroups -
+  if \code{byvar} is not missing.}  \item{lower.I2.w,
+  upper.I2.w}{Lower and upper confidence limit for heterogeneity
+  statistic I\eqn{^2} within subgroups - if \code{byvar} is not
+  missing.}  \item{keepdata}{As defined above.}
+  \item{data}{Original data (set) used in function call (if
+  \code{keepdata = TRUE}).}  \item{subset}{Information on subset of
+  original data used in meta-analysis (if \code{keepdata = TRUE}).}
+  \item{.glmm.fixed}{GLMM object generated by call of
   \code{\link[metafor]{rma.glmm}} function (fixed effect model).}
-\item{.glmm.random}{GLMM object generated by call of
+  \item{.glmm.random}{GLMM object generated by call of
   \code{\link[metafor]{rma.glmm}} function (random effects model).}
-\item{call}{Function call.}
-\item{version}{Version of R package \bold{meta} used to create
-  object.}
-\item{version.metafor}{Version of R package \bold{metafor} used for
-  GLMMs.}
+  \item{call}{Function call.}  \item{version}{Version of R package
+  \bold{meta} used to create object.}
+  \item{version.metafor}{Version of R package \bold{metafor} used
+  for GLMMs.}
 }
 \description{
 Calculation of fixed effect and random effects estimates (risk
@@ -611,20 +621,32 @@ method.
 In rare settings with very homogeneous treatment estimates, the
 Hartung-Knapp variance estimate can be arbitrarily small resulting
 in a very narrow confidence interval (Knapp and Hartung, 2003;
-Wiksten et al., 2016). In such cases, an \emph{ad hoc} variance
-correction has been proposed by utilising the variance estimate
-from the classic random effects model (Knapp and Hartung,
-2003). Argument \code{adhoc.hakn} can be used to choose the
-\emph{ad hoc} method:
+Wiksten et al., 2016). In such cases, an
+\emph{ad hoc} variance correction has been proposed by utilising
+the variance estimate from the classic random effects model with
+the HK method (Knapp and Hartung, 2003; IQWiQ, 2020). An
+alternative approach is to use the wider confidence interval of
+classic fixed or random effects meta-analysis and the HK method
+(Wiksten et al., 2016; Jackson et al., 2017).
+
+Argument \code{adhoc.hakn} can be used to choose the \emph{ad hoc}
+method:
 \tabular{ll}{
-\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr 
+\bold{Argument}\tab \bold{\emph{Ad hoc} method} \cr
 \code{adhoc.hakn = ""}\tab not used \cr
-\code{adhoc.hakn = "se"}\tab used if HK standard error is smaller than
- standard error \cr
- \tab from classic random effects model (Knapp and Hartung, 2003) \cr
-\code{adhoc.hakn = "ci"}\tab used if HK confidence interval is
- narrower than CI from \cr
- \tab classic random effects model with DL estimator (IQWiG, 2020)
+\code{adhoc.hakn = "se"}\tab use variance correction if HK standard
+ error is smaller \cr
+ \tab than standard error from classic random effects
+ \cr
+ \tab meta-analysis (Knapp and Hartung, 2003) \cr
+\code{adhoc.hakn = "iqwig6"}\tab use variance correction if HK
+ confidence interval \cr
+ \tab is narrower than CI from classic random effects model \cr
+ \tab with DerSimonian-Laird estimator (IQWiG, 2020) \cr
+\code{adhoc.hakn = "ci"}\tab use wider confidence interval of
+ classic random effects \cr
+ \tab and HK meta-analysis \cr
+ \tab (Hybrid method 2 in Jackson et al., 2017)
 }
 }
 
@@ -842,8 +864,8 @@ A re-evaluation of random-effects meta-analysis.
 \bold{172}, 137--59
 
 IQWiG (2020):
-General Methods: Draft of Version 6.0.
-\url{https://www.iqwig.de/en/methods/methods-paper.3020.html}
+General Methods: Version 6.0.
+\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}
 
 Knapp G & Hartung J (2003):
 Improved tests for a random effects meta-regression with a single
@@ -851,9 +873,8 @@ covariate.
 \emph{Statistics in Medicine},
 \bold{22}, 2693--710
 
-\emph{Review Manager (RevMan)}
-[Computer program]. Version 5.3.
-Copenhagen: The Nordic Cochrane Centre, The Cochrane Collaboration, 2014
+\emph{Review Manager (RevMan)} [Computer program]. Version 5.4.
+The Cochrane Collaboration, 2020
 
 Paule RC & Mandel J (1982):
 Consensus values and weighting factors.

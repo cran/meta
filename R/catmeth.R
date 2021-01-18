@@ -33,7 +33,8 @@ catmeth <- function(method,
                     digits.tau = gs("digits.tau"),
                     text.tau = gs("text.tau"),
                     text.tau2 = gs("text.tau2"),
-                    method.miss, IMOR.e, IMOR.c
+                    method.miss, IMOR.e, IMOR.c,
+                    threelevel = FALSE
                     ) {
   
   metabin  <- "metabin"  %in% class
@@ -138,15 +139,16 @@ catmeth <- function(method,
   }
   ##
   if (metabin | metainc | metaprop | metarate) {
+    txtCC <- !(method == "MH" & MH.exact & k.all == 1)
     if (!(sm == "ASD" | method == "Peto")) {
       if (addincr) {
-        if (all(incr == "TACC"))
+        if (all(incr == "TACC") && txtCC)
           sm.details <-
             paste0(sm.details,
                    "\n- Treatment arm continuity correction in all studies",
                    if (method == "GLMM")
                      "\n  (only used to calculate individual study results)")
-        else if (all(incr != 0))
+        else if (all(incr != 0) && txtCC)
           sm.details <-
             paste0(sm.details,
                    "\n- Continuity correction",
@@ -158,14 +160,14 @@ catmeth <- function(method,
       }
       else if (sparse) {
         if (allincr == FALSE) {
-          if (all(incr == "TACC"))
+          if (all(incr == "TACC") && txtCC)
             sm.details <-
               paste0(sm.details,
                      paste0("\n- Treatment arm continuity correction in ",
                             "studies with zero cell frequencies"),
                      if (method == "GLMM")
                        "\n  (only used to calculate individual study results)")
-          else if (any(incr != 0))
+          else if (any(incr != 0) && txtCC)
             sm.details <-
               paste0(sm.details,
                      "\n- Continuity correction",
@@ -176,13 +178,15 @@ catmeth <- function(method,
                        "\n  (only used to calculate individual study results)")
         }
         else {
-          if (all(incr == "TACC"))
-            sm.details <-
-              paste0(sm.details,
-                     "\n- Treatment arm continuity correction in all studies",
-                     if (method == "GLMM")
-                       "\n  (only used to calculate individual study results)")
-          else if (any(incr != 0))
+          if (all(incr == "TACC")) {
+            if (txtCC)
+              sm.details <-
+                paste0(sm.details,
+                       "\n- Treatment arm continuity correction in all studies",
+                       if (method == "GLMM")
+                         "\n  (only used to calculate individual study results)")
+          }
+          else if (any(incr != 0) && txtCC)
             sm.details <-
               paste0(sm.details,
                      "\n- Continuity correction",
@@ -261,7 +265,7 @@ catmeth <- function(method,
     }
     else {
       i.lab.method.tau <-
-        charmatch(method.tau, .settings$meth4tau, nomatch = NA)
+        charmatch(method.tau, c(.settings$meth4tau, ""), nomatch = NA)
       ##
       lab.method.tau <-
         c("\n- DerSimonian-Laird estimator",
@@ -271,15 +275,17 @@ catmeth <- function(method,
           "\n- Hunter-Schmidt estimator",
           "\n- Sidik-Jonkman estimator",
           "\n- Hedges estimator",
-          "\n- Empirical Bayes estimator")[i.lab.method.tau]
-      lab.method.tau <- paste(lab.method.tau, "for", text.tau2)
+          "\n- Empirical Bayes estimator",
+          "")[i.lab.method.tau]
+      if (lab.method.tau != "")
+        lab.method.tau <- paste(lab.method.tau, "for", text.tau2)
       ##
-      if (tau.common)
+      if (lab.method.tau != "" & tau.common)
         lab.method.tau <- paste0(lab.method.tau,
                                  " (assuming common ", text.tau2,
                                  " in subgroups)")
       ##
-      if (metabin & Q.Cochrane)
+      if (lab.method.tau != "" & metabin & Q.Cochrane)
         lab.method.tau <-
           paste0(lab.method.tau,
                  "\n- Mantel-Haenszel estimator used in ",
@@ -313,14 +319,19 @@ catmeth <- function(method,
     }
   }
   ##
-  imeth <- charmatch(method,
-                     c("MH", "Peto", "Inverse", "Cochran", "SSW", "GLMM", "NoMA"),
-                     nomatch = NA)
+  imeth <-
+    charmatch(method,
+              c("MH", "Peto", "Inverse", "Cochran", "SSW", "GLMM",
+                "NoMA", ""),
+              nomatch = NA)
   ##
   if ((metabin|metainc) & imeth == 1 & (sparse | addincr))
     if (MH.exact | metainc)
-      lab.method.details <- paste0(" (without continuity correction)",
-                                   lab.method.details)
+      lab.method.details <-
+        paste0(" (without continuity correction)", lab.method.details)
+  if (threelevel)
+    lab.method.details <-
+      paste0(" (three-level model)", lab.method.details)
   ##
   if (metacont && !is.null(pooledvar) && pooledvar)
     lab.method.details <-
@@ -333,6 +344,7 @@ catmeth <- function(method,
               "\n- Cochran method",
               "\n- Sample size method",
               "GLMM",
+              "",
               "")[imeth]
   ##
   if (method == "GLMM") {

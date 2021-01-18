@@ -315,6 +315,7 @@ summary.meta <- function(object,
   ##
   if (length(warn) == 0)
     warn <- gs("warn")
+  ##
   object <- updateversion(object)
   ##
   metaprop <- inherits(object, "metaprop")
@@ -438,6 +439,14 @@ summary.meta <- function(object,
   ci.Rb <- list(TE = object$Rb,
                 lower = object$lower.Rb, upper = object$upper.Rb)
   ##
+  ci.tau2.resid <- list(TE = object$tau2.resid,
+                        lower = object$lower.tau2.resid,
+                        upper = object$upper.tau2.resid)
+  ##
+  ci.tau.resid <- list(TE = object$tau.resid,
+                       lower = object$lower.tau.resid,
+                       upper = object$upper.tau.resid)
+  ##
   ci.H.resid <- list(TE = object$H.resid,
                      lower = object$lower.H.resid,
                      upper = object$upper.H.resid)
@@ -467,10 +476,14 @@ summary.meta <- function(object,
               fixed = ci.f, random = ci.r,
               predict = ci.p,
               k = object$k,
+              k.study = object$k.study,
               Q = object$Q, df.Q = object$df.Q, Q.LRT = object$Q.LRT,
               ##
               tau = ci.tau,
               tau2 = ci.tau2,
+              ##
+              tau.resid = ci.tau.resid,
+              tau2.resid = ci.tau2.resid,
               ##
               method.tau = object$method.tau,
               method.tau.ci = object$method.tau.ci,
@@ -479,6 +492,7 @@ summary.meta <- function(object,
               ##
               TE.tau = object$TE.tau,
               tau.preset = object$tau.preset,
+              detail.tau = object$detail.tau,
               ##
               hakn = object$hakn, adhoc.hakn = object$adhoc.hakn,
               df.hakn = object$df.hakn,
@@ -496,7 +510,10 @@ summary.meta <- function(object,
               comb.random = comb.random,
               prediction = prediction,
               overall = overall,
-              overall.hetstat = overall.hetstat)
+              overall.hetstat = overall.hetstat,
+              text.fixed = object$text.fixed,
+              text.random = object$text.random,
+              text.predict = object$text.predict)
   ##  
   ## Add results from subgroup analysis
   ##
@@ -675,6 +692,7 @@ summary.meta <- function(object,
   }
   ##
   if (inherits(object, "metabind")) {
+    res$show.studies <- object$show.studies
     class(res) <- c(class(res), "metabind")
   }
   ##
@@ -918,6 +936,7 @@ print.summary.meta <- function(x,
   ##
   k.all <- length(x$study$TE)
   k <- x$k
+  k.study <- ifelse(is.null(x$k.study), k, x$k.study)
   sm <- x$sm
   ##
   bip <- inherits(x, c("metabin", "metainc", "metaprop", "metarate"))
@@ -979,6 +998,30 @@ print.summary.meta <- function(x,
     bylevs <- ifelse(nchar(x$bylevs) > bylab.nchar,
                      paste0(substring(x$bylevs, 1, bylab.nchar - 4), " ..."),
                      x$bylevs)
+  ##
+  if (is.null(x$text.fixed))
+    text.fixed <- gs("text.fixed")
+  else
+    text.fixed <- x$text.fixed
+  ##
+  if (is.null(x$text.random))
+    text.random <- gs("text.random")
+  else
+    text.random <- x$text.random
+  ##
+  if (is.null(x$text.predict))
+    text.predict <- gs("text.predict")
+  else
+    text.predict <- x$text.predict
+  ##
+  if (substring(text.fixed, 1, 5) %in% c("Fixed", "Commo", "Rando")) {
+    text.fixed.br <- tolower(text.fixed)
+    text.random.br <- tolower(text.random)
+  }
+  else {
+    text.fixed.br <- text.fixed
+    text.random.br <- text.random
+  }
   
   
   ##
@@ -1172,6 +1215,10 @@ print.summary.meta <- function(x,
     H <- round(x$H$TE, digits.H)
     lowH <- round(x$H$lower, digits.H)
     uppH <- round(x$H$upper, digits.H)
+    if (all(!is.na(lowH) & !is.na(uppH)) && all(lowH == uppH)) {
+      lowH <- NA
+      uppH <- NA
+    }
   }
   ##
   if (print.I2) {
@@ -1182,6 +1229,8 @@ print.summary.meta <- function(x,
       !(is.na(lowI2) | is.na(uppI2))
     if (is.na(print.I2.ci))
       print.I2.ci <- FALSE
+    if (print.I2.ci && all(lowI2 == uppI2))
+      print.I2.ci <- FALSE
   }
   else
     print.I2.ci <- FALSE
@@ -1190,6 +1239,10 @@ print.summary.meta <- function(x,
     Rb <- round(100 * x$Rb$TE, digits.I2)
     lowRb <- round(100 * x$Rb$lower, digits.I2)
     uppRb <- round(100 * x$Rb$upper, digits.I2)
+    if (all(!is.na(lowRb) & !is.na(uppRb)) && all(lowRb == uppRb)) {
+      lowRb <- NA
+      uppRb <- NA
+    }
   }
   
   
@@ -1244,6 +1297,7 @@ print.summary.meta <- function(x,
             addincr = ifelse(bip, x$addincr, FALSE),
             allstudies = x$allstudies,
             doublezeros = x$doublezeros,
+            MH.exact = ifelse(metabin, x$MH.exact, FALSE),
             method.ci = method.ci,
             pooledvar = x$pooledvar,
             method.smd = x$method.smd,
@@ -1257,7 +1311,9 @@ print.summary.meta <- function(x,
             big.mark = big.mark,
             digits = digits, digits.tau = digits.tau,
             text.tau = text.tau, text.tau2 = text.tau2,
-            method.miss = x$method.miss, IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
+            method.miss = x$method.miss,
+            IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c,
+            threelevel = if (is.null(x$k.study)) FALSE else x$k != x$k.study)
   }
   else if (is.na(k)) {
     ## Do nothing
@@ -1276,11 +1332,20 @@ print.summary.meta <- function(x,
              comb.fixed & sm %in% c("RD", "IRD") &
              (!is.null(x$k.MH) == 1 && k != x$k.MH)))
           cat(paste0("Number of studies combined:   k.MH = ", x$k.MH,
-                     " (fixed effect), k = ", format(k, big.mark = big.mark),
-                     " (random effects)\n\n"))
-        else
-          cat(paste0("Number of studies combined: k = ",
-                     format(k, big.mark = big.mark), "\n\n"))
+                     " (", text.fixed.br, "), k = ",
+                     format(k, big.mark = big.mark),
+                     " (", text.random.br, ")\n\n"))
+        else {
+          if (k.study != k) {
+            cat(paste0("Number of studies combined: n = ",
+                       format(x$k.study, big.mark = big.mark), "\n"))
+            cat(paste0("Number of estimates combined: k = ",
+                       format(k, big.mark = big.mark), "\n\n"))
+          }
+          else
+            cat(paste0("Number of studies combined: k = ",
+                       format(k, big.mark = big.mark), "\n\n"))
+        }
       }
       else
         cat(paste0("Number of studies combined: k = ",
@@ -1330,9 +1395,9 @@ print.summary.meta <- function(x,
       else
         zlab <- "z"
       ##
-      dimnames(res) <- list(c(if (comb.fixed) "Fixed effect model",
-                              if (comb.random) "Random effects model",
-                              if (prediction) "Prediction interval"),  
+      dimnames(res) <- list(c(if (comb.fixed) text.fixed,
+                              if (comb.random) text.random,
+                              if (prediction) text.predict),
                             c(sm.lab, x$ci.lab,
                               if (null.given) zlab,
                               if (null.given) "p-value"))
@@ -1362,9 +1427,18 @@ print.summary.meta <- function(x,
       ##
       print.tau2 <- TRUE
       print.tau2.ci <-
-        print.tau2 & !(is.na(x$tau2$lower) | is.na(x$tau2$upper))
+        print.tau2 & all(!(is.na(x$tau2$lower) | is.na(x$tau2$upper)))
+      if (print.tau2.ci &&
+          (all(x$tau2$lower == 0) & all(x$tau2$upper == 0)))
+        print.tau2.ci <- FALSE
+      ##
       print.tau <- TRUE
-      print.tau.ci <- print.tau & !(is.na(x$tau$lower) | is.na(x$tau$upper))
+      print.tau.ci <-
+        print.tau & all(!(is.na(x$tau$lower) | is.na(x$tau$upper)))
+      if (print.tau.ci &&
+          (all(x$tau$lower == 0) & all(x$tau$upper == 0)))
+        print.tau.ci <- FALSE
+      ##
       ##
       cathet(k,
              x$tau2$TE, x$tau2$lower, x$tau2$upper,
@@ -1378,7 +1452,8 @@ print.summary.meta <- function(x,
              print.H, digits.H,
              Rb, lowRb, uppRb,
              print.Rb, text.Rb,
-             big.mark)
+             big.mark,
+             if (is.null(x$detail.tau)) "" else x$detail.tau)
       ##
       ## Print information on residual heterogeneity
       ##
@@ -1409,10 +1484,10 @@ print.summary.meta <- function(x,
           cat("\nQuantifying residual heterogeneity:\n")
           ##
           cathet(k.resid, 
-                 unique(x$tau.w)^2, NA, NA,
-                 x$tau.common, FALSE, text.tau2, digits.tau2,
-                 unique(x$tau.w), NA, NA,
-                 x$tau.common, FALSE, text.tau, digits.tau,
+                 x$tau2.resid$TE, x$tau2.resid$lower, x$tau2.resid$upper,
+                 x$tau.common, print.tau2.ci, text.tau2, digits.tau2,
+                 x$tau.resid$TE, x$tau.resid$lower, x$tau.resid$upper,
+                 x$tau.common, print.tau.ci, text.tau, digits.tau,
                  "", "",
                  I2.resid, lowI2.resid, uppI2.resid,
                  print.I2, print.I2.ci, text.I2, digits.I2,
@@ -1420,7 +1495,8 @@ print.summary.meta <- function(x,
                  print.H, digits.H,
                  NA, NA, NA,
                  FALSE, text.Rb,
-                 big.mark)
+                 big.mark,
+                 if (is.null(x$detail.tau)) "" else x$detail.tau)
         }
       }
       ##
@@ -1513,13 +1589,14 @@ print.summary.meta <- function(x,
                                   if (!comb.random) text.tau)
                                 )
         if (inherits(x, "metabind"))
-          cat("\nResults for meta-analyses (fixed effect model):\n")
+          cat(paste0("\nResults for meta-analyses (", text.fixed.br, "):\n"))
         else
-          cat("\nResults for subgroups (fixed effect model):\n")
+          cat(paste0("\nResults for subgroups (", text.fixed.br, "):\n"))
         prmatrix(Tdata, quote = FALSE, right = TRUE, ...)
         ##
         if (!inherits(x, "metabind")) {
-          cat("\nTest for subgroup differences (fixed effect model):\n")
+          cat(paste0("\nTest for subgroup differences (",
+                     text.fixed.br, "):\n"))
           if (x$method == "MH") {
             Qdata <- cbind(formatN(round(Q.b.fixed, digits.Q), digits.Q, "NA",
                                    big.mark = big.mark),
@@ -1597,14 +1674,15 @@ print.summary.meta <- function(x,
                                 )
         ##
         if (inherits(x, "metabind"))
-          cat("\nResults for meta-analyses (random effects model):\n")
+          cat(paste0("\nResults for meta-analyses (", text.random.br, "):\n"))
         else
-          cat("\nResults for subgroups (random effects model):\n")
+          cat(paste0("\nResults for subgroups (", text.random.br, "):\n"))
         ##
         prmatrix(Tdata, quote = FALSE, right = TRUE, ...)
         ##
         if (!inherits(x, "metabind")) {
-          cat("\nTest for subgroup differences (random effects model):\n")
+          cat(paste0("\nTest for subgroup differences (",
+                     text.random.br, "):\n"))
           if (is.na(Q.w.random)) {
             Qdata <- cbind(formatN(round(Q.b.random, digits.Q), digits.Q,
                                    "NA", big.mark = big.mark),
@@ -1680,7 +1758,9 @@ print.summary.meta <- function(x,
               big.mark = big.mark,
               digits = digits, digits.tau = digits.tau,
               text.tau = text.tau, text.tau2 = text.tau2,
-              method.miss = x$method.miss, IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
+              method.miss = x$method.miss,
+              IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c,
+              threelevel = if (is.null(x$k.study)) FALSE else x$k != x$k.study)
   }
   
   

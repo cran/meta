@@ -1,7 +1,7 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
-243b17a3329331b37b2371715e9aedad *DESCRIPTION
+80bcc49c59538e90c4f1b8ae4f3a22ce *DESCRIPTION
 5e260f657258fc574368dbac62305d3f *NAMESPACE
-4fa4421977141d25994d5c15e74073c6 *NEWS.md
+69508f5e6921f142fd1cc735370d762e *NEWS.md
 ae33d541ef216db6516d37e9120dd3bb *R/Fleiss1993bin.R
 67f1b088c164cb963d5ddaee6137240a *R/Fleiss1993cont.R
 2d942bbad3374f5334204bd103200d59 *R/JAMAlabels.R
@@ -73,12 +73,12 @@ b854e037b8adea0f476d9b44cc4cbc77 *R/meta-package.R
 65de40e7f29edb6bd38660537897c40a *R/metabias.R
 b28f533551fc4b83c0a6082a7cfbeb7a *R/metabias.rm5.R
 a49efab5c3d207e23c1f2e83fdbb414d *R/metabin.R
-a45e76a443bd74bc0442213a47fc08f0 *R/metabind.R
+ea2528baec58fcc61c4471e8295dd40a *R/metabind.R
 01ba1c71af7d1ae211222b5256e8974a *R/metacont.R
 7f6db55d72a42572a9253f65adcea4f5 *R/metacor.R
 52f317d7e965672c5b67cbf5a188d28e *R/metacr.R
 ef81ce7a26c10b06b53abfb1354c24c2 *R/metacum.R
-d8628ed57bf5bac0331167d23d9c88e7 *R/metagen.R
+ae3169e59c678ce333af000cf07d16e6 *R/metagen.R
 b20d76f1673c16d8e5a6d246b4303b24 *R/metainc.R
 c8dc8bb062cf1863bddf1d4b9e0367fd *R/metainf.R
 bc9003613311bbd50854c5d3603ee372 *R/metamean.R

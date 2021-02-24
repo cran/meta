@@ -16,14 +16,27 @@
   ...
 )
 
-\method{print}{metabias}(x, ...)
+\method{print}{metabias}(
+  x,
+  digits = gs("digits"),
+  digits.stat = gs("digits.stat"),
+  digits.pval = max(gs("digits.pval"), 2),
+  digits.se = gs("digits.se"),
+  digits.tau2 = gs("digits.tau2"),
+  scientific.pval = gs("scientific.pval"),
+  big.mark = gs("big.mark"),
+  zero.pval = gs("zero.pval"),
+  JAMA.pval = gs("JAMA.pval"),
+  text.tau2 = gs("text.tau2"),
+  ...
+)
 
 metabias(x, ...)
 
 \method{metabias}{default}(
   x,
   seTE,
-  method.bias = "linreg",
+  method.bias = "Egger",
   plotit = FALSE,
   correct = FALSE,
   k.min = 10,
@@ -35,44 +48,73 @@ metabias(x, ...)
 effect in individual studies.}
 
 \item{method.bias}{A character string indicating which test is to
-be used.  Either \code{"rank"}, \code{"linreg"}, \code{"mm"},
-\code{"count"}, \code{"score"}, \code{"peters"}, or
-\code{"deeks"}, can be abbreviated.}
+be used (see Details), can be abbreviated.}
 
 \item{plotit}{A logical indicating whether a plot should be
-produced for method.bias \code{"rank"}, \code{"linreg"},
-\code{"mm"}, \code{"score"}, or \code{"deeks"}.}
+produced (see Details).}
 
 \item{correct}{A logical indicating whether a continuity corrected
-statistic is used for rank correlation methods \code{"rank"} and
-\code{"count"}.}
+statistic is used for rank correlation tests.}
 
 \item{k.min}{Minimum number of studies to perform test for funnel
 plot asymmetry.}
 
 \item{\dots}{Additional arguments (ignored at the moment).}
 
+\item{digits}{Minimal number of significant digits for estimates,
+see \code{print.default}.}
+
+\item{digits.stat}{Minimal number of significant digits for z- or
+t-value of test for test of funnel plot asymmetry, see
+\code{print.default}.}
+
+\item{digits.pval}{Minimal number of significant digits for p-value
+of test for test of funnel plot asymmetry, see
+\code{print.default}.}
+
+\item{digits.se}{Minimal number of significant digits for standard
+errors, see \code{print.default}.}
+
+\item{digits.tau2}{Minimal number of significant digits for
+residual heterogeneity variance, see \code{print.default}.}
+
+\item{scientific.pval}{A logical specifying whether p-values should
+be printed in scientific notation, e.g., 1.2345e-01 instead of
+0.12345.}
+
+\item{big.mark}{A character used as thousands separator.}
+
+\item{zero.pval}{A logical specifying whether p-values should be
+printed with a leading zero.}
+
+\item{JAMA.pval}{A logical specifying whether p-values for test of
+overall effect should be printed according to JAMA reporting
+standards.}
+
+\item{text.tau2}{Text printed to identify residual heterogeneity
+variance \eqn{\tau^2}.}
+
 \item{seTE}{Standard error of estimated treatment effect (mandatory
 if \code{x} not of class \code{meta}).}
 }
 \value{
-A list with class \code{htest} containing the following components
-if a test for funnel plot asymmetry is conducted:
-\item{estimate}{The estimated degree of funnel plot asymmetry, with
-  name \code{"ks"} or \code{"bias"} corresponding to the method
-  employed, i.e., rank correlation or regression method.}
-\item{statistic}{The value of the test statistic.}
-\item{parameters}{The degrees of freedom of the test statistic in
+A list with class \code{metabias} containing the following
+components if a test for funnel plot asymmetry is conducted:
+\item{statistic}{Test statistic.}
+\item{df}{The degrees of freedom of the test statistic in
   the case that it follows a t distribution.}
-\item{p.value}{The p-value for the test.}
-\item{alternative}{A character string describing the alternative
-  hypothesis.}
-\item{method}{A character string indicating what type of text.was
+\item{pval}{The p-value for the test.}
+\item{estimate}{Estimates used to calculate test statisic.}
+\item{method}{A character string indicating what type of test was
   used.}
-\item{data.name}{A character string giving the names of the data.}
-  \item{title}{Title of Cochrane review.}
+\item{title}{Title of Cochrane review.}
 \item{complab}{Comparison label.}
 \item{outclab}{Outcome label.}
+\item{var.model}{A character string indicating whether none,
+  multiplicative, or additive residual heterogeneity variance was
+  assumed.}
+\item{method.bias}{As defined above.}
+\item{x}{Meta-analysis object.}
 \item{version}{Version of R package \bold{meta} used to create
   object.}
 
@@ -95,10 +137,10 @@ for funnel plot asymmetry.
 \subsection{Classic generic tests}{
 The following tests are generic tests for funnel plot asymmetry
 which only require estimates of the treatment effect and
-corresponding standard errors. Accordingly, these are the only tests
-provided by R function \code{metabias.default}.
+corresponding standard errors. Accordingly, these are the only
+tests provided by R function \code{metabias.default}.
 
-If argument \code{method.bias} is \code{"rank"}, the test statistic
+If argument \code{method.bias} is \code{"Begg"}, the test statistic
 is based on the rank correlation between standardised treatment
 estimates and variance estimates of estimated treatment effects;
 Kendall's tau is used as correlation measure (Begg & Mazumdar,
@@ -106,19 +148,18 @@ Kendall's tau is used as correlation measure (Begg & Mazumdar,
 distribution. By default (if \code{correct} is FALSE), no
 continuity correction is utilised (Kendall & Gibbons, 1990).
 
-If argument \code{method.bias} is \code{"linreg"}, the test
+If argument \code{method.bias} is \code{"Egger"}, the test
 statistic is based on a weighted linear regression of the treatment
 effect on its standard error (Egger et al., 1997). The test
 statistic follows a t distribution with \code{number of studies -
 2} degrees of freedom.
 
-If argument \code{method.bias} is \code{"mm"}, the test statistic
-is based on a weighted linear regression of the treatment effect on
-its standard error using the method of moments estimator for the
-additive between-study variance component (method 3a in Thompson,
-Sharp, 1999). The test statistic follows a t distribution with
-\code{number of studies - 2} degrees of freedom.
-}
+If argument \code{method.bias} is \code{"Thompson"}, the test
+statistic is based on a weighted linear regression of the treatment
+effect on its standard error using an additive between-study
+variance component denoted as methods (3a) - (3d) in Thompson &
+Sharp (1999). The test statistic follows a t distribution with
+\code{number of studies - 2} degrees of freedom.  }
 
 \subsection{Tests for meta-analysis with binary outcomes}{
 The following tests for funnel plot asymmetry are only available
@@ -127,7 +168,7 @@ generated with the \code{metabin} function. The only exception is
 the test by Peters et al. (2006) which can also be used in a
 meta-analysis of single proportions generated with \code{metaprop}.
 
-If argument \code{method.bias} is \code{"score"}, the test
+If argument \code{method.bias} is \code{"Harbord"}, the test
 statistic is based on a weighted linear regression utilising
 efficient score and score variance (Harbord et al., 2006,
 2009). The test statistic follows a t distribution with
@@ -137,17 +178,26 @@ In order to calculate an arcsine test for funnel plot asymmetry
 (Rücker et al., 2008), one has to use the \code{metabin} function
 with argument \code{sm = "ASD"} as input to the \code{metabias}
 command. The three arcsine tests described in Rücker et al. (2008)
-can be calculated by setting \code{method.bias} to \code{"rank"},
-\code{"linreg"} and \code{"mm"}, respectively.
+can be calculated by setting \code{method.bias} to \code{"Begg"},
+\code{"Egger"} and \code{"Thompson"}, respectively.
 
-If argument \code{method.bias} is \code{"peters"}, the test
+If argument \code{method.bias} is \code{"Macaskill"}, the test
 statistic is based on a weighted linear regression of the treatment
-effect on the inverse of the total sample size using the variance
-of the average event rate as weights (Peters et al., 2006). The
-test statistic follows a t distribution with \code{number of
-studies - 2} degrees of freedom.
+effect on the total sample size with weights reciprocal to the
+variance of the average event probability (Macaskill et al., 2001,
+\emph{method FPV}). The test statistic follows a t distribution
+with \code{number of studies - 2} degrees of freedom.
 
-If argument \code{method.bias} is \code{"count"}, the test
+If argument \code{method.bias} is \code{"Peters"}, the test
+statistic is based on a weighted linear regression of the treatment
+effect on the inverse of the total sample size with weights
+reciprocal to the variance of the average event probability (Peters
+et al., 2006). The test statistic follows a t distribution with
+\code{number of studies - 2} degrees of freedom. Note, this test is
+a variant of Macaskill et al. (2001), \emph{method FPV}, using the
+inverse sample size as covariate.
+
+If argument \code{method.bias} is \code{"Schwarzer"}, the test
 statistic is based on the rank correlation between a standardised
 cell frequency and the inverse of the variance of the cell
 frequency; Kendall's tau is used as correlation measure (Schwarzer
@@ -156,12 +206,21 @@ distribution. By default (if \code{correct} is FALSE), no
 continuity correction is utilised (Kendall & Gibbons, 1990).
 
 Finally, for meta-analysis of diagnostic test accuracy studies, if
-argument \code{method.bias} is \code{"deeks"}, the test statistic
+argument \code{method.bias} is \code{"Deeks"}, the test statistic
 is based on a weighted linear regression of the log diagnostic odds
 ratio on the inverse of the squared effective sample size using the
 effective sample size as weights (Deeks et al., 2005). The test
 statistic follows a t distribution with \code{number of studies -
 2} degrees of freedom.
+}
+
+\subsection{Test for the standardised mean difference}{
+If argument \code{method.bias} is \code{"Pustejovsky"}, the test
+statistic is based on a weighted linear regression of the treatment
+effect on the square root of the sum of the inverse group sample
+sizes using the treatment effect variance as weights (Pustejovsky &
+Rodgers, 2019). The test statistic follows a t distribution with
+\code{number of studies - 2} degrees of freedom.
 }
 
 \subsection{Recommendations and default settings}{
@@ -172,14 +231,19 @@ behaviour can be changed by setting a smaller value for argument
 \code{k.min}. Note, the minimum number of studies is three.
 
 If argument \code{method.bias} is missing, the Harbord test
-(\code{method.bias = "score"}) is used in meta-analysis of binary
+(\code{method.bias = "Harbord"}) is used in meta-analysis of binary
 outcomes for the odds ratio as effect measure and the Egger test
-(\code{method.bias = "linreg"}) in all other settings (Sterne
-et al., 2011).
+(\code{method.bias = "Egger"}) in all other settings (Sterne et
+al., 2011).
 
 No test for funnel plot asymmetry is conducted in meta-analyses
 with subgroups.
 }
+
+If argument \code{plotit = TRUE}, a scatter plot is shown if
+argument \code{method.bias} is equal to \code{"Begg"},
+\code{"Egger"}, \code{"Thompson"}, \code{"Harbord"}, or
+\code{"Deeks"}.
 }
 \examples{
 data(Olkin1995)
@@ -190,11 +254,11 @@ m1 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
 metabias(m1)
 metabias(m1, plotit = TRUE)
 
-metabias(m1, method.bias = "rank")
-metabias(m1, method.bias = "rank", correct = TRUE)
+metabias(m1, method.bias = "Begg")
+metabias(m1, method.bias = "Begg", correct = TRUE)
 
-metabias(m1, method.bias = "count")
-metabias(m1, method.bias = "linreg")$p.value
+metabias(m1, method.bias = "Schwarzer")
+metabias(m1, method.bias = "Egger")$pval
 
 # Arcsine test (based on linear regression)
 #
@@ -250,11 +314,22 @@ Kendall M & Gibbons JD (1990):
 \emph{Rank Correlation Methods}.
 London: Edward Arnold
 
+Macaskill P, Walter SD, Irwig L (2001):
+A comparison of methods to detect publication bias in
+meta-analysis.
+\emph{Statistics in Medicine},
+\bold{20}, 641--54
+
 Peters JL, Sutton AJ, Jones DR, Abrams KR & Rushton L (2006):
 Comparison of two methods to detect publication bias in
 meta-analysis.
 \emph{Journal of the American Medical Association},
 \bold{295}, 676--80
+
+Pustejovsky JE, Rodgers MA (2019):
+Testing for funnel plot asymmetry of standardized mean differences.
+\emph{Research Synthesis Methods},
+\bold{10}, 57--71
 
 Rücker G, Schwarzer G, Carpenter JR (2008):
 Arcsine test for publication bias in meta-analyses with binary
@@ -287,4 +362,3 @@ Explaining heterogeneity in meta-analysis: a comparison of methods,
 \author{
 Guido Schwarzer \email{sc@imbi.uni-freiburg.de}
 }
-\keyword{htest}

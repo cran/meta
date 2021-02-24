@@ -92,10 +92,8 @@
 #' @param null.effect A numeric value specifying the effect under the
 #'   null hypothesis.
 #' @param method.bias A character string indicating which test for
-#'   funnel plot asymmetry is to be used. Either \code{"rank"},
-#'   \code{"linreg"}, \code{"mm"}, \code{"count"}, \code{"score"}, or
-#'   \code{"peters"}, can be abbreviated. See function
-#'   \code{\link{metabias}}
+#'   funnel plot asymmetry is to be used, can be abbreviated. See
+#'   function \code{\link{metabias}.}
 #' @param backtransf A logical indicating whether results should be
 #'   back transformed in printouts and plots. If \code{backtransf =
 #'   TRUE}, results for \code{sm = "OR"} are printed as odds ratios
@@ -493,7 +491,8 @@ update.meta <- function(object,
     object$subset <- NULL
     ##
     object$data <- data.frame(.studlab = object$studlab,
-                              .exclude = rep_len(FALSE, length(object$studlab)))
+                              .exclude = rep_len(FALSE,
+                                                 length(object$studlab)))
     ##
     if (!is.null(object$byvar))
       object$data$.byvar <- object$byvar
@@ -598,13 +597,13 @@ update.meta <- function(object,
   missing.id <- missing(id)
   ##
   if (!missing.id)
-    id <- eval(mf[[match("id", names(mf))]],
-               data, enclos = sys.frame(sys.parent()))
+    ...id <- eval(mf[[match("id", names(mf))]],
+                  data, enclos = sys.frame(sys.parent()))
   else {
     if (isCol(object$data, ".id"))
-      id <- object$data$.id
+      ...id <- object$data$.id
     else
-      id <- NULL
+      ...id <- NULL
   }
   ##
   ## Catch argument 'incr'
@@ -662,14 +661,17 @@ update.meta <- function(object,
     if (sm == "ASD") {
       if (!missing.incr && any(incr != 0))
         warning("Note, no continuity correction considered for ",
-                "arcsine difference (sm = \"ASD\").")
+                "arcsine difference (sm = \"ASD\").",
+                call. = FALSE)
       incr <- 0
       object$data$.incr <- 0
     }
     ##
     if (method == "Peto") {
       if (!missing.incr && any(incr != 0))
-        warning("Note, no continuity correction considered for method = \"Peto\".")
+        warning("Note, no continuity correction considered for ",
+                "method = \"Peto\".",
+                call. = FALSE)
       incr <- 0
       object$data$.incr <- 0
     }
@@ -687,7 +689,8 @@ update.meta <- function(object,
                  method = method,
                  sm = ifelse(method == "GLMM", "OR", sm),
                  incr = incr,
-                 allincr = allincr, addincr = addincr, allstudies = allstudies,
+                 allincr = allincr, addincr = addincr,
+                 allstudies = allstudies,
                  MH.exact = MH.exact, RR.Cochrane = RR.Cochrane,
                  Q.Cochrane = Q.Cochrane, model.glmm = model.glmm,
                  ##
@@ -736,12 +739,13 @@ update.meta <- function(object,
                   ##
                   studlab = studlab,
                   exclude = exclude,
-                  id = id,
+                  id = ...id,
                   ##
                   data = data, subset = subset,
                   ##
                   sm = sm, pooledvar = pooledvar,
-                  method.smd = method.smd, sd.glass = sd.glass, exact.smd = exact.smd,
+                  method.smd = method.smd, sd.glass = sd.glass,
+                  exact.smd = exact.smd,
                   ##
                   method.ci = ifelse(is.null(method.ci), gs("method.ci.cont"),
                                      method.ci),
@@ -833,7 +837,7 @@ update.meta <- function(object,
                  ##
                  studlab = studlab,
                  exclude = exclude,
-                 id = id,
+                 id = ...id,
                  ##
                  data = data.m, subset = subset,
                  ##

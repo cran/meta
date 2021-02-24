@@ -1,3 +1,42 @@
+## meta, version 4.17-0 (2021-02-11)
+
+### Major changes
+
+* Tests of funnel plot asymmetry:
+  - tests by [Macaskill et
+    al. (2001)](https://doi.org/10.1002/sim.698) and [Pustejovsky &
+    Rodgers (2019)](https://doi.org/10.1002/jrsm.1332) added
+  - use regtest() from R package **metafor** internally for linear
+    regression tests
+  - new print layout providing more details
+
+* New dataset Pagliaro1992 for meta-analysis on prevention of first
+  bleeding in cirrhosis [(Pagliaro et
+  al., 1992)](https://doi.org/10.7326/0003-4819-117-1-59)
+
+### Bug fixes
+
+* update.meta():
+  - do not switch to three-level model if method.tau = "ML"
+
+### User-visible changes
+
+* metabias():
+  - use name of first author to select test for funnel plot asymmetry
+    instead of "rank", "linreg", "mm", "count", and "score" (can be
+    abbreviated; old names are still recognised)
+
+* print.metabias():
+  - new arguments 'digits.stat', 'digits.se', 'digits.pval',
+    'scientific.pval', 'big.mark', 'zero.pval', 'JAMA.pval'
+
+### Internal changes
+
+* linregcore():
+  - complete rewrite using rma.uni() and regtest() from R package
+    **metafor**
+
+
 ## meta, version 4.16-2 (2021-01-27)
 
 ### Bug fixes
@@ -25,7 +64,7 @@
 
 * funnel.meta():
   - try to derive sample sizes from list elements 'n.e' or 'n.c' if
-    argument 'size = "size"'
+    argument 'yaxis = "size"'
 
 
 ## meta, version 4.16-1 (2021-01-19)
@@ -246,7 +285,8 @@
 
 * read.rm5():
   - direct import of RM5-file possible
-  - new argument 'debug' for debug messages while importing RM5-files directly
+  - new argument 'debug' for debug messages while importing RM5-files
+    directly
 
 * metacr():
   - overall results not shown if this was specified in the Cochrane

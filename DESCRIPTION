@@ -1,7 +1,7 @@
 Package: meta
 Title: General Package for Meta-Analysis
-Version: 4.16-2
-Date: 2021-01-27
+Version: 4.17-0
+Date: 2021-02-19
 Depends: R (>= 3.5.0)
 Imports: metafor (>= 2.1-0), grid, lme4, CompQuadForm, xml2
 Suggests: BiasedUrn
@@ -9,6 +9,7 @@ Authors@R: person("Guido", "Schwarzer",
                   role = c("cre", "aut"),
                   email = "sc@imbi.uni-freiburg.de",
                   comment = c(ORCID = "0000-0001-6214-9087"))
+Maintainer: Guido Schwarzer <sc@imbi.uni-freiburg.de>
 URL: https://github.com/guido-s/meta http://meta-analysis-with-r.org
 Description: User-friendly general package providing standard methods for meta-analysis and supporting Schwarzer, Carpenter, and Rücker <DOI:10.1007/978-3-319-21416-0>, "Meta-Analysis with R" (2015):
  - fixed effect and random effects meta-analysis;
@@ -24,8 +25,7 @@ License: GPL (>= 2)
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-01-27 17:26:21 UTC; sc
+Packaged: 2021-02-19 14:39:00 UTC; sc
 Author: Guido Schwarzer [cre, aut] (<https://orcid.org/0000-0001-6214-9087>)
-Maintainer: Guido Schwarzer <sc@imbi.uni-freiburg.de>
 Repository: CRAN
-Date/Publication: 2021-01-27 22:20:06 UTC
+Date/Publication: 2021-02-24 11:20:03 UTC

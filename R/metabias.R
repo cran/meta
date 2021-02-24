@@ -11,17 +11,36 @@
 #' @param seTE Standard error of estimated treatment effect (mandatory
 #'   if \code{x} not of class \code{meta}).
 #' @param method.bias A character string indicating which test is to
-#'   be used.  Either \code{"rank"}, \code{"linreg"}, \code{"mm"},
-#'   \code{"count"}, \code{"score"}, \code{"peters"}, or
-#'   \code{"deeks"}, can be abbreviated.
+#'   be used (see Details), can be abbreviated.
 #' @param plotit A logical indicating whether a plot should be
-#'   produced for method.bias \code{"rank"}, \code{"linreg"},
-#'   \code{"mm"}, \code{"score"}, or \code{"deeks"}.
+#'   produced (see Details).
 #' @param correct A logical indicating whether a continuity corrected
-#'   statistic is used for rank correlation methods \code{"rank"} and
-#'   \code{"count"}.
+#'   statistic is used for rank correlation tests.
 #' @param k.min Minimum number of studies to perform test for funnel
 #'   plot asymmetry.
+#' @param digits Minimal number of significant digits for estimates,
+#'   see \code{print.default}.
+#' @param digits.stat Minimal number of significant digits for z- or
+#'   t-value of test for test of funnel plot asymmetry, see
+#'   \code{print.default}.
+#' @param digits.pval Minimal number of significant digits for p-value
+#'   of test for test of funnel plot asymmetry, see
+#'   \code{print.default}.
+#' @param digits.se Minimal number of significant digits for standard
+#'   errors, see \code{print.default}.
+#' @param digits.tau2 Minimal number of significant digits for
+#'   residual heterogeneity variance, see \code{print.default}.
+#' @param scientific.pval A logical specifying whether p-values should
+#'   be printed in scientific notation, e.g., 1.2345e-01 instead of
+#'   0.12345.
+#' @param big.mark A character used as thousands separator.
+#' @param zero.pval A logical specifying whether p-values should be
+#'   printed with a leading zero.
+#' @param JAMA.pval A logical specifying whether p-values for test of
+#'   overall effect should be printed according to JAMA reporting
+#'   standards.
+#' @param text.tau2 Text printed to identify residual heterogeneity
+#'   variance \eqn{\tau^2}.
 #' @param \dots Additional arguments (ignored at the moment).
 #' 
 #' @details
@@ -31,10 +50,10 @@
 #' \subsection{Classic generic tests}{
 #' The following tests are generic tests for funnel plot asymmetry
 #' which only require estimates of the treatment effect and
-#' corresponding standard errors. Accordingly, these are the only tests
-#' provided by R function \code{metabias.default}.
+#' corresponding standard errors. Accordingly, these are the only
+#' tests provided by R function \code{metabias.default}.
 #' 
-#' If argument \code{method.bias} is \code{"rank"}, the test statistic
+#' If argument \code{method.bias} is \code{"Begg"}, the test statistic
 #' is based on the rank correlation between standardised treatment
 #' estimates and variance estimates of estimated treatment effects;
 #' Kendall's tau is used as correlation measure (Begg & Mazumdar,
@@ -42,19 +61,18 @@
 #' distribution. By default (if \code{correct} is FALSE), no
 #' continuity correction is utilised (Kendall & Gibbons, 1990).
 #' 
-#' If argument \code{method.bias} is \code{"linreg"}, the test
+#' If argument \code{method.bias} is \code{"Egger"}, the test
 #' statistic is based on a weighted linear regression of the treatment
 #' effect on its standard error (Egger et al., 1997). The test
 #' statistic follows a t distribution with \code{number of studies -
 #' 2} degrees of freedom.
 #' 
-#' If argument \code{method.bias} is \code{"mm"}, the test statistic
-#' is based on a weighted linear regression of the treatment effect on
-#' its standard error using the method of moments estimator for the
-#' additive between-study variance component (method 3a in Thompson,
-#' Sharp, 1999). The test statistic follows a t distribution with
-#' \code{number of studies - 2} degrees of freedom.
-#' }
+#' If argument \code{method.bias} is \code{"Thompson"}, the test
+#' statistic is based on a weighted linear regression of the treatment
+#' effect on its standard error using an additive between-study
+#' variance component denoted as methods (3a) - (3d) in Thompson &
+#' Sharp (1999). The test statistic follows a t distribution with
+#' \code{number of studies - 2} degrees of freedom.  }
 #' 
 #' \subsection{Tests for meta-analysis with binary outcomes}{
 #' The following tests for funnel plot asymmetry are only available
@@ -63,7 +81,7 @@
 #' the test by Peters et al. (2006) which can also be used in a
 #' meta-analysis of single proportions generated with \code{metaprop}.
 #' 
-#' If argument \code{method.bias} is \code{"score"}, the test
+#' If argument \code{method.bias} is \code{"Harbord"}, the test
 #' statistic is based on a weighted linear regression utilising
 #' efficient score and score variance (Harbord et al., 2006,
 #' 2009). The test statistic follows a t distribution with
@@ -73,17 +91,26 @@
 #' (Rücker et al., 2008), one has to use the \code{metabin} function
 #' with argument \code{sm = "ASD"} as input to the \code{metabias}
 #' command. The three arcsine tests described in Rücker et al. (2008)
-#' can be calculated by setting \code{method.bias} to \code{"rank"},
-#' \code{"linreg"} and \code{"mm"}, respectively.
+#' can be calculated by setting \code{method.bias} to \code{"Begg"},
+#' \code{"Egger"} and \code{"Thompson"}, respectively.
 #' 
-#' If argument \code{method.bias} is \code{"peters"}, the test
+#' If argument \code{method.bias} is \code{"Macaskill"}, the test
 #' statistic is based on a weighted linear regression of the treatment
-#' effect on the inverse of the total sample size using the variance
-#' of the average event rate as weights (Peters et al., 2006). The
-#' test statistic follows a t distribution with \code{number of
-#' studies - 2} degrees of freedom.
+#' effect on the total sample size with weights reciprocal to the
+#' variance of the average event probability (Macaskill et al., 2001,
+#' \emph{method FPV}). The test statistic follows a t distribution
+#' with \code{number of studies - 2} degrees of freedom.
 #' 
-#' If argument \code{method.bias} is \code{"count"}, the test
+#' If argument \code{method.bias} is \code{"Peters"}, the test
+#' statistic is based on a weighted linear regression of the treatment
+#' effect on the inverse of the total sample size with weights
+#' reciprocal to the variance of the average event probability (Peters
+#' et al., 2006). The test statistic follows a t distribution with
+#' \code{number of studies - 2} degrees of freedom. Note, this test is
+#' a variant of Macaskill et al. (2001), \emph{method FPV}, using the
+#' inverse sample size as covariate.
+#' 
+#' If argument \code{method.bias} is \code{"Schwarzer"}, the test
 #' statistic is based on the rank correlation between a standardised
 #' cell frequency and the inverse of the variance of the cell
 #' frequency; Kendall's tau is used as correlation measure (Schwarzer
@@ -92,12 +119,21 @@
 #' continuity correction is utilised (Kendall & Gibbons, 1990).
 #' 
 #' Finally, for meta-analysis of diagnostic test accuracy studies, if
-#' argument \code{method.bias} is \code{"deeks"}, the test statistic
+#' argument \code{method.bias} is \code{"Deeks"}, the test statistic
 #' is based on a weighted linear regression of the log diagnostic odds
 #' ratio on the inverse of the squared effective sample size using the
 #' effective sample size as weights (Deeks et al., 2005). The test
 #' statistic follows a t distribution with \code{number of studies -
 #' 2} degrees of freedom.
+#' }
+#'
+#' \subsection{Test for the standardised mean difference}{
+#' If argument \code{method.bias} is \code{"Pustejovsky"}, the test
+#' statistic is based on a weighted linear regression of the treatment
+#' effect on the square root of the sum of the inverse group sample
+#' sizes using the treatment effect variance as weights (Pustejovsky &
+#' Rodgers, 2019). The test statistic follows a t distribution with
+#' \code{number of studies - 2} degrees of freedom.
 #' }
 #' 
 #' \subsection{Recommendations and default settings}{
@@ -108,32 +144,38 @@
 #' \code{k.min}. Note, the minimum number of studies is three.
 #' 
 #' If argument \code{method.bias} is missing, the Harbord test
-#' (\code{method.bias = "score"}) is used in meta-analysis of binary
+#' (\code{method.bias = "Harbord"}) is used in meta-analysis of binary
 #' outcomes for the odds ratio as effect measure and the Egger test
-#' (\code{method.bias = "linreg"}) in all other settings (Sterne
-#' et al., 2011).
+#' (\code{method.bias = "Egger"}) in all other settings (Sterne et
+#' al., 2011).
 #' 
 #' No test for funnel plot asymmetry is conducted in meta-analyses
 #' with subgroups.
 #' }
+#'
+#' If argument \code{plotit = TRUE}, a scatter plot is shown if
+#' argument \code{method.bias} is equal to \code{"Begg"},
+#' \code{"Egger"}, \code{"Thompson"}, \code{"Harbord"}, or
+#' \code{"Deeks"}.
+#' 
 #' @return
-#' A list with class \code{htest} containing the following components
-#' if a test for funnel plot asymmetry is conducted:
-#' \item{estimate}{The estimated degree of funnel plot asymmetry, with
-#'   name \code{"ks"} or \code{"bias"} corresponding to the method
-#'   employed, i.e., rank correlation or regression method.}
-#' \item{statistic}{The value of the test statistic.}
-#' \item{parameters}{The degrees of freedom of the test statistic in
+#' A list with class \code{metabias} containing the following
+#' components if a test for funnel plot asymmetry is conducted:
+#' \item{statistic}{Test statistic.}
+#' \item{df}{The degrees of freedom of the test statistic in
 #'   the case that it follows a t distribution.}
-#' \item{p.value}{The p-value for the test.}
-#' \item{alternative}{A character string describing the alternative
-#'   hypothesis.}
-#' \item{method}{A character string indicating what type of text.was
+#' \item{pval}{The p-value for the test.}
+#' \item{estimate}{Estimates used to calculate test statisic.}
+#' \item{method}{A character string indicating what type of test was
 #'   used.}
-#' \item{data.name}{A character string giving the names of the data.}
-#'   \item{title}{Title of Cochrane review.}
+#' \item{title}{Title of Cochrane review.}
 #' \item{complab}{Comparison label.}
 #' \item{outclab}{Outcome label.}
+#' \item{var.model}{A character string indicating whether none,
+#'   multiplicative, or additive residual heterogeneity variance was
+#'   assumed.}
+#' \item{method.bias}{As defined above.}
+#' \item{x}{Meta-analysis object.}
 #' \item{version}{Version of R package \bold{meta} used to create
 #'   object.}
 #'
@@ -184,12 +226,23 @@
 #' Kendall M & Gibbons JD (1990):
 #' \emph{Rank Correlation Methods}.
 #' London: Edward Arnold
+#'
+#' Macaskill P, Walter SD, Irwig L (2001):
+#' A comparison of methods to detect publication bias in
+#' meta-analysis.
+#' \emph{Statistics in Medicine},
+#' \bold{20}, 641--54
 #' 
 #' Peters JL, Sutton AJ, Jones DR, Abrams KR & Rushton L (2006):
 #' Comparison of two methods to detect publication bias in
 #' meta-analysis.
 #' \emph{Journal of the American Medical Association},
 #' \bold{295}, 676--80
+#'
+#' Pustejovsky JE, Rodgers MA (2019):
+#' Testing for funnel plot asymmetry of standardized mean differences.
+#' \emph{Research Synthesis Methods},
+#' \bold{10}, 57--71
 #' 
 #' Rücker G, Schwarzer G, Carpenter JR (2008):
 #' Arcsine test for publication bias in meta-analyses with binary
@@ -213,8 +266,6 @@
 #' Explaining heterogeneity in meta-analysis: a comparison of methods,
 #' \emph{Statistics in Medicine},
 #' \bold{18}, 2693--708
-#'
-#' @keywords htest
 #' 
 #' @examples
 #' data(Olkin1995)
@@ -225,11 +276,11 @@
 #' metabias(m1)
 #' metabias(m1, plotit = TRUE)
 #' 
-#' metabias(m1, method.bias = "rank")
-#' metabias(m1, method.bias = "rank", correct = TRUE)
+#' metabias(m1, method.bias = "Begg")
+#' metabias(m1, method.bias = "Begg", correct = TRUE)
 #' 
-#' metabias(m1, method.bias = "count")
-#' metabias(m1, method.bias = "linreg")$p.value
+#' metabias(m1, method.bias = "Schwarzer")
+#' metabias(m1, method.bias = "Egger")$pval
 #' 
 #' # Arcsine test (based on linear regression)
 #' #
@@ -265,55 +316,55 @@ metabias.meta <- function(x, method.bias = x$method.bias,
   ## (1) Check for meta object
   ##
   ##
-  
   chkclass(x, "meta")
   x.name <- deparse(substitute(x))
   ##  
   if (inherits(x, "metacum"))
     stop("Test for funnel plot asymmetry not meaningful for ",
-         "object of class \"metacum\".")
+         "object of class \"metacum\".",
+         call. = FALSE)
   ##
   if (inherits(x, "metainf"))
     stop("Test for funnel plot asymmetry not meaningful for ",
-         "object of class \"metainf\".")
+         "object of class \"metainf\".",
+         call. = FALSE)
   
   
   ##
   ##
-  ## (2) Check other arguments
+  ## (2) Check / set other arguments
   ##
   ##
-  ## --
-  ##
-  ## Set default for method.bias (see Sterne et al., BMJ 2011;343:d4002):
-  ## - "score" for OR as effect measure
-  ## - "linreg" otherwise
-  ##
-  if (length(method.bias) == 0)
+  if (length(method.bias) == 0) {
+    ## Set default for method.bias (see Sterne et al., BMJ 2011;343:d4002):
+    ## - "Harbord" for OR as effect measure
+    ## - "Egger" otherwise
     if (inherits(x, "metabin") & x$sm == "OR")
-      method.bias <- "score"
+      method.bias <- "Harbord"
     else
-      method.bias <- "linreg"
+      method.bias <- "Egger"
+  }
   ##
-  method.bias <- setchar(method.bias, .settings$meth4bias)
-  imeth <- charmatch(method.bias, .settings$meth4bias)
-  method <-
-    c(paste0("Rank correlation test of funnel plot asymmetry",
-             ifelse(correct == TRUE, " (with continuity correction)", "")),
-      "Linear regression test of funnel plot asymmetry",
-      "Linear regression test of funnel plot asymmetry (methods of moment)",
-      paste0("Rank correlation test of funnel plot asymmetry (based on counts)",
-             ifelse(correct == TRUE, " (with continuity correction)", "")),
-      "Linear regression test of funnel plot asymmetry (efficient score)",
-      paste0("Linear regression test of funnel plot asymmetry ",
-             "(based on sample size)"),
-      "Deeks' funnel plot test for diagnostic odds ratios")[imeth]
+  method.bias <- setmethodbias(method.bias)
+  ##
+  if (method.bias %in% c("Begg", "Schwarzer"))
+    method <- paste0("Rank correlation test of funnel plot asymmetry",
+                     if (correct == TRUE) " (with continuity correction)")
+  else if (method.bias == "Deeks")
+    method <- "Funnel plot test for diagnostic odds ratios"
+  else
+    method <- "Linear regression test of funnel plot asymmetry"
   ##
   chklogical(plotit)
   chklogical(correct)
   chknumeric(k.min, 1, length = 1)
   
   
+  ##
+  ##
+  ## (3) Select studies for inclusion in test of funnel plot asymmetry
+  ##
+  ##
   TE <- x$TE
   seTE <- x$seTE
   n.e <- x$n.e
@@ -325,7 +376,8 @@ metabias.meta <- function(x, method.bias = x$method.bias,
     ##
     if (x$method == "Peto") {
       warning("Inverse variance method used for pooling ",
-              "to perform test of funnel plot asymmetry.")
+              "to perform test of funnel plot asymmetry.",
+              call = FALSE)
       m <- metabin(event.e, n.e, event.c, n.c, sm = x$sm, method = "Inverse",
                    incr = x$incr, allincr = x$allincr,
                    allstudies = x$allstudies, MH.exact = x$MH.exact,
@@ -341,7 +393,8 @@ metabias.meta <- function(x, method.bias = x$method.bias,
   }
   
   if(length(TE) != length(seTE))
-    stop("length of argument TE and seTE must be equal")
+    stop("Length of argument TE and seTE must be equal.",
+         call. = FALSE)
   ##
   ## Exclude studies from meta-analysis
   ##
@@ -373,9 +426,12 @@ metabias.meta <- function(x, method.bias = x$method.bias,
   TE <- TE[sel]
   seTE <- seTE[sel]
   ##
-  if (inherits(x, "metabin")) {
+  if (inherits(x, c("metabin", "metacont"))) {
     n.e <- n.e[sel]
     n.c <- n.c[sel]
+  }
+  ##
+  if (inherits(x, "metabin")) {
     event.e <- event.e[sel]
     event.c <- event.c[sel]
   }
@@ -383,73 +439,94 @@ metabias.meta <- function(x, method.bias = x$method.bias,
   k <- length(TE)
   
   
+  ##
+  ##
+  ## (4) Conduct test of funnel plot asymmetry
+  ##
+  ##
   if (k < k.min | k < 3)
     res <- list(k = k, k.min = k.min)
   else if (length(x$byvar) != 0)
     res <- list(subgroup = TRUE)
   else {
-    if (method.bias == "rank") {
+    ##
+    ## Check whether standard errors differ
+    ##
+    if (method.bias %in%c("Begg", "Egger", "Thompson",
+                           "Macaskill", "Pustejovsky"))
       if (length(unique(seTE)) == 1)
         stop("Test for small-study effects not feasible as ",
-             "all studies have same precision")
+             "all studies have the same precision.",
+             call. = FALSE)
+    ##
+    ## (a) Rank correlation tests
+    ##
+    if (method.bias %in% c("Begg", "Schwarzer")) {
+      if (method.bias == "Begg") {
+        ##
+        ## Begg und Mazumdar (1994), Biometrics, 50, 1088-1101
+        ##
+        m <- metagen(TE, seTE, method.tau.ci = "")
+        TE.fixed <- m$TE.fixed
+        seTE.fixed <- m$seTE.fixed
+        ##
+        varTE.s <- seTE^2 - seTE.fixed^2
+        TE.s <- (TE - TE.fixed) / sqrt(varTE.s)
+        ##
+        ktau <- kentau(TE.s, seTE^2, correct = correct)
+      }
+      else {
+        ##
+        ## Schwarzer, Antes, Schumacher (2006), Stat Med
+        ##
+        if (inherits(x, "metabin")) {
+          TE.MH <- metabin(x$event.e, x$n.e, x$event.c, x$n.c,
+                           sm = "OR", method = "MH", warn = FALSE)$TE.fixed
+          ##
+          n.. <- n.e + n.c
+          n11 <- event.e
+          n1. <- n.e
+          n.1 <- event.e + event.c
+          ##
+          n11.e <- rep(NA, k)
+          n11.v <- rep(NA, k)
+          ##
+          for ( i in seq(1:k) ) {
+            obj <- hypergeometric(n1.[i], n.1[i], n..[i], exp(TE.MH))
+            n11.e[i] <- obj$mean()
+            n11.v[i] <- obj$var()
+          }
+          ##
+          ktau <- kentau((n11 - n11.e) / sqrt(n11.v),
+                         1 / n11.v, correct = correct)
+        }
+      }
       ##
-      ## Begg und Mazumdar (1994), Biometrics, 50, 1088-1101
-      ##
-      m <- metagen(TE, seTE)
-      TE.fixed <- m$TE.fixed
-      seTE.fixed <- m$seTE.fixed
-      ##
-      varTE.s <- seTE^2 - seTE.fixed^2
-      TE.s <- (TE - TE.fixed) / sqrt(varTE.s)
-      ##
-      ktau <- kentau(TE.s, seTE^2, correct = correct)
-      ##
-      res <- list(estimate = c(ktau$ks, ktau$se.ks),
-                  statistic = ktau$ks / ktau$se.ks,
+      res <- list(statistic = ktau$ks / ktau$se.ks,
+                  pval = ktau$p.value,
+                  estimate = c(ktau$ks, ktau$se.ks),
                   p.value = ktau$p.value)
+      ##
       names(res$statistic) <- "z"
       names(res$estimate) <- c("ks", "se.ks")
     }
-    else if (method.bias == "linreg" | method.bias == "mm" |
-             method.bias == "score" | method.bias == "peters" |
-             method.bias == "deeks") {
-      
-      if (method.bias == "linreg") {
-        if (length(unique(seTE)) == 1)
-          stop("Test for small-study effects not feasible as ",
-               "all studies have same precision")
+    ##
+    ## (b) Linear regression tests
+    ##
+    else {
+      if (method.bias == "Egger") {
         ##
         ## Egger, Smith, Schneider, Minder (1997), BMJ, 315, 629-34
         ##
-        lreg <- linregcore(seTE, TE, 1 / seTE^2)
-        se.bias <- lreg$se.slope
+        lreg <- linregcore(TE, seTE)
       }
-      else if (method.bias == "mm") {
-        if (length(unique(seTE)) == 1)
-          stop("Test for small-study effects not feasible as ",
-               "all studies have same precision")
+      else if (method.bias == "Thompson") {
         ##
         ## Thompson und Sharp (1999), Stat Med, 18, 2693-2708
         ##
-        fit1 <- linregcore(1 / seTE, TE / seTE)
-        Q <- sum((TE / seTE - fit1$intercept - fit1$slope / seTE)^2)
-        ##
-        x <- seTE
-        y <- TE
-        w <- 1 / seTE^2
-        ##
-        tau2 <- (Q - (k - 2)) /
-          (sum(w) - (sum(w^2) * sum(w * x^2) -
-                     2 * sum(w^2 * x) * sum(w * x) +
-                     sum(w) * sum(w^2 * x^2)) /
-           (sum(w) * sum(w * x^2) - (sum(w * x))^2))
-        ##
-        tau2 <- ifelse(tau2 < 0, 0, tau2)
-        ##
-        lreg <- linregcore(seTE, TE, 1 / (seTE^2 + tau2))
-        se.bias <- lreg$se.slope / sqrt(lreg$MSE.w)
+        lreg <- linregcore(TE, seTE, model = "rma", method.tau = x$method.tau)
       }
-      else if (method.bias == "score") {
+      else if (method.bias == "Harbord") {
         if (inherits(x, "metabin")) {
           if (x$sm == "RR") {
             ##
@@ -464,7 +541,8 @@ metabias.meta <- function(x, method.bias = x$method.bias,
           }
           else {
             if (x$sm != "OR")
-              warning("Using odds ratio as effect measure in Harbord test.")
+              warning("Using odds ratio as effect measure in Harbord test.",
+                      call. = FALSE)
             ##
             ## Harbord et al. (2006), Statistics in Medicine
             ##
@@ -477,118 +555,92 @@ metabias.meta <- function(x, method.bias = x$method.bias,
           TE.score <- Z / V
           seTE.score <- 1 / sqrt(V)
           ##
-          lreg <- linregcore(seTE.score, TE.score, 1 / seTE.score^2)
-          se.bias <- lreg$se.slope
+          lreg <- linregcore(TE.score, seTE.score)
         }
-        else {
-          stop("method.bias '", method.bias,
-               "' only defined for meta-analysis ",
-               "with binary outcome data (function 'metabin')")
-        }
+        else
+          stoponly("method.bias", method.bias, "metabin()")
       }
-      else if (method.bias == "peters") {
+      else if (method.bias == "Macaskill") {
+        ##
+        ## Macaskill et al. (2001), Stat Med
+        ##
+        if (inherits(x, "metabin") || inherits(x, "metacont"))
+          covar <- n.e + n.c
+        else if (length(n.e) > 0 & length(n.c) > 0)
+          covar <- n.e + n.c
+        else if (inherits(x, "metaprop"))
+          covar <- n
+        else if (length(n.e) > 0)
+          covar <- n.e
+        else if (length(n.c) > 0)
+          covar <- n.c
+        else
+          stop("No information on sample size available.")
+        ##
+        lreg <- linregcore(TE, seTE, covar)
+      }
+      else if (method.bias == "Peters") {
         ##
         ## Peters et al. (2006), JAMA
         ##
         if (inherits(x, "metabin")) {
-          seTE.peters <- sqrt(1 / (event.e + event.c) +
-                                1 / (n.e - event.e + n.c - event.c))
-          ##
-          lreg <- linregcore(1 / (n.e + n.c), TE, 1 / seTE.peters^2)
-          se.bias <- lreg$se.slope
+          seTE.Peters <- sqrt(1 / (event.e + event.c) +
+                              1 / (n.e - event.e + n.c - event.c))
+          covar <- 1 / (n.e + n.c)
         }
         else if (inherits(x, "metaprop")) {
-          seTE.peters <- sqrt(1 / event + 1 / (n - event))
-          ##
-          lreg <- linregcore(1 / n, TE, 1 / seTE.peters^2)
-          se.bias <- lreg$se.slope
+          seTE.Peters <- sqrt(1 / event + 1 / (n - event))
+          covar <- 1 / n
         }
-        else {
-          stop("method.bias '", method.bias, "' only defined for ",
-               "meta-analysis conducted with metabin() or metaprop()")
-        }
+        else
+          stoponly("method.bias", method.bias, "metabin() or metaprop()")
+        ##
+        lreg <- linregcore(TE, seTE.Peters, covar)
       }
-      else if (method.bias == "deeks") {
+      else if (method.bias == "Deeks") {
         ##
         ## Deeks et al. (2005), J Clin Epid
         ##
         if (inherits(x, "metabin")) {
           ESS <- 4 * n.e * n.c / (n.e + n.c)
           ##
-          lreg <- linregcore(1 / sqrt(ESS), TE, ESS)
-          se.bias <- lreg$se.slope
+          lreg <- linregcore(TE, sqrt(1 / ESS), 1 / sqrt(ESS))
         }
-        else {
-          stop("method.bias '", method.bias, "' only defined for ",
-               "meta-analysis conducted with metabin()")
-        }
+        else
+          stoponly("method.bias", method.bias, "metabin()")
       }
-      ##
-      bias <- lreg$slope
-      df <- lreg$df
-      intercept <- lreg$intercept
-      ##
-      statistic <- bias / se.bias
-      p.value <- 2 * pt(abs(statistic), df = df, lower.tail = FALSE)[[1]]
-      ##
-      res <- list(estimate = c(bias, se.bias, intercept),
-                  parameters = df, statistic = statistic,
-                  p.value = p.value)
-      
-      names(res$statistic) <- "t"
-      names(res$parameters) <- "df"
-      names(res$estimate) <- c("bias", "se.bias", "intercept")
-    }
-    else if (method.bias == "count") {
-      ##
-      ## Schwarzer, Antes, Schumacher (2006), Stat Med
-      ##
-      if (inherits(x, "metabin")) {
-        TE.MH <- metabin(x$event.e, x$n.e, x$event.c, x$n.c,
-                         sm = "OR", method = "MH", warn = FALSE)$TE.fixed
-        
-        n.. <- n.e + n.c
-        n11 <- event.e
-        n1. <- n.e
-        n.1 <- event.e + event.c
-        
-        n11.e <- rep(NA, k)
-        n11.v <- rep(NA, k)
+      else if (method.bias == "Pustejovsky") {
         ##
-        for ( i in seq(1:k) ) {
-          obj <- hypergeometric(n1.[i], n.1[i], n..[i], exp(TE.MH))
-          n11.e[i] <- obj$mean()
-          n11.v[i] <- obj$var()
-        }
-        
-        ktau <- kentau((n11 - n11.e) / sqrt(n11.v),
-                       1 / n11.v, correct = correct)
+        ## Pustejovsky & Rodgers (2019)
         ##
-        res <- list(estimate = c(ktau$ks, ktau$se.ks),
-                    statistic = ktau$ks / ktau$se.ks,
-                    p.value = ktau$p.value)
-        names(res$statistic) <- "z"
-        names(res$estimate) <- c("ks", "se.ks")
+        if (is.null(n.e))
+          stop("Sample size in experimental group (n.e) missing.",
+               call. = FALSE)
+        if (is.null(n.c))
+          stop("Sample size in control group (n.c) missing.",
+               call. = FALSE)
+        ##
+        lreg <- linregcore(TE, seTE, sqrt(1 / n.e + 1 / n.c))
       }
-      else {
-        stop("method.bias '", method.bias, "' only defined for ",
-             "meta-analysis with binary outcome data (function 'metabin')")
-      }
+      ##
+      res <- list(statistic = lreg$statistic, df = lreg$df, pval = lreg$pval,
+                  estimate = c(lreg$slope, lreg$se.slope,
+                               lreg$intercept, lreg$se.intercept),
+                  tau = lreg$tau, p.value = lreg$pval)
+      names(res$estimate) <- c("bias", "se.bias", "intercept", "se.intercept")
     }
     
-    res$alternative <- "asymmetry in funnel plot"
     
-    res$method <- method
-    
-    res$data.name <- x.name
-    
+    ##
+    ## Optional plot
+    ##
     if (plotit) {
       ##
-      if (method.bias == "linreg" | method.bias == "mm") {
+      if (method.bias == "Egger" | method.bias == "Thompson") {
         radial(TE, seTE, comb.fixed = FALSE)
         abline(lreg$slope, lreg$intercept)
       }
-      else if (method.bias == "rank") {
+      else if (method.bias == "Begg") {
         ##
         if (plotit) {
           plot(TE.s, seTE^2,
@@ -596,13 +648,24 @@ metabias.meta <- function(x, method.bias = x$method.bias,
                ylab = "Estimated variance of treatment estimate")
         }
       }
-      else if (method.bias == "score") {
+      else if (method.bias == "Harbord") {
         ##
         radial(TE.score, seTE.score, comb.fixed = FALSE)
         abline(lreg$slope, lreg$intercept)
       }
     }
-
+    
+    
+    res$method <- method
+    ##
+    res$var.model <- ifelse(method.bias %in% c("Begg", "Schwarzer"),
+                            "",
+                     ifelse(method.bias == "Thompson",
+                            "additive", "multiplicative"))
+    ##
+    res$method.bias <- method.bias
+    
+    
     if (inherits(x, "meta")) {
       if (!is.null(x$title))
         res$title <- x$title
@@ -613,9 +676,11 @@ metabias.meta <- function(x, method.bias = x$method.bias,
     }
   }
   
+  
+  res$x <- x
   res$version <- packageDescription("meta")$Version
   
-  class(res) <- c("metabias", "htest")
+  class(res) <- "metabias"
   
   res
 }
@@ -630,7 +695,20 @@ metabias.meta <- function(x, method.bias = x$method.bias,
 #' @export print.metabias
 
 
-print.metabias <- function(x, ...) {
+print.metabias <- function(x,
+                           digits = gs("digits"),
+                           digits.stat = gs("digits.stat"),
+                           digits.pval = max(gs("digits.pval"), 2),
+                           digits.se = gs("digits.se"),
+                           digits.tau2 = gs("digits.tau2"),
+                           ##
+                           scientific.pval = gs("scientific.pval"),
+                           big.mark = gs("big.mark"),
+                           zero.pval = gs("zero.pval"),
+                           JAMA.pval = gs("JAMA.pval"),
+                           ##
+                           text.tau2 = gs("text.tau2"),
+                           ...) {
   
   
   ##
@@ -639,16 +717,211 @@ print.metabias <- function(x, ...) {
   ##
   ##
   chkclass(x, "metabias")
+  ##
+  chknumeric(digits, min = 0, length = 1)
+  chknumeric(digits.stat, min = 0, length = 1)
+  chknumeric(digits.pval, min = 1, length = 1)
+  chknumeric(digits.se, min = 0, length = 1)
+  chknumeric(digits.tau2, min = 0, length = 1)
+  ##
+  chklogical(scientific.pval)
+  chklogical(zero.pval)
+  chklogical(JAMA.pval)
+  ##
+  chkchar(text.tau2, length = 1)
+  
+  
+  ## Update old metabias objects
+  ##
+  if (inherits(x, "htest")) {
+    x$pval <- x$p.value
+    x$x <- list(method.tau = "DL")
+    x$df <- x$parameters
+    x$var.model <- "multiplicative"
+    ##
+    if (grepl("Rank correlation test of funnel plot asymmetry",
+              x$method)) {
+      if (!grepl("counts", x$method))
+        x$method.bias <- "Begg"
+      else
+        x$method.bias <- "Schwarzer"
+      ##
+      x$method <- "Rank correlation test of funnel plot asymmetry"
+      x$var.model <- ""
+    }
+    else if (grepl("Deeks", x$method)) {
+      x$method.bias <- "Deeks"
+      x$method <- "Funnel plot test for diagnostic odds ratios"
+    }
+    else {
+      ##
+      if (grepl("score", x$method))
+        x$method.bias <- "Harbord"
+      else if (grepl("sample size", x$method))
+        x$method.bias <- "Peters"
+      else if (grepl("methods of moment", x$method)) {
+        x$method.bias <- "Thompson"
+      x$var.model <- "additive"
+      }
+      else
+        x$method.bias <- "Egger"
+      ##
+      x$method <- "Linear regression test of funnel plot asymmetry"
+    }
+  }
   
   
   ## Print information for meta-analysis from Cochrane Review
   ##
   crtitle(x)
   
-  class(x) <- "htest"
+  
+  names.estimate <- names(x$estimate)
   ##
-  if (length(x$p.value) != 0)
-    print(x)
+  if (length(x$pval) != 0) {
+    if ("intercept" %in% names(x$estimate)) {
+      est1 <-
+        formatN(x$estimate[c(1, 3)], digits, "NA",
+                big.mark = big.mark)
+      est2 <-
+        formatN(x$estimate[c(2, 4)], digits.se, "NA",
+                big.mark = big.mark)
+      ##
+      x$estimate <- matrix(c(est1[1], est2[1], est1[2], est2[2]), nrow = 1)
+      dimnames(x$estimate) <- list("", names.estimate)
+    }
+    else {
+      est1 <-
+        formatN(x$estimate[1], digits, "NA", big.mark = big.mark)
+      names(est1) <- 
+      est2 <-
+        formatN(x$estimate[2], digits.se, "NA", big.mark = big.mark)
+      names(est2) <- names(x$estimate[2])
+      ##
+      x$estimate <- matrix(c(est1, est2), nrow = 1)
+      dimnames(x$estimate) <- list("", names.estimate)
+    }
+    ##
+    format.pvalue <- formatPT(x$pval, digits = digits.pval,
+                              scientific = scientific.pval,
+                              zero = zero.pval, JAMA = JAMA.pval)
+    if (!grepl("<", format.pvalue))
+      format.pvalue <- paste("=", format.pvalue)
+    
+    
+    cat(paste0(x$method, "\n\n"))
+    ##
+    cat(paste0("Test result: ",
+               names(x$statistic), " = ",
+               formatN(x$statistic, digits.stat, "NA",
+                       big.mark = big.mark),
+               ", ",
+               if (!is.null(x$df))
+                 paste0("df = ", x$df, ", "),
+               "p-value ",
+               format.pvalue,
+               "\n\n",
+               ##
+               "Sample estimates:\n"
+               ))
+    ##
+    prmatrix(x$estimate, quote = FALSE, right = TRUE, ...)
+    ##
+    cat("\n")
+    ##
+    if (x$var.model != "") {
+      cat("Details:\n")
+      cat(paste0("- ", x$var.model,
+                 " residual heterogeneity variance (",
+                 formatPT(x$tau^2,
+                          lab = TRUE, labval = text.tau2,
+                          digits = digits.tau2,
+                          lab.NA = "NA",
+                          big.mark = big.mark),
+                 ")\n"))
+      ##
+      if (x$var.model == "additive") {
+        i.lab.method.tau <-
+          charmatch(x$x$method.tau, c(.settings$meth4tau, ""), nomatch = NA)
+        ##
+        lab.method.tau <-
+          c("- DerSimonian-Laird estimator",
+            "- Paule-Mandel estimator",
+            "- restricted maximum-likelihood estimator",
+            "- maximum-likelihood estimator",
+            "- Hunter-Schmidt estimator",
+            "- Sidik-Jonkman estimator",
+            "- Hedges estimator",
+            "- empirical Bayes estimator",
+            ""
+            )[i.lab.method.tau]
+        ##
+        if (lab.method.tau != "")
+          lab.method.tau <- paste(lab.method.tau, "for", text.tau2)
+        ##
+        cat(paste0(lab.method.tau, "\n"))
+      }
+      ##
+      if (x$method.bias == "Egger")
+        detail.predictor <- "standard error"
+      else if (x$method.bias == "Thompson")
+        detail.predictor <- "standard error"
+      else if (x$method.bias == "Harbord")
+        detail.predictor <- "standard error of score"
+      else if (x$method.bias == "Macaskill")
+        detail.predictor <- "total sample size"
+      else if (x$method.bias == "Peters")
+        detail.predictor <- "inverse of total sample size"
+      else if (x$method.bias == "Deeks")
+        detail.predictor <- "inverse of the squared effective sample size"
+      else if (x$method.bias == "Pustejovsky")
+        detail.predictor <-
+          "square root of the sum of the inverse group sample sizes"
+      ##
+      cat(paste0("- predictor: ", detail.predictor, "\n"))
+      ##
+      if (x$method.bias == "Egger")
+        detail.weights <- "inverse variance"
+      else if (x$method.bias == "Thompson")
+        detail.weights <- "inverse variance"
+      else if (x$method.bias == "Harbord")
+        detail.weights <- "inverse variance of score"
+      else if (x$method.bias == "Macaskill")
+        detail.weights <- "inverse variance of average event probability"
+      else if (x$method.bias == "Peters")
+        detail.weights <- "inverse variance of average event probability"
+      else if (x$method.bias == "Deeks")
+        detail.weights <- "effective sample size"
+      else if (x$method.bias == "Pustejovsky")
+        detail.weights <- "inverse variance"
+      ##
+      cat(paste0("- weight:    ", detail.weights, "\n"))
+    }
+    ##
+    if (x$method.bias == "Begg")
+      detail.ref <- "Begg & Mazumdar (1993), Biometrics"
+    else if (x$method.bias == "Egger")
+      detail.ref <- "Egger et al. (1997), BMJ"
+    else if (x$method.bias == "Thompson")
+      detail.ref <- "Thompson & Sharp (1999), Stat Med"
+    else if (x$method.bias == "Schwarzer")
+      detail.ref <- "Schwarzer et al. (2006), Stat Med"
+    else if (x$method.bias == "Harbord")
+      detail.ref <- "Harbord et al. (2006), Stat Med"
+    else if (x$method.bias == "Macaskill")
+      detail.ref <- "Macaskill et al. (2001), Stat Med, method FPV"
+    else if (x$method.bias == "Peters")
+      detail.ref <- "Peters et al. (2006), JAMA"
+    else if (x$method.bias == "Deeks")
+      detail.ref <- "Deeks et al. (2005), J Clin Epid"
+    else if (x$method.bias == "Pustejovsky")
+      detail.ref <- "Pustejovsky & Rodgers (2019), RSM"
+    else
+      detail.ref <- ""
+    ##
+    if (detail.ref != "")
+      cat(paste0("- reference: ", detail.ref, "\n"))
+  }
   else {
     ##
     ## Check whether number of studies is too small:
@@ -657,11 +930,13 @@ print.metabias <- function(x, ...) {
       if (x$k <= x$k.min) {
         if (x$k <= 2)
           warning("Number of studies (k=",  x$k,
-                  ") too small to test for small study effects.")
+                  ") too small to test for small study effects.",
+                  call. = FALSE)
         else
           warning("Number of studies (k=",  x$k,
                   ") too small to test for small study effects (k.min=",
-                  x$k.min, "). Change argument 'k.min' if appropriate.\n")
+                  x$k.min, "). Change argument 'k.min' if appropriate.",
+                  call. = FALSE)
       }
     }
     ##
@@ -669,7 +944,8 @@ print.metabias <- function(x, ...) {
     ##
     if (length(x$subgroup) != 0)
       warning("No test for small study effects conducted ",
-              "for meta-analysis with subgroups.")
+              "for meta-analysis with subgroups.",
+              call. = FALSE)
   }
   
   invisible(NULL)
@@ -697,7 +973,7 @@ metabias <- function(x, ...)
 
 
 metabias.default <- function(x, seTE,
-                             method.bias = "linreg",
+                             method.bias = "Egger",
                              plotit = FALSE, correct = FALSE,
                              k.min = 10, ...) {
   
@@ -715,7 +991,7 @@ metabias.default <- function(x, seTE,
   fun <- "metabias"
   chklength(seTE, k.All, fun)
   ##
-  method.bias <- setchar(method.bias, c("rank", "linreg", "mm"))
+  method.bias <- setchar(method.bias, c("Begg", "Egger", "Thompson"))
   
   
   ##

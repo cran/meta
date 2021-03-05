@@ -47,7 +47,7 @@
 #' Higgins, J.P.T and S. Green (2011):
 #' \emph{Cochrane Handbook for Systematic Reviews of Interventions
 #'   Version 5.1.0 [Updated March 2011]}.
-#' The Cochrane Library: http://www.cochrane-handbook.org
+#' The Cochrane Library: http://www.cochrane-handbook.org/
 #' 
 #' @keywords htest
 #' 

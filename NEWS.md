@@ -1,3 +1,37 @@
+## meta, version 4.18-1 (2021-mm-dd)
+
+### Major changes
+
+* Calculate correct upper limit for confidence intervals of I2 and H2
+  in very homogeneous meta-analyses (i.e., if Q < k - 1)
+
+### Bug fixes
+
+* forest.meta():
+  - correct order of p-values for homogeneity tests within subgroups
+    if argument 'bysort = TRUE'
+
+* calcH():
+  - set H = 1 in calculation of confidence interval for H if H < 1
+    (i.e., if Q < k - 1)
+
+* metabias():
+  - bug fix for linear regression tests using **metafor**, version
+    2.5-86
+
+* metabind():
+  - bug fix for a single meta-analysis object
+
+### Internal changes
+
+* metabias.bias():
+  - argument '...' passed on to rma.uni()
+
+* metagen():
+  - set list element 'df.hakn' to NA instead of NULL if condition met
+    for argument 'adhoc.hakn = "ci"'
+
+
 ## meta, version 4.18-0 (2021-03-05)
 
 ### Major changes

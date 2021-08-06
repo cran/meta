@@ -19,6 +19,8 @@
 #'   argument is useful in a meta-analysis with subgroups if
 #'   heterogeneity statistics should only be printed on subgroup
 #'   level.
+#' @param test.subgroup A logical value indicating whether to print
+#'   results of test for subgroup differences.
 #' @param bylab A character string with a label for the grouping
 #'   variable.
 #' @param print.byvar A logical indicating whether the name of the
@@ -62,9 +64,10 @@
 #' @param digits.Q Minimal number of significant digits for
 #'   heterogeneity statistic Q, see \code{print.default}.
 #' @param digits.tau2 Minimal number of significant digits for
-#'   between-study variance, see \code{print.default}.
-#' @param digits.tau Minimal number of significant digits for square
-#'   root of between-study variance, see \code{print.default}.
+#'   between-study variance \eqn{\tau^2}, see \code{print.default}.
+#' @param digits.tau Minimal number of significant digits for
+#'   \eqn{\tau}, the square root of the between-study variance
+#'   \eqn{\tau^2}.
 #' @param digits.H Minimal number of significant digits for H
 #'   statistic, see \code{print.default}.
 #' @param digits.I2 Minimal number of significant digits for I-squared
@@ -78,6 +81,11 @@
 #' @param JAMA.pval A logical specifying whether p-values for test of
 #'   overall effect should be printed according to JAMA reporting
 #'   standards.
+#' @param print.tau2 A logical specifying whether between-study
+#'   variance \eqn{\tau^2} should be printed.
+#' @param print.tau A logical specifying whether \eqn{\tau}, the
+#'   square root of the between-study variance \eqn{\tau^2}, should be
+#'   printed.
 #' @param print.I2 A logical specifying whether heterogeneity
 #'   statistic I\eqn{^2} should be printed.
 #' @param warn A logical indicating whether the use of
@@ -98,7 +106,10 @@
 #'   I\eqn{^2}.
 #' @param text.Rb Text printed to identify heterogeneity statistic
 #'   R\eqn{_b}.
-#' @param digits.zval Deprecated argument (replaced by \code{digits.stat}).
+#' @param details.methods A logical specifying whether details on
+#'   statistical methods should be printed.
+#' @param digits.zval Deprecated argument (replaced by
+#'   \code{digits.stat}).
 #' @param \dots Additional arguments (ignored).
 #'
 #' @details
@@ -280,6 +291,7 @@ summary.meta <- function(object,
                          prediction = object$prediction,
                          overall = object$overall,
                          overall.hetstat = object$overall.hetstat,
+                         test.subgroup = object$test.subgroup,
                          ##
                          backtransf = object$backtransf,
                          pscale = object$pscale,
@@ -334,6 +346,10 @@ summary.meta <- function(object,
   chklogical(overall)
   overall.hetstat <- replaceNULL(overall.hetstat, TRUE)
   chklogical(overall.hetstat)
+  test.subgroup <- replaceNULL(test.subgroup, TRUE)
+  if (is.na(test.subgroup))
+    test.subgroup <- FALSE
+  chklogical(test.subgroup)
   ##
   chklogical(backtransf)
   ##
@@ -515,10 +531,18 @@ summary.meta <- function(object,
               prediction = prediction,
               overall = overall,
               overall.hetstat = overall.hetstat,
+              test.subgroup = test.subgroup,
               text.fixed = object$text.fixed,
               text.random = object$text.random,
-              text.predict = object$text.predict)
-  ##  
+              text.predict = object$text.predict,
+              ##
+              three.level = object$three.level)
+  ##
+  ## Add study label for meta-analysis with a single study
+  ##
+  if (res$k.all == 1)
+    res$studlab <- object$studlab
+  ##
   ## Add results from subgroup analysis
   ##
   if (length(object$byvar) > 0) {
@@ -588,11 +612,19 @@ summary.meta <- function(object,
     res$bylab           <- bylab
     res$tau.common      <- object$tau.common
     res$bylevs          <- object$bylevs
+    ##
+    if (is.null(res$test.subgroup))
+      res$test.subgroup <- TRUE
   }
   ##
   class(res) <- "summary.meta"
   ##
   if (inherits(object, "metabin")) {
+    res$event.e <- object$event.e
+    res$n.e     <- object$n.e
+    res$event.c <- object$event.c
+    res$n.c     <- object$n.c
+    ##
     res$sparse      <- object$sparse
     res$incr        <- object$incr
     res$allincr     <- object$allincr
@@ -612,6 +644,13 @@ summary.meta <- function(object,
   }
   ##
   if (inherits(object, "metacont")) {
+    res$n.e     <- object$n.e
+    res$mean.e <- object$mean.e
+    res$sd.e   <- object$sd.e
+    res$n.c     <- object$n.c
+    res$mean.c <- object$mean.c
+    res$sd.c   <- object$sd.c
+    ##
     res$pooledvar  <- object$pooledvar
     res$method.smd <- object$method.smd
     res$sd.glass   <- object$sd.glass
@@ -637,6 +676,14 @@ summary.meta <- function(object,
   }
   ##
   if (inherits(object, "metainc")) {
+    res$event.e <- object$event.e
+    res$time.e  <- object$time.e
+    res$event.c <- object$event.c
+    res$time.c  <- object$time.c
+    ##
+    res$n.e <- object$n.e
+    res$n.c <- object$n.c
+    ##
     res$sparse  <- object$sparse
     res$incr    <- object$incr
     res$allincr <- object$allincr
@@ -697,8 +744,8 @@ summary.meta <- function(object,
   }
   ##
   if (is.rate(object$sm)) {
-    res$event     <- object$event
-    res$time      <- object$time
+    res$event <- object$event
+    res$time  <- object$time
   }
   ##
   if (inherits(object, "trimfill")) {
@@ -747,6 +794,11 @@ summary.meta <- function(object,
     class(res) <- c(class(res), "metamiss")
   }
   ##
+  ## Function netpairwise() from R package netmeta
+  ##
+  if (inherits(object, "netpairwise"))
+    class(res) <- c(class(res), "is.netpairwise")
+  ##
   res$complab <- object$complab
   res$outclab <- object$outclab
   res$title   <- object$title
@@ -770,6 +822,8 @@ summary.meta <- function(object,
     res$version <- packageDescription("meta")$Version
   ##
   res$version.metafor <- object$version.metafor
+  ##
+  attr(res, "class.orig") <- class(object)
   
   
   res
@@ -791,6 +845,7 @@ print.summary.meta <- function(x,
                                prediction = x$prediction,
                                overall = x$overall,
                                overall.hetstat = x$overall.hetstat,
+                               test.subgroup = x$test.subgroup,
                                ##
                                print.byvar = x$print.byvar,
                                byseparator = x$byseparator,
@@ -818,6 +873,8 @@ print.summary.meta <- function(x,
                                big.mark = gs("big.mark"),
                                zero.pval = gs("zero.pval"),
                                JAMA.pval = gs("JAMA.pval"),
+                               print.tau2 = TRUE,
+                               print.tau = TRUE,
                                print.I2 = gs("print.I2"),
                                print.H = gs("print.H"),
                                print.Rb = gs("print.Rb"),
@@ -826,6 +883,8 @@ print.summary.meta <- function(x,
                                text.tau = gs("text.tau"),
                                text.I2 = gs("text.I2"),
                                text.Rb = gs("text.Rb"),
+                               ##
+                               details.methods = TRUE,
                                ##
                                digits.zval = digits.stat,
                                ##
@@ -868,6 +927,8 @@ print.summary.meta <- function(x,
     backtransf <- TRUE
   chklogical(backtransf)
   ##
+  chklogical(print.tau2)
+  chklogical(print.tau)
   chklogical(print.I2)
   chklogical(print.H)
   chklogical(print.Rb)
@@ -905,10 +966,14 @@ print.summary.meta <- function(x,
   chklogical(comb.fixed)
   chklogical(comb.random)
   chklogical(prediction)
-  replaceNULL(overall, TRUE)
+  overall <- replaceNULL(overall, TRUE)
   chklogical(overall)
-  replaceNULL(overall.hetstat, TRUE)
+  overall.hetstat <- replaceNULL(overall.hetstat, TRUE)
   chklogical(overall.hetstat)
+  test.subgroup <- replaceNULL(test.subgroup, TRUE)
+  if (is.na(test.subgroup))
+    test.subgroup <- FALSE
+  chklogical(test.subgroup)
   ##
   if (by) {
     chklogical(print.byvar)
@@ -918,6 +983,8 @@ print.summary.meta <- function(x,
     chklogical(print.CMH)
   chklogical(header)
   chknumeric(bylab.nchar)
+  ##
+  chklogical(details.methods)
   ##
   ## Additional arguments / checks for metacont objects
   ##
@@ -1290,6 +1357,56 @@ print.summary.meta <- function(x,
       uppRb <- NA
     }
   }
+  ##
+  catobsev <- function(var1, var2 = NULL, type = "n", addrow = FALSE) {
+    if (type == "n") {
+      txt <- "observations"
+      idx <- "o"
+    }
+    else if (type == "e") {
+      txt <- "events"
+      idx <- "e"
+    }
+    ##
+    if (!is.null(var1) & !is.null(var2)) {
+      sum1 <- sum(var1, na.rm = TRUE)
+      sum2 <- sum(var2, na.rm = TRUE)
+      ##
+      cat(paste0("Number of ", txt, ": ", idx, " = ",
+                 format(sum1 + sum2, big.mark = big.mark),
+                 ##" (", idx, ".e = ",
+                 ##format(sum1, big.mark = big.mark),
+                 ##", ", idx, ".c = ",
+                 ##format(sum2, big.mark = big.mark),
+                 ##")",
+                 "\n"))
+    }
+    else if (!is.null(var1)) {
+      cat(paste0("Number of ", txt, ": ", idx, " = ",
+                 format(sum(var1, na.rm = TRUE),
+                          big.mark = big.mark),
+                 "\n"))
+    }
+    else if (!is.null(var2)) {
+      cat(paste0("Number of ", txt, ": ", idx, " = ",
+                 format(sum(var2, na.rm = TRUE), big.mark = big.mark),
+                 "\n"))
+    }
+    ##
+    if (addrow)
+      cat("\n")
+    ##
+    invisible(NULL)
+  }
+  ##
+  sel.n <-
+    !is.null(attr(x, "class.orig")) &
+    any(attr(x, "class.orig") %in%
+        c("metacor", "metaprop", "metamean"))
+  ##
+  sel.ev <-
+    !is.null(attr(x, "class.orig")) &
+    any(attr(x, "class.orig") %in% "metaprop")
   
   
   ##
@@ -1312,6 +1429,16 @@ print.summary.meta <- function(x,
     ##
     ## Print results for a single study
     ##
+    if (sel.n)
+      catobsev(x$n, type = "n")
+    else
+      catobsev(x$n.e, x$n.c, type = "n")
+    ##
+    if (sel.ev)
+      catobsev(x$event, type = "e", addrow = TRUE)
+    else
+      catobsev(x$event.e, x$event.c, type = "e", addrow = TRUE)
+    ##
     res <- cbind(formatN(TE.fixed, digits, "NA",
                          big.mark = big.mark),
                  formatCI(formatN(lowTE.fixed, digits, "NA",
@@ -1324,42 +1451,44 @@ print.summary.meta <- function(x,
                    formatPT(pTE.fixed, digits = digits.pval,
                             scientific = scientific.pval,
                             zero = zero.pval, JAMA = JAMA.pval))
-    dimnames(res) <- list("",
+    dimnames(res) <- list(x$studlab,
                           c(sm.lab, x$ci.lab,
                             if (null.given) "z",
                             if (null.given) "p-value"))
     prmatrix(res, quote = FALSE, right = TRUE, ...)
     ## Print information on summary method:
-    catmeth(class = class(x),
-            method =
-              if (!metaprop | (overall & (comb.fixed | comb.random)) |
-                  overall.hetstat | by)
-                x$method else "NoMA",
-            sm = sm,
-            k.all = k.all,
-            sparse = ifelse(bip, x$sparse, FALSE),
-            incr = if (bip) x$incr else FALSE,
-            allincr = ifelse(bip, x$allincr, FALSE),
-            addincr = ifelse(bip, x$addincr, FALSE),
-            allstudies = x$allstudies,
-            doublezeros = x$doublezeros,
-            MH.exact = ifelse(metabin, x$MH.exact, FALSE),
-            method.ci = method.ci,
-            pooledvar = x$pooledvar,
-            method.smd = x$method.smd,
-            sd.glass = x$sd.glass,
-            exact.smd = x$exact.smd,
-            model.glmm = x$model.glmm,
-            pscale = pscale,
-            irscale = irscale,
-            irunit = irunit,
-            null.effect = if (null.given) null.effect else 0,
-            big.mark = big.mark,
-            digits = digits, digits.tau = digits.tau,
-            text.tau = text.tau, text.tau2 = text.tau2,
-            method.miss = x$method.miss,
-            IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c,
-            threelevel = if (is.null(x$k.study)) FALSE else x$k != x$k.study)
+    if (details.methods)
+      catmeth(class = class(x),
+              method =
+                if (!metaprop | (overall & (comb.fixed | comb.random)) |
+                    overall.hetstat | by)
+                  x$method else "NoMA",
+              sm = sm,
+              k.all = k.all,
+              sparse = ifelse(bip, x$sparse, FALSE),
+              incr = if (bip) x$incr else FALSE,
+              allincr = ifelse(bip, x$allincr, FALSE),
+              addincr = ifelse(bip, x$addincr, FALSE),
+              allstudies = x$allstudies,
+              doublezeros = x$doublezeros,
+              MH.exact = ifelse(metabin, x$MH.exact, FALSE),
+              method.ci = method.ci,
+              pooledvar = x$pooledvar,
+              method.smd = x$method.smd,
+              sd.glass = x$sd.glass,
+              exact.smd = x$exact.smd,
+              model.glmm = x$model.glmm,
+              pscale = pscale,
+              irscale = irscale,
+              irunit = irunit,
+              null.effect = if (null.given) null.effect else 0,
+              big.mark = big.mark,
+              digits = digits, digits.tau = digits.tau,
+              text.tau = text.tau, text.tau2 = text.tau2,
+              method.miss = x$method.miss,
+              IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c,
+              three.level =
+                if (is.null(x$three.level)) FALSE else x$three.level)
   }
   else if (is.na(k)) {
     ## Do nothing
@@ -1380,17 +1509,17 @@ print.summary.meta <- function(x,
           cat(paste0("Number of studies combined:   k.MH = ", x$k.MH,
                      " (", text.fixed.br, "), k = ",
                      format(k, big.mark = big.mark),
-                     " (", text.random.br, ")\n\n"))
+                     " (", text.random.br, ")\n"))
         else {
           if (k.study != k) {
             cat(paste0("Number of studies combined: n = ",
                        format(x$k.study, big.mark = big.mark), "\n"))
             cat(paste0("Number of estimates combined: k = ",
-                       format(k, big.mark = big.mark), "\n\n"))
+                       format(k, big.mark = big.mark), "\n"))
           }
           else
             cat(paste0("Number of studies combined: k = ",
-                       format(k, big.mark = big.mark), "\n\n"))
+                       format(k, big.mark = big.mark), "\n"))
         }
       }
       else
@@ -1398,7 +1527,17 @@ print.summary.meta <- function(x,
                    format(k, big.mark = big.mark),
                    " (with ",
                    format(x$k0, big.mark = big.mark),
-                   " added studies)\n\n"))
+                   " added studies)\n"))
+      ##
+      if (sel.n)
+        catobsev(x$n, type = "n")
+      else
+        catobsev(x$n.e, x$n.c, type = "n")
+      ##
+      if (sel.ev)
+        catobsev(x$event, type = "e", addrow = TRUE)
+      else
+        catobsev(x$event.e, x$event.c, type = "e", addrow = TRUE)      
       ##
       res <- cbind(formatN(c(if (comb.fixed) TE.fixed,
                              if (comb.random) TE.random,
@@ -1472,22 +1611,42 @@ print.summary.meta <- function(x,
         prmatrix(Qdata, quote = FALSE, right = TRUE, ...)
       }
     }
-    else
-      cat(paste0("Number of studies: k = ", k, "\n"))
+    else {
+      if (k.study != k) {
+        cat(paste0("Number of studies: ",
+                   if (inherits(x, "is.netpairwise")) "k" else "n", " = ",
+                   format(x$k.study, big.mark = big.mark), "\n"))
+        cat(paste0("Number of ",
+                   if (inherits(x, "is.netpairwise"))
+                     "pairwise comparisons: m = " else "estimates: k = ",
+                   format(k, big.mark = big.mark), "\n"))
+      }
+      else
+        cat(paste0("Number of studies: k = ",
+                   format(k, big.mark = big.mark), "\n"))
+      ##
+      if (sel.n)
+        catobsev(x$n, type = "n")
+      else
+        catobsev(x$n.e, x$n.c, type = "n")
+      ##
+      if (sel.ev)
+        catobsev(x$event, type = "e")
+      else
+        catobsev(x$event.e, x$event.c, type = "e")
+    }
     ##
     ## Print information on heterogeneity
     ##
     if (overall.hetstat) {
       cat("\nQuantifying heterogeneity:\n")
       ##
-      print.tau2 <- TRUE
       print.tau2.ci <-
         print.tau2 & all(!(is.na(x$tau2$lower) | is.na(x$tau2$upper)))
       if (print.tau2.ci &&
           (all(x$tau2$lower == 0) & all(x$tau2$upper == 0)))
         print.tau2.ci <- FALSE
       ##
-      print.tau <- TRUE
       print.tau.ci <-
         print.tau & all(!(is.na(x$tau$lower) | is.na(x$tau$upper)))
       if (print.tau.ci &&
@@ -1597,6 +1756,13 @@ print.summary.meta <- function(x,
     ## Print information for subgroup analysis
     ##
     if (by) {
+      if (inherits(x, "metabind"))
+        anaunit <- "meta-analyses"
+      else if (inherits(x, "is.netpairwise"))
+        anaunit <- "pairwise comparisons"
+      else
+        anaunit <- "subgroups"
+      ##
       if (comb.fixed) {
         ##
         ## Subgroup analysis based on fixed effect model
@@ -1636,20 +1802,22 @@ print.summary.meta <- function(x,
                          big.mark = big.mark)
         ##
         dimnames(Tdata) <- list(bylab,
-                                c("  k", sm.lab, x$ci.lab,
+                                c(if (inherits(x, "is.netpairwise"))
+                                    "  m" else "  k",
+                                  sm.lab, x$ci.lab,
                                   "Q",
                                   if (print.I2) text.I2,
                                   if (print.Rb) text.Rb,
                                   if (!comb.random) text.tau2,
                                   if (!comb.random) text.tau)
                                 )
-        if (inherits(x, "metabind"))
-          cat(paste0("\nResults for meta-analyses (", text.fixed.br, "):\n"))
-        else
-          cat(paste0("\nResults for subgroups (", text.fixed.br, "):\n"))
+        ##
+        cat(paste0("\nResults for ", anaunit, " (",
+                   text.fixed.br, "):\n"))
+        ##
         prmatrix(Tdata, quote = FALSE, right = TRUE, ...)
         ##
-        if (!inherits(x, "metabind")) {
+        if (test.subgroup & !inherits(x, "metabind")) {
           cat(paste0("\nTest for subgroup differences (",
                      text.fixed.br, "):\n"))
           if (x$method == "MH") {
@@ -1721,21 +1889,20 @@ print.summary.meta <- function(x,
                          big.mark = big.mark)
         ##
         dimnames(Tdata) <- list(bylab,
-                                c("  k", sm.lab, x$ci.lab,
+                                c(if (inherits(x, "is.netpairwise"))
+                                    "  m" else "  k",
+                                  sm.lab, x$ci.lab,
                                   text.tau2, text.tau,
                                   if (!comb.fixed) "Q",
                                   if (!comb.fixed & print.I2) text.I2,
                                   if (!comb.fixed & print.Rb) text.Rb)
                                 )
         ##
-        if (inherits(x, "metabind"))
-          cat(paste0("\nResults for meta-analyses (", text.random.br, "):\n"))
-        else
-          cat(paste0("\nResults for subgroups (", text.random.br, "):\n"))
+        cat(paste0("\nResults for ", anaunit, " (", text.random.br, "):\n"))
         ##
         prmatrix(Tdata, quote = FALSE, right = TRUE, ...)
         ##
-        if (!inherits(x, "metabind")) {
+        if (test.subgroup & !inherits(x, "metabind")) {
           cat(paste0("\nTest for subgroup differences (",
                      text.random.br, "):\n"))
           if (is.na(Q.w.random)) {
@@ -1788,7 +1955,7 @@ print.summary.meta <- function(x,
     ##
     ## Print information on summary method:
     ##
-    if (comb.fixed | comb.random | prediction)
+    if (details.methods & (comb.fixed | comb.random | prediction))
       catmeth(class = class(x),
               method =
                 if ((overall & (comb.fixed | comb.random)) |
@@ -1833,7 +2000,8 @@ print.summary.meta <- function(x,
               text.tau = text.tau, text.tau2 = text.tau2,
               method.miss = x$method.miss,
               IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c,
-              threelevel = if (is.null(x$k.study)) FALSE else x$k != x$k.study)
+              three.level =
+                if (is.null(x$three.level)) FALSE else x$three.level)
   }
   
   

@@ -68,6 +68,7 @@ metagen(
   bylab,
   print.byvar = gs("print.byvar"),
   byseparator = gs("byseparator"),
+  test.subgroup = gs("test.subgroup"),
   keepdata = gs("keepdata"),
   warn = gs("warn"),
   control = NULL
@@ -279,6 +280,9 @@ grouping variable should be printed in front of the group labels.}
 \item{byseparator}{A character string defining the separator
 between label and levels of grouping variable.}
 
+\item{test.subgroup}{A logical value indicating whether to print
+results of test for subgroup differences.}
+
 \item{keepdata}{A logical indicating whether original data (set)
 should be kept in meta object.}
 
@@ -441,6 +445,11 @@ object is a list containing the following components:
 Fixed effect and random effects meta-analysis based on estimates
 (e.g. log hazard ratios) and their standard errors. The inverse
 variance method is used for pooling.
+
+Three-level random effects meta-analysis (Van den Noortgate et al.,
+2013) is available by internally calling
+\code{\link[metafor]{rma.mv}} function from R package
+\bold{metafor} (Viechtbauer, 2010).
 }
 \details{
 This function provides the \emph{generic inverse variance method}
@@ -459,6 +468,16 @@ function.
 
 Furthermore, R function \code{\link{update.meta}} can be used to
 rerun a meta-analysis with different settings.
+
+\subsection{Three-level random effects meta-analysis}{
+
+A three-level random effects meta-analysis model (Van den Noortgate
+et al., 2013) is utilized if argument \code{id} is used and at
+least one study provides more than one estimate. Internally,
+\code{\link[metafor]{rma.mv}} is called to conduct the analysis and
+\code{\link[metafor]{weights.rma.mv}} with argument \code{type =
+"rowsum"} is used to calculate random effects weights.
+}
 
 \subsection{Approximate treatment estimates}{
 

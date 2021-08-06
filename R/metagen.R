@@ -5,6 +5,11 @@
 #' Fixed effect and random effects meta-analysis based on estimates
 #' (e.g. log hazard ratios) and their standard errors. The inverse
 #' variance method is used for pooling.
+#'
+#' Three-level random effects meta-analysis (Van den Noortgate et al.,
+#' 2013) is available by internally calling
+#' \code{\link[metafor]{rma.mv}} function from R package
+#' \bold{metafor} (Viechtbauer, 2010).
 #' 
 #' @param TE Estimate of treatment effect, e.g., log hazard ratio or
 #'   risk difference.
@@ -148,6 +153,8 @@
 #'   grouping variable should be printed in front of the group labels.
 #' @param byseparator A character string defining the separator
 #'   between label and levels of grouping variable.
+#' @param test.subgroup A logical value indicating whether to print
+#'   results of test for subgroup differences.
 #' @param keepdata A logical indicating whether original data (set)
 #'   should be kept in meta object.
 #' @param warn A logical indicating whether warnings should be printed
@@ -175,6 +182,16 @@
 #' 
 #' Furthermore, R function \code{\link{update.meta}} can be used to
 #' rerun a meta-analysis with different settings.
+#' 
+#' \subsection{Three-level random effects meta-analysis}{
+#' 
+#' A three-level random effects meta-analysis model (Van den Noortgate
+#' et al., 2013) is utilized if argument \code{id} is used and at
+#' least one study provides more than one estimate. Internally,
+#' \code{\link[metafor]{rma.mv}} is called to conduct the analysis and
+#' \code{\link[metafor]{weights.rma.mv}} with argument \code{type =
+#' "rowsum"} is used to calculate random effects weights.
+#' }
 #' 
 #' \subsection{Approximate treatment estimates}{
 #' 
@@ -944,6 +961,7 @@ metagen <- function(TE, seTE, studlab,
                     ##
                     byvar, bylab, print.byvar = gs("print.byvar"),
                     byseparator = gs("byseparator"),
+                    test.subgroup = gs("test.subgroup"),
                     ##
                     keepdata = gs("keepdata"),
                     warn = gs("warn"),
@@ -1175,8 +1193,10 @@ metagen <- function(TE, seTE, studlab,
   chklength(seTE, k.All, arg)
   chklength(studlab, k.All, arg)
   ##
-  if (by)
+  if (by) {
     chklength(byvar, k.All, arg)
+    chklogical(test.subgroup)
+  }
   ##
   ## Additional checks
   ##
@@ -1305,8 +1325,11 @@ metagen <- function(TE, seTE, studlab,
     if (!missing.exclude)
       data$.exclude <- exclude
     ##
-    if (!missing.id)
+    if (!missing.id) {
       data$.id <- id
+      idx <- seq_along(id)
+      data$.idx <- idx
+    }
     ##
     if (!missing.pval)
       data$.pval <- pval
@@ -1355,8 +1378,10 @@ metagen <- function(TE, seTE, studlab,
     if (!is.null(n.c))
       n.c <- n.c[subset]
     ##
-    if (!missing.id)
+    if (!missing.id) {
       id <- id[subset]
+      idx <- idx[subset]
+    }
     ##
     if (!missing.pval)
       pval <- pval[subset]
@@ -1408,33 +1433,25 @@ metagen <- function(TE, seTE, studlab,
   ## No three-level meta-analysis conducted if variable 'id' contains
   ## different values for each estimate
   ##
-  multi.level <- FALSE
+  three.level <- FALSE
   ##
   sel.ni <- !is.infinite(TE) & !is.infinite(seTE)
   if (!missing.id && length(unique(id[sel.ni])) != length(id[sel.ni]))
-    multi.level <- TRUE
+    three.level <- TRUE
   ##
-  if (!multi.level & method.tau.ci == "PL") {
+  if (!three.level & method.tau.ci == "PL") {
     if (method.tau == "DL")
       method.tau.ci <- "J"
     else
       method.tau.ci <- "QP"
   }
   ##
-  if (multi.level) {
+  if (three.level) {
     if (!(method.tau %in% c("REML", "ML"))) {
       if (!missing.method.tau)
         warning("For three-level model, argument 'method.tau' set to \"REML\".",
                 call. = FALSE)
       method.tau <- "REML"
-    }
-    ##
-    if (by & !tau.common) {
-      if (!missing(tau.common))
-        warning("For three-level model, argument 'tau.common' set to ",
-                "\"TRUE\".",
-                call. = FALSE)
-      tau.common <- TRUE
     }
   }
   ##
@@ -1818,12 +1835,12 @@ metagen <- function(TE, seTE, studlab,
     ##
     ## Different calculations for three-level models
     ##
-    if (!multi.level) {
+    if (!three.level) {
       ##
       ## Classic meta-analysis
       ##
       if (is.null(tau.preset))
-        tau2.calc <- if (is.na(hc$tau2)) 0 else hc$tau2
+        tau2.calc <- if (is.na(sum(hc$tau2))) 0 else sum(hc$tau2)
       else {
         tau2.calc <- tau.preset^2
         ##
@@ -1863,8 +1880,6 @@ metagen <- function(TE, seTE, studlab,
       ##
       ## Three-level meta-analysis
       ##
-      id.TE <- seq_along(TE)
-      ##
       ## No fixed effect method for three-level model
       ##
       if (comb.fixed) {
@@ -1881,60 +1896,70 @@ metagen <- function(TE, seTE, studlab,
       ##
       ## Conduct three-level meta-analysis
       ##
-      if (by & !tau.common) {
-        if (!missing(tau.common))
-          warning("Argument 'tau.common' set to TRUE for three-level model.",
-                  call. = FALSE)
-        tau.common <- TRUE
-      }
-      ##
       m4 <- rma.mv(TE, seTE^2,
-                   method = method.tau,
-                   random = ~ 1 | id / id.TE,
+                   method = method.tau, test = ifelse(hakn, "t", "z"),
+                   random = ~ 1 | id / idx,
                    control = control)
       ##
-      w.random <- rep_len(NA, length(w.fixed))
+      w.random <- weights(m4, type = "rowsum")
       ##
       TE.random <- m4$b
       seTE.random <- m4$se
       ##
       tau2.calc <- sum(m4$tau2)
+      ##
+      ## Confidence interval for three-level model
+      ##
+      ci.r <- list(statistic = m4$zval, p = m4$pval,
+                   lower = m4$ci.lb, upper = m4$ci.ub)
+      df.hakn <- k - 1
+      ##
+      ## No adhoc method for three-level models
+      ##
+      if (!missing(adhoc.hakn) && adhoc.hakn != "") {
+        warning("Ad hoc variance correction not implemented ",
+                "for three-level model.",
+                call. = FALSE)
+        adhoc.hakn <- ""
+      }
     }
     ##
-    ## Hartung-Knapp adjustment
+    ## Hartung-Knapp adjustment (not three-level model)
     ##
-    if (hakn) {
-      alpha <- (1 - level.comb) / 2
+    if (hakn & !three.level) {
+      ## alpha <- (1 - level.comb) / 2
       df.hakn <- k - 1
       q <- 1 / (k - 1) * sum(w.random * (TE - TE.random)^2, na.rm = TRUE)
       ##
+      seTE.random.classic <- seTE.random
       seTE.random <- sqrt(q / sum(w.random))
       ##
       if (adhoc.hakn == "se") {
         ##
-        ## Variance correction if SE_HK < SE_notHK (Knapp and Hartung, 2003)
+        ## Variance correction if SE_HK < SE_notHK (Knapp and Hartung, 2003),
+        ## i.e., if q < 1
         ##
         if (q < 1) {
           seTE.random.hakn.orig <- seTE.random
-          seTE.random <- sqrt(1 /  sum(w.random))
+          seTE.random <- seTE.random.classic
         }
       }
       else if (adhoc.hakn == "ci") {
         ##
         ## Use wider confidence interval, i.e., confidence interval
-        ## from classic random effects meta-analysis if HK CI is
+        ## from classic random effects meta-analysis if CI_HK is
         ## smaller
         ## (Wiksten et al., 2016; Jackson et al., 2017, hybrid 2)
         ##
         ci.hk <- ci(TE.random, seTE.random, level = level.comb, df = df.hakn)
-        ci.re <- ci(TE.random, seTE.random, level = level.comb)
+        ci.re <- ci(TE.random, seTE.random.classic, level = level.comb)
         ##
         width.hk <- ci.hk$upper - ci.hk$lower
         width.re <- ci.re$upper - ci.re$lower
         ##
         if (width.hk < width.re) {
           seTE.random.hakn.orig <- seTE.random
-          seTE.random <- sqrt(1 /  sum(w.random))
+          seTE.random <- seTE.random.classic
           df.hakn <- NA
         }
       }
@@ -1953,14 +1978,14 @@ metagen <- function(TE, seTE, studlab,
         ##
         if (width.hk < width.dl) {
           seTE.random.hakn.orig <- seTE.random
-          seTE.random <- sqrt(max(q, 1) /  sum(w.random))
+          seTE.random <- seTE.random.classic
         }
       }
       ##
       ci.r <- ci(TE.random, seTE.random, level = level.comb, df = df.hakn,
                  null.effect = null.effect)
     }
-    else
+    else if (!three.level)
       ci.r <- ci(TE.random, seTE.random, level = level.comb,
                  null.effect = null.effect)
     ##
@@ -2083,11 +2108,17 @@ metagen <- function(TE, seTE, studlab,
               label.c = label.c,
               label.left = label.left,
               label.right = label.right,
+              ##
               data = if (keepdata) data else NULL,
               subset = if (keepdata) subset else NULL,
               exclude = if (!missing.exclude) exclude else NULL,
+              ##
               print.byvar = print.byvar,
               byseparator = byseparator,
+              test.subgroup = test.subgroup,
+              ##
+              three.level = three.level,
+              ##
               warn = warn,
               call = match.call(),
               backtransf = backtransf,
@@ -2108,8 +2139,13 @@ metagen <- function(TE, seTE, studlab,
       res <- c(res, subgroup(res))
     else if (!is.null(tau.preset))
       res <- c(res, subgroup(res, tau.preset))
-    else
-      res <- c(res, subgroup(res, hcc$tau.resid))
+    else {
+      if (three.level)
+        res <- c(res, subgroup(res, NULL,
+                               factor(res$byvar, bylevs(res$byvar))))
+      else
+        res <- c(res, subgroup(res, hcc$tau.resid))
+    }
     ##
     if (!tau.common || !is.null(tau.preset)) {
       res$tau2.resid <- res$lower.tau2.resid <- res$upper.tau2.resid <- NA

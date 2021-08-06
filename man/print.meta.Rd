@@ -28,12 +28,14 @@
   digits.prop = gs("digits.prop"),
   digits.weight = gs("digits.weight"),
   scientific.pval = gs("scientific.pval"),
-  big.mark = gs("big.mark"),
   zero.pval = gs("zero.pval"),
   JAMA.pval = gs("JAMA.pval"),
+  big.mark = gs("big.mark"),
   text.tau2 = gs("text.tau2"),
   text.tau = gs("text.tau"),
   text.I2 = gs("text.I2"),
+  truncate,
+  text.truncate = "*** Output truncated ***",
   warn.backtransf = FALSE,
   ...
 )
@@ -119,14 +121,14 @@ weights, see \code{print.default}.}
 be printed in scientific notation, e.g., 1.2345e-01 instead of
 0.12345.}
 
-\item{big.mark}{A character used as thousands separator.}
-
 \item{zero.pval}{A logical specifying whether p-values should be
 printed with a leading zero.}
 
 \item{JAMA.pval}{A logical specifying whether p-values for test of
 overall effect should be printed according to JAMA reporting
 standards.}
+
+\item{big.mark}{A character used as thousands separator.}
 
 \item{text.tau2}{Text printed to identify between-study variance
 \eqn{\tau^2}.}
@@ -136,6 +138,13 @@ root of the between-study variance \eqn{\tau^2}.}
 
 \item{text.I2}{Text printed to identify heterogeneity statistic
 I\eqn{^2}.}
+
+\item{truncate}{An optional vector used to truncate the printout of
+results for individual studies (must be a logical vector of same
+length as \code{x$TE} or contain numerical values).}
+
+\item{text.truncate}{A character string printed if study results
+were truncated from the printout.}
 
 \item{warn.backtransf}{A logical indicating whether a warning
 should be printed if backtransformed proportions and rates are

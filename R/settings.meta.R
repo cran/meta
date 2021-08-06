@@ -35,18 +35,23 @@
 #' The first command can be used to reproduce meta-analyses from
 #' Cochrane reviews conducted with \emph{Review Manager 5} (RevMan 5,
 #' \url{https://training.cochrane.org/online-learning/core-software-cochrane-reviews/revman})
-#' and specifies to use a RevMan 5 layout in forest plots. The second
-#' command can be used to generate forest plots following instructions
-#' for authors of the \emph{Journal of the American Medical
-#' Association}
-#' (\url{https://jamanetwork.com/journals/jama/pages/instructions-for-authors/}). The
-#' next commands implement the recommendations of the Institute for
-#' Quality and Efficiency in Health Care, Germany (IQWiG) accordinging
-#' to General Methods 5 and 6, respectively
-#' (\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}). The
-#' last setting can be used to print p-values in scientific notation
-#' and to suppress the calculation of confidence intervals for the
-#' between-study variance.
+#' and specifies to use a RevMan 5 layout in forest plots.
+#'
+#' The second command can be used to generate forest plots following
+#' instructions for authors of the \emph{Journal of the American
+#' Medical Association}
+#' (\url{https://jamanetwork.com/journals/jama/pages/instructions-for-authors/}).Study
+#' labels according to JAMA guidelines can be generated using
+#' \code{\link{JAMAlabels}}.
+#'
+#' The next commands implement the recommendations of the Institute
+#' for Quality and Efficiency in Health Care, Germany (IQWiG)
+#' accordinging to General Methods 5 and 6, respectively
+#' (\url{https://www.iqwig.de/en/about-us/methods/methods-paper/}).
+#'
+#' The last setting can be used to print p-values in scientific
+#' notation and to suppress the calculation of confidence intervals
+#' for the between-study variance.
 #' 
 #' RevMan 5 settings, in detail:
 #' \tabular{lll}{
@@ -122,7 +127,8 @@
 #' 
 #' @author Guido Schwarzer \email{sc@@imbi.uni-freiburg.de}
 #' 
-#' @seealso \code{\link{gs}}, \code{\link{forest.meta}}
+#' @seealso \code{\link{gs}}, \code{\link{forest.meta}},
+#'   \code{\link{JAMAlabels}}
 #' 
 #' @examples
 #' # Get listing of current settings
@@ -396,6 +402,7 @@ settings.meta <- function(...) {
     catarg("tau.common     ")
     catarg("prediction     ")
     catarg("level.predict  ")
+    catarg("test.subgroup  ")
     catarg("method.bias    ")
     catarg("text.fixed     ")
     catarg("text.random    ")
@@ -435,7 +442,8 @@ settings.meta <- function(...) {
     catarg("text.I2        ")
     catarg("text.Rb        ")
     ##
-    cat("\n* Default summary measure (argument 'sm' in corresponding function) *\n")
+    cat(paste("\n* Default summary measure (argument 'sm' in",
+               "corresponding function) *\n"))
     cat("- metabin():  ")
     catarg("smbin ", newline = FALSE)
     cat("- metacont(): ")
@@ -451,7 +459,8 @@ settings.meta <- function(...) {
     cat("- metarate(): ")
     catarg("smrate", newline = FALSE)
     ##
-    cat("\n* Additional settings for metabin(), metainc(), metaprop(), and metarate() *\n")
+    cat(paste("\n* Additional settings for metabin(), metainc(),",
+              "metaprop(), and metarate() *\n"))
     catarg("incr   ")
     catarg("allincr")
     catarg("addincr")
@@ -484,7 +493,6 @@ settings.meta <- function(...) {
     cat("\n* Settings for forest.meta() *\n")
     catarg("layout              ")
     catarg("test.overall        ")
-    catarg("test.subgroup       ")
     catarg("test.effect.subgroup")
     catarg("digits.forest       ",
            end = "\n  (argument 'digits' in forest.meta())")
@@ -503,6 +511,7 @@ settings.meta <- function(...) {
     setOption("tau.common", FALSE)
     setOption("prediction", FALSE)
     setOption("level.predict", 0.95)
+    setOption("test.subgroup", TRUE)
     setOption("method.bias", "Egger")
     setOption("text.fixed", "Fixed effect model")
     setOption("text.random", "Random effects model")
@@ -578,7 +587,6 @@ settings.meta <- function(...) {
     ##
     setOption("layout", "meta")
     setOption("test.overall", FALSE)
-    setOption("test.subgroup", FALSE)
     setOption("test.effect.subgroup", FALSE)
     setOption("digits.forest", 2)
   }

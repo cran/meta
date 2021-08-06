@@ -660,6 +660,8 @@
 #' respectively. The value \code{NA} can be used to specify columns
 #' which should use default labels (see Examples).
 #' 
+#' \subsection{Forest plots in RevMan5 layout}{
+#' 
 #' If argument \code{layout = "RevMan5"} (and arguments \code{leftcols} and
 #' \code{rightcols} are \code{NULL}), the layout for forest plots used for
 #' Cochrane reviews (which are generated with Review Manager 5,
@@ -680,7 +682,10 @@
 #' \item Label "Study or Subgroup" is printed for meta-analysis with
 #'   subgroups (\code{leftlabs})
 #' }
+#' }
 #'
+#' \subsection{Forest plots in JAMA layout}{
+#' 
 #' If argument \code{layout = "JAMA"} (and arguments \code{leftcols} and
 #' \code{rightcols} are \code{NULL}), instructions for authors of the
 #' \emph{Journal of the American Medical Association}, see
@@ -704,7 +709,12 @@
 #' \item P-values are rounded to three digits (for 0.001 < p \eqn{\le}
 #'   0.01) or two digits (p > 0.01) (\code{JAMA.pval})
 #' }
+#' Study labels according to JAMA guidelines can be generated using
+#' \code{\link{JAMAlabels}}.
+#' }
 #'
+#' \subsection{Forest plots showing results of subgroups}{
+#' 
 #' The following changes are conducted if argument
 #' \code{layout = "subgroup"} (and arguments \code{leftcols} and
 #' \code{rightcols} are \code{NULL}) and a subgroup analysis was
@@ -717,6 +727,7 @@
 #' \item Label "Subgroup" is printed instead of "Study"
 #'   (\code{leftlabs})
 #' }
+#' } 
 #' 
 #' If arguments \code{lab.e} and \code{lab.c} are \code{NULL},
 #' "Experimental" and "Control" are used as labels for experimental
@@ -763,7 +774,7 @@
 #' 
 #' @seealso \code{\link{metabin}}, \code{\link{metacont}},
 #'   \code{\link{metagen}}, \code{\link{forest.metabind}},
-#'   \code{\link{settings.meta}}
+#'   \code{\link{settings.meta}}, \code{\link{JAMAlabels}}
 #' 
 #' @references
 #' Guddat C, Grouven U, Bender R, Skipka G (2012):
@@ -925,9 +936,7 @@
 #' # Print results of test for subgroup differences (random effects
 #' # model)
 #' #
-#' forest(m2,
-#'        sortvar = -TE, comb.fixed = FALSE,
-#'        test.subgroup.random = TRUE)
+#' forest(m2, sortvar = -TE, comb.fixed = FALSE)
 #' 
 #' # Print only subgroup results
 #' #
@@ -1075,9 +1084,9 @@ forest.meta <- function(x,
                         ##
                         print.stat = TRUE,
                         ##
-                        test.subgroup,
-                        test.subgroup.fixed,
-                        test.subgroup.random,
+                        test.subgroup = x$test.subgroup,
+                        test.subgroup.fixed = test.subgroup & comb.fixed,
+                        test.subgroup.random = test.subgroup & comb.random,
                         print.Q.subgroup = TRUE,
                         label.test.subgroup.fixed,
                         label.test.subgroup.random,
@@ -1483,10 +1492,12 @@ forest.meta <- function(x,
   ##
   chklogical(test.overall.fixed)
   chklogical(test.overall.random)
-  if (!missing(test.subgroup.fixed))
-    chklogical(test.subgroup.fixed)
-  if (!missing(test.subgroup.random))
-    chklogical(test.subgroup.random)
+  ##
+  test.subgroup <- replaceNULL(test.subgroup, TRUE)
+  chklogical(test.subgroup)
+  chklogical(test.subgroup.fixed)
+  chklogical(test.subgroup.random)
+  ##
   chklogical(print.Q.subgroup)
   if (!missing(test.effect.subgroup.fixed))
     chklogical(test.effect.subgroup.fixed)
@@ -1911,21 +1922,6 @@ forest.meta <- function(x,
     test.effect.subgroup.random <- FALSE
   }
   else {
-    if (!missing(test.subgroup)) {
-      if (missing(test.subgroup.fixed))
-        test.subgroup.fixed <- comb.fixed & test.subgroup
-      ##
-      if (missing(test.subgroup.random))
-        test.subgroup.random <- comb.random & test.subgroup
-    }
-    else {
-      if (missing(test.subgroup.fixed))
-        test.subgroup.fixed <- comb.fixed & gs("test.subgroup")
-      ##
-      if (missing(test.subgroup.random))
-        test.subgroup.random <- comb.random & gs("test.subgroup")
-    }
-    ##
     if (!missing(test.effect.subgroup)) {
       if (missing(test.effect.subgroup.fixed))
         test.effect.subgroup.fixed <- comb.fixed & test.effect.subgroup

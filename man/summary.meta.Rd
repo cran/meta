@@ -12,6 +12,7 @@
   prediction = object$prediction,
   overall = object$overall,
   overall.hetstat = object$overall.hetstat,
+  test.subgroup = object$test.subgroup,
   backtransf = object$backtransf,
   pscale = object$pscale,
   irscale = object$irscale,
@@ -32,6 +33,7 @@
   prediction = x$prediction,
   overall = x$overall,
   overall.hetstat = x$overall.hetstat,
+  test.subgroup = x$test.subgroup,
   print.byvar = x$print.byvar,
   byseparator = x$byseparator,
   print.CMH = x$print.CMH,
@@ -54,6 +56,8 @@
   big.mark = gs("big.mark"),
   zero.pval = gs("zero.pval"),
   JAMA.pval = gs("JAMA.pval"),
+  print.tau2 = TRUE,
+  print.tau = TRUE,
   print.I2 = gs("print.I2"),
   print.H = gs("print.H"),
   print.Rb = gs("print.Rb"),
@@ -61,6 +65,7 @@
   text.tau = gs("text.tau"),
   text.I2 = gs("text.I2"),
   text.Rb = gs("text.Rb"),
+  details.methods = TRUE,
   digits.zval = digits.stat,
   warn.backtransf = FALSE,
   ...
@@ -87,6 +92,9 @@ heterogeneity measures for overall treatment comparisons. This
 argument is useful in a meta-analysis with subgroups if
 heterogeneity statistics should only be printed on subgroup
 level.}
+
+\item{test.subgroup}{A logical value indicating whether to print
+results of test for subgroup differences.}
 
 \item{backtransf}{A logical indicating whether printed results
 should be back transformed. If \code{backtransf=TRUE}, results
@@ -155,10 +163,11 @@ p-value of heterogeneity test, see \code{print.default}.}
 heterogeneity statistic Q, see \code{print.default}.}
 
 \item{digits.tau2}{Minimal number of significant digits for
-between-study variance, see \code{print.default}.}
+between-study variance \eqn{\tau^2}, see \code{print.default}.}
 
-\item{digits.tau}{Minimal number of significant digits for square
-root of between-study variance, see \code{print.default}.}
+\item{digits.tau}{Minimal number of significant digits for
+\eqn{\tau}, the square root of the between-study variance
+\eqn{\tau^2}.}
 
 \item{digits.H}{Minimal number of significant digits for H
 statistic, see \code{print.default}.}
@@ -178,6 +187,13 @@ printed with a leading zero.}
 \item{JAMA.pval}{A logical specifying whether p-values for test of
 overall effect should be printed according to JAMA reporting
 standards.}
+
+\item{print.tau2}{A logical specifying whether between-study
+variance \eqn{\tau^2} should be printed.}
+
+\item{print.tau}{A logical specifying whether \eqn{\tau}, the
+square root of the between-study variance \eqn{\tau^2}, should be
+printed.}
 
 \item{print.I2}{A logical specifying whether heterogeneity
 statistic I\eqn{^2} should be printed.}
@@ -200,7 +216,11 @@ I\eqn{^2}.}
 \item{text.Rb}{Text printed to identify heterogeneity statistic
 R\eqn{_b}.}
 
-\item{digits.zval}{Deprecated argument (replaced by \code{digits.stat}).}
+\item{details.methods}{A logical specifying whether details on
+statistical methods should be printed.}
+
+\item{digits.zval}{Deprecated argument (replaced by
+\code{digits.stat}).}
 
 \item{warn.backtransf}{A logical indicating whether a warning
 should be printed if backtransformed proportions and rates are

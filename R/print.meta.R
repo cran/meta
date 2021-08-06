@@ -61,18 +61,23 @@
 #' @param scientific.pval A logical specifying whether p-values should
 #'   be printed in scientific notation, e.g., 1.2345e-01 instead of
 #'   0.12345.
-#' @param big.mark A character used as thousands separator.
 #' @param zero.pval A logical specifying whether p-values should be
 #'   printed with a leading zero.
 #' @param JAMA.pval A logical specifying whether p-values for test of
 #'   overall effect should be printed according to JAMA reporting
 #'   standards.
+#' @param big.mark A character used as thousands separator.
 #' @param text.tau2 Text printed to identify between-study variance
 #'   \eqn{\tau^2}.
 #' @param text.tau Text printed to identify \eqn{\tau}, the square
 #'   root of the between-study variance \eqn{\tau^2}.
 #' @param text.I2 Text printed to identify heterogeneity statistic
 #'   I\eqn{^2}.
+#' @param truncate An optional vector used to truncate the printout of
+#'   results for individual studies (must be a logical vector of same
+#'   length as \code{x$TE} or contain numerical values).
+#' @param text.truncate A character string printed if study results
+#'   were truncated from the printout.
 #' @param warn.backtransf A logical indicating whether a warning
 #'   should be printed if backtransformed proportions and rates are
 #'   below 0 and backtransformed proportions are above 1.
@@ -167,13 +172,16 @@ print.meta <- function(x,
                        digits.weight = gs("digits.weight"),
                        ##
                        scientific.pval = gs("scientific.pval"),
-                       big.mark = gs("big.mark"),
                        zero.pval = gs("zero.pval"),
                        JAMA.pval = gs("JAMA.pval"),
+                       ##
+                       big.mark = gs("big.mark"),
                        ##
                        text.tau2 = gs("text.tau2"),
                        text.tau = gs("text.tau"),
                        text.I2 = gs("text.I2"),
+                       ##
+                       truncate, text.truncate = "*** Output truncated ***",
                        ##
                        warn.backtransf = FALSE,
                        ...
@@ -272,6 +280,46 @@ print.meta <- function(x,
   tt <- text.tau
   ti <- text.I2
   ##
+  ## Catch 'truncate' from meta-analysis object:
+  ##
+  missing.truncate <- missing(truncate)
+  if (!missing.truncate) {
+    truncate <- eval(mf[[match("truncate", names(mf))]],
+                     x, enclos = sys.frame(sys.parent()))
+    ##
+    if (is.null(truncate))
+      truncate <- eval(mf[[match("truncate", names(mf))]],
+                       x$data, enclos = sys.frame(sys.parent()))
+    ##
+    if (length(truncate) > k.all)
+      stop("Length of argument 'truncate' is too long.",
+           call. = FALSE)
+    else if (length(truncate) < k.all) {
+      if (is.numeric(truncate)) {
+        if (any(is.na(truncate)) | max(truncate) > k.all | min(truncate) < 0)
+          stop("Numeric values in argument 'truncate' must be between 1 and ",
+               k.all, ".",
+               call. = FALSE)
+        truncate2 <- rep(FALSE, k.all)
+        truncate2[truncate] <- TRUE
+        truncate <- truncate2
+      }
+      else if (is.character(truncate)) {
+        if (any(!(truncate %in% x$studlab)))
+          stop("At least one value of argument 'truncate' does not ",
+               "match a study label.",
+               call. = FALSE)
+        truncate2 <- rep(FALSE, k.all)
+        truncate2[x$studlab %in% truncate] <- TRUE
+        truncate <- truncate2
+      }
+      else
+        stop("Argument 'truncate' must contain integers or study labels if ",
+             "length differs from number of treatment effects.",
+             call. = FALSE)
+    }
+  }
+  ##
   ## Additional arguments / checks for metacont objects
   ##
   cl <- paste0("update.meta() or ", class(x)[1], "()")
@@ -340,7 +388,7 @@ print.meta <- function(x,
     text.w.random <- paste0("%W(", x$text.w.random, ")")
   ##
   by <- !is.null(x$bylab)
-  
+  id <- !is.null(x$three.level) && x$three.level
   
   ##
   ##
@@ -490,11 +538,23 @@ print.meta <- function(x,
                                   "NA", big.mark = big.mark))
     }
     ##
+    if (id)
+      res <- cbind(res, id = as.character(x$id))
+    ##
     if (by)
       res <- cbind(res, byvar = as.character(x$byvar))
     ##
     dimnames(res)[[1]] <- x$studlab
-    prmatrix(res[order(sortvar), ], quote = FALSE, right = TRUE)
+    ##
+    if (!missing.truncate) {
+      sortvar <- sortvar[truncate]
+      res <- res[truncate, , drop = FALSE]
+    }
+    ##
+    prmatrix(res[order(sortvar), , drop = FALSE],
+             quote = FALSE, right = TRUE)
+    if (!missing.truncate)
+      cat(text.truncate, "\n")
     cat("\n")
   }
   
@@ -645,8 +705,12 @@ print.meta <- function(x,
               IMOR.e = x$IMOR.e, IMOR.c = x$IMOR.c)
     }
     else if (!(inherits(x, "metabind") && !x$show.studies)) {
-      show.w.fixed  <- (overall | by) & comb.fixed  & !mb.glmm
-      show.w.random <- (overall | by) & comb.random & !mb.glmm
+      show.w.fixed  <-
+        (overall | by) & !mb.glmm &
+        (comb.fixed && !all(is.na(w.fixed.p)))
+      show.w.random <-
+        (overall | by) & !mb.glmm &
+        (comb.random && !all(is.na(w.random.p)))
       ##
       res <- cbind(formatN(round(TE, digits), digits, "NA",
                            big.mark = big.mark),
@@ -660,6 +724,7 @@ print.meta <- function(x,
                    if (show.w.random)
                      formatN(w.random.p, digits.weight,
                              big.mark = big.mark),
+                   if (id) as.character(x$id),
                    if (by) as.character(x$byvar),
                    if (!is.null(x$exclude))
                      ifelse(is.na(x$exclude), "",
@@ -697,6 +762,7 @@ print.meta <- function(x,
                    c(sm.lab, ci.lab,
                      if (show.w.fixed) text.w.fixed,
                      if (show.w.random) text.w.random,
+                     if (id) "id",
                      if (by) x$bylab,
                      if (!is.null(x$exclude)) "exclude"))
             prmatrix(res, quote = FALSE, right = TRUE)
@@ -711,9 +777,19 @@ print.meta <- function(x,
                c(sm.lab, ci.lab,
                  if (show.w.fixed) text.w.fixed,
                  if (show.w.random) text.w.random,
+                 if (id) "id",
                  if (by) x$bylab,
                  if (!is.null(x$exclude)) "exclude"))
-        prmatrix(res[order(sortvar),], quote = FALSE, right = TRUE)
+        ##
+        if (!missing.truncate) {
+          sortvar <- sortvar[truncate]
+          res <- res[truncate, , drop = FALSE]
+        }
+        ##
+        prmatrix(res[order(sortvar), , drop = FALSE],
+                 quote = FALSE, right = TRUE)
+        if (!missing.truncate)
+          cat(text.truncate, "\n")
       }
     }
     

@@ -1896,12 +1896,20 @@ metagen <- function(TE, seTE, studlab,
       ##
       ## Conduct three-level meta-analysis
       ##
-      m4 <- rma.mv(TE, seTE^2,
+      sel.4 <- !is.na(TE) & !is.na(seTE)
+      TE.4 <- TE[sel.4]
+      seTE.4 <- seTE[sel.4]
+      id.4 <- id[sel.4]
+      idx.4 <- idx[sel.4]
+      ##
+      m4 <- rma.mv(TE.4, seTE.4^2,
                    method = method.tau, test = ifelse(hakn, "t", "z"),
-                   random = ~ 1 | id / idx,
+                   random = ~ 1 | id.4 / idx.4,
                    control = control)
       ##
-      w.random <- weights(m4, type = "rowsum")
+      w.random <- rep_len(NA, length(TE))
+      w.random[sel.4] <- weights(m4, type = "rowsum")
+      w.random[is.na(w.random)] <- 0
       ##
       TE.random <- m4$b
       seTE.random <- m4$se
@@ -2059,7 +2067,7 @@ metagen <- function(TE, seTE, studlab,
               lower.predict = p.lower, upper.predict = p.upper,
               level.predict = level.predict,
               ##
-              k = k, k.study = k.study,
+              k = k, k.study = k.study, k.all = k.all,
               Q = hc$Q, df.Q = hc$df.Q, pval.Q = hc$pval.Q,
               tau2 = hc$tau2, se.tau2 = hc$se.tau2,
               lower.tau2 = hc$lower.tau2, upper.tau2 = hc$upper.tau2,
@@ -2135,8 +2143,14 @@ metagen <- function(TE, seTE, studlab,
     res$byvar <- byvar
     res$bylab <- bylab
     ##
-    if (!tau.common)
+    if (!tau.common) {
       res <- c(res, subgroup(res))
+      if (three.level) {
+        res$Q.b.random <- NA
+        res$df.Q.b <- NA
+        res$pval.Q.b.random <- NA
+      }
+    }
     else if (!is.null(tau.preset))
       res <- c(res, subgroup(res, tau.preset))
     else {

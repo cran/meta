@@ -1,4 +1,26 @@
-## meta, version 4.19-0 (2021-mm-dd)
+## meta, version 4.19-1 (2021-09-14)
+
+### Bug fixes
+
+* metagen():
+  - set random effects weights equal to zero for estimates with
+    standard errors equal to NA (to fix error bubble.metareg)
+
+* metareg():
+  - for three-level model, use 'test = "t"' instead of 'test = "knha"'
+    in internal call of rma.mv()
+
+### User-visible changes
+
+* summary.meta():
+  - print tau2 and tau for subgroups with single study if argument
+    'tau.common = TRUE'
+
+* bubble.metareg():
+  - show regression lines for a single categorical covariate
+
+
+## meta, version 4.19-0 (2021-08-05)
 
 ### Major changes
 
@@ -695,8 +717,7 @@
   objects created with metabind()
 
 * P-values can be printed according to [JAMA reporting
-  standards](https://www.amamanualofstyle.com/view/10.1093/jama/9780195176339.001.0001/med-9780195176339-div2-485)
-  (subscription necessary)
+  standards](https://jamanetwork.com/journals/jama)
 
 * In subgroup analyses, print the group labels instead of levels if
   the grouping variable is a factor
@@ -707,7 +728,7 @@
   meta-analysis was conducted
 
 * New preferred citation of R package **meta**: [Balduzzi et
-  al. (2019)](https://www.doi.org/10.1136/ebmental-2019-300117)
+  al. (2019)](https://ebmh.bmj.com/content/22/4/153/)
 
 ### User-visible changes
 

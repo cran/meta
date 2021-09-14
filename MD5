@@ -1,7 +1,7 @@
 94d55d512a9ba36caa9b7df079bae19f *COPYING
-44564f1e132545607509c78372f7a714 *DESCRIPTION
+b495dc93cc9fd06791964185a9bbd9b7 *DESCRIPTION
 9f6dc7c116a2a78574a8825c8cc7b79d *NAMESPACE
-8c94f8f695c10514f113d6b83750fb10 *NEWS.md
+7e075d0eb7d9d9f6817cba3966ef3685 *NEWS.md
 ae33d541ef216db6516d37e9120dd3bb *R/Fleiss1993bin.R
 67f1b088c164cb963d5ddaee6137240a *R/Fleiss1993cont.R
 2d942bbad3374f5334204bd103200d59 *R/JAMAlabels.R
@@ -15,7 +15,7 @@ a28d1c5f812cbf7ef66e8c8a738a3f27 *R/Pagliaro1992.R
 c547c426df6796bb9310b2d14fa37873 *R/asin2p.R
 b21e7d9a34966478f15ab61373f186ca *R/backtransf.R
 4abbf2944931402e89015a9062ac8757 *R/baujat.R
-82f79a269ef5949cf7dfce6733c15296 *R/bubble.R
+c90ce9b657747fab6e5f83d48d3f809b *R/bubble.R
 0cda9341d7a4a75655251f8497a7a990 *R/bylabel.R
 eb4391c59227bad9476d994599048592 *R/bylevs.R
 501bd5b37517d9ed1c51b940322d633e *R/byvarname.R
@@ -40,7 +40,7 @@ b7be3451fe7ee1a06406dbd06621ab97 *R/cisapride.R
 927af18d153059ca74a61a6922ff9d3a *R/drapery.R
 6291eddfee8d71d395b571537a6aacaa *R/estimate.missing.R
 fa173f956c40e8768fa534cabcca3507 *R/forest-internal.R
-3bc93b8cfa2a0a2b17cbe33d10ef9d3c *R/forest.R
+ba972d52f1817da36ced51cb3d43aa50 *R/forest.R
 06ebd6d3493a3bb014ce329b6248a125 *R/forest.metabind.R
 8759afd2d5a0935e27a2cbf988bd2105 *R/format.NA.R
 fa24e4c4492cde3b1fab10e278888a90 *R/format.p.R
@@ -49,7 +49,7 @@ aad6d794ca0e6c5864a9fef6193385af *R/formatN.R
 907a71fd2755ff53ee6ad0d8868cc2d1 *R/formatPT.R
 5b719ff6e028bab9ddfb0f56da2bfe08 *R/funnel.R
 168582f20b23e304cffde21c1e0661cb *R/gs.R
-3db9e199ef17d7a6c0d1de86f9cd97c9 *R/hetcalc.R
+9bc5db30f7ccdc16ba76e96c7f2748e7 *R/hetcalc.R
 5bd6b193ce0b9777eac20156dea57741 *R/hypergeometric.R
 f9113998de7535c7b2fda70ea2f3d5f0 *R/int2num.R
 ceb44357026126450c749548c0aae251 *R/is.cor.R
@@ -75,18 +75,18 @@ efe8ca98584a4ab87ca003a6db3329be *R/meta-internal.R
 e0931cae100614a13274eed3774c1c02 *R/metabias.rm5.R
 bb69242d5c73106074f58a2c50a48078 *R/metabin.R
 5616b2f0206df9d174b59782ca545d13 *R/metabind.R
-dc23a5cd36a32ceac11eb5ee495cb6aa *R/metacont.R
+788be2b5b2e1b3a6f0b930363ad0a448 *R/metacont.R
 9f5461b78db859126a3750662e67ab7c *R/metacor.R
 7407b3827a36bf1a8e76860c797e1c43 *R/metacr.R
 ef81ce7a26c10b06b53abfb1354c24c2 *R/metacum.R
-048f77c6bf445491d794d164f375130a *R/metagen.R
+a252bb297bfb15bbfb6d4f5bff3c51fa *R/metagen.R
 9cc9f4cef557712929a2129f0cf3c1db *R/metainc.R
 ada2fe3f870e41b77fb1cbc3b7376e85 *R/metainf.R
 f34d2af04f2a11f5a2550dc1f64d4222 *R/metamean.R
 e5d3ed7a811c5473d56998cfcd550bb2 *R/metamerge.R
 51a2f41dafa8c3382439dd8738d04909 *R/metaprop.R
 cc416815802ac19bfac8dfaf893af970 *R/metarate.R
-cbfb5ccfe265518ec609d4affbc7e2b6 *R/metareg.R
+91362d7169de54e02edf9c3a8307b16c *R/metareg.R
 ad1a42dab37b1d3ebededb8a1abb55d5 *R/nnt.R
 442406649350659375dc99826718119a *R/npn.R
 65af8c120787eb7345bb984da63ddb69 *R/or2smd.R
@@ -108,8 +108,8 @@ d5fe42827b0907829558e3ea8b2238fc *R/setstudlab.R
 86fd80c895be15c582a3461b7ff11059 *R/setunit.R
 afed4a9b5eb87c92f657539d4140d849 *R/smd2or.R
 54752e6c40092c13d87ea9fdc9f4cf0d *R/smoking.R
-f770ca7f60c43464526cd8acd2fb7985 *R/subgroup.R
-ab8abde0017b5be2c4a18d3843412851 *R/summary.meta.R
+d5fa872e3b73f6fd84d1c8bbfd8a4f6a *R/subgroup.R
+ddec3d9e8e7a97e1d3aa4c0737fc23c0 *R/summary.meta.R
 c9107f9ef133674a6f09bca1f8581bf2 *R/summary.rm5.R
 af8ca2313416ae41b49f0a20a3a2e19c *R/trimfill.R
 b96f4a9e4326dd83bbd64f6d16040115 *R/update.meta.R
@@ -147,7 +147,7 @@ d10d14e76d0bbe6d4bc2d9908092dca6 *man/baujat.meta.Rd
 148622b57352423cf0ee0279bfadd0b8 *man/ci.Rd
 8ff3ec456c524f398e8c2a72d4a318ca *man/cisapride.Rd
 01dfe48146af22ee8252a1dd3d3ba959 *man/drapery.Rd
-a07f3e5bc0f0073a5f25a853cdddde60 *man/forest.meta.Rd
+24016a13b942f27c330224134e873905 *man/forest.meta.Rd
 8382f85b83f0cf77f77de3a55b93ff9b *man/forest.metabind.Rd
 eb43e6221394eb9b18c89d3e84d20653 *man/funnel.meta.Rd
 be0aa7d5a0721b875509dbf8b85bf0eb *man/gs.Rd
@@ -157,7 +157,7 @@ be0aa7d5a0721b875509dbf8b85bf0eb *man/gs.Rd
 3767dfe8eee5ad178b993b696ec3de24 *man/metabias.rm5.Rd
 9a2e652f3e90ef04202fe4294029f47b *man/metabin.Rd
 cb42417dd20e667244504c6956f7c1cf *man/metabind.Rd
-4a099a5c4fbd664319eb662e0c472ca7 *man/metacont.Rd
+49dda120fce056a7bcf5653572dd7776 *man/metacont.Rd
 efe27ab67515f6419280c86729bdf8da *man/metacor.Rd
 3bf90fad0c94c90849d056f3f249b052 *man/metacr.Rd
 4f2160b66ea9e95dfccb6d188f3c012d *man/metacum.Rd

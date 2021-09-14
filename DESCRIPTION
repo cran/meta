@@ -1,7 +1,7 @@
 Package: meta
 Title: General Package for Meta-Analysis
-Version: 4.19-0
-Date: 2021-08-05
+Version: 4.19-1
+Date: 2021-09-14
 Depends: R (>= 3.5.0)
 Imports: metafor (>= 2.1-0), grid, lme4, CompQuadForm, xml2
 Suggests: BiasedUrn
@@ -9,6 +9,7 @@ Authors@R: person("Guido", "Schwarzer",
                   role = c("cre", "aut"),
                   email = "sc@imbi.uni-freiburg.de",
                   comment = c(ORCID = "0000-0001-6214-9087"))
+Author: Guido Schwarzer [cre, aut] (<https://orcid.org/0000-0001-6214-9087>)
 Maintainer: Guido Schwarzer <sc@imbi.uni-freiburg.de>
 URL: https://github.com/guido-s/meta/
         https://www.springer.com/gp/book/9783319214153
@@ -24,9 +25,8 @@ Description: User-friendly general package providing standard methods for meta-a
  - produce forest plot summarising several (subgroup) meta-analyses.
 License: GPL (>= 2)
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 NeedsCompilation: no
-Packaged: 2021-08-05 17:29:02 UTC; sc
-Author: Guido Schwarzer [cre, aut] (<https://orcid.org/0000-0001-6214-9087>)
+Packaged: 2021-09-14 09:59:36 UTC; sc
 Repository: CRAN
-Date/Publication: 2021-08-06 05:00:07 UTC
+Date/Publication: 2021-09-14 11:30:02 UTC

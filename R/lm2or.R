@@ -13,11 +13,11 @@ lm2or <- function(coef, se.coef, studlab,
   ##
   ##
   nulldata <- is.null(data)
+  sfsp <- sys.frame(sys.parent())
+  mc <- match.call()
   ##
   if (nulldata)
-    data <- sys.frame(sys.parent())
-  ##
-  mf <- match.call()
+    data <- sfsp
   ##
   ## Check whether essential variables are available
   ##
@@ -44,49 +44,33 @@ lm2or <- function(coef, se.coef, studlab,
   ## Catch 'coef', 'se.coef', 'tval', 'pval', 'lower', 'upper',
   ## 'level.ci', and 'n' from data:
   ##
-  coef <- eval(mf[[match("coef", names(mf))]],
-               data, enclos = sys.frame(sys.parent()))
+  coef <- catch("coef", mc, data, sfsp)
   chknull(coef)
   ##
-  se.coef <- eval(mf[[match("se.coef", names(mf))]],
-                  data, enclos = sys.frame(sys.parent()))
-  ##
-  tval <- eval(mf[[match("tval", names(mf))]],
-               data, enclos = sys.frame(sys.parent()))
-  ##
-  pval <- eval(mf[[match("pval", names(mf))]],
-               data, enclos = sys.frame(sys.parent()))
-  ##
-  lower <- eval(mf[[match("lower", names(mf))]],
-                data, enclos = sys.frame(sys.parent()))
-  ##
-  upper <- eval(mf[[match("upper", names(mf))]],
-                data, enclos = sys.frame(sys.parent()))
+  se.coef <- catch("se.coef", mc, data, sfsp)
+  tval <- catch("tval", mc, data, sfsp)
+  pval <- catch("pval", mc, data, sfsp)
+  lower <- catch("lower", mc, data, sfsp)
+  upper <- catch("upper", mc, data, sfsp)
   ##
   if (!missing(level.ci))
-    level.ci <- eval(mf[[match("level.ci", names(mf))]],
-                     data, enclos = sys.frame(sys.parent()))
+    level.ci <- catch("level.ci", mc, data, sfsp)
   ##
-  n <- eval(mf[[match("n", names(mf))]],
-            data, enclos = sys.frame(sys.parent()))
+  n <- catch("n", mc, data, sfsp)
   k.All <- length(n)
   ##
-  m <- eval(mf[[match("m", names(mf))]],
-            data, enclos = sys.frame(sys.parent()))
+  m <- catch("m", mc, data, sfsp)
   ##
   ## Catch 'studlab', 'subset', and 'exclude' from data:
   ##
-  studlab <- eval(mf[[match("studlab", names(mf))]],
-                  data, enclos = sys.frame(sys.parent()))
+  studlab <- catch("studlab", mc, data, sfsp)
   studlab <- setstudlab(studlab, k.All)
   ##
   missing.subset <- missing(subset)
-  subset <- eval(mf[[match("subset", names(mf))]],
-                 data, enclos = sys.frame(sys.parent()))
+  subset <- catch("subset", mc, data, sfsp)
   ##
   missing.exclude <- missing(exclude)
-  exclude <- eval(mf[[match("exclude", names(mf))]],
-                  data, enclos = sys.frame(sys.parent()))
+  exclude <- catch("exclude", mc, data, sfsp)
   
   
   ##

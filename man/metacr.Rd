@@ -16,7 +16,9 @@ metacr(
   prediction = gs("prediction") | !missing(method.predict),
   method.tau = "DL",
   method.tau.ci = gs("method.tau.ci"),
+  level.hetstat = gs("level.hetstat"),
   tau.common = FALSE,
+  method.I2 = gs("method.I2"),
   level.ma = gs("level.ma"),
   method.random.ci = "classic",
   adhoc.hakn.ci = gs("adhoc.hakn.ci"),
@@ -44,6 +46,8 @@ metacr(
   title,
   complab,
   outclab,
+  col.label.left = gs("col.label.left"),
+  col.label.right = gs("col.label.right"),
   keepdata = gs("keepdata"),
   warn = FALSE,
   warn.deprecated = gs("warn.deprecated"),
@@ -87,8 +91,16 @@ square root \eqn{\tau} (see \code{\link{meta-package}}).}
 used to estimate the confidence interval of \eqn{\tau^2} and
 \eqn{\tau} (see \code{\link{meta-package}}).}
 
+\item{level.hetstat}{The level used to calculate confidence intervals
+for heterogeneity statistics.}
+
 \item{tau.common}{A logical indicating whether tau-squared should
 be the same across subgroups.}
+
+\item{method.I2}{A character string indicating which method is
+used to estimate the heterogeneity statistic I\eqn{^2}. Either
+\code{"Q"} or \code{"tau2"}, can be abbreviated
+(see \code{\link{meta-package}}).}
 
 \item{level.ma}{The level used to calculate confidence intervals
 for meta-analysis estimates.}
@@ -180,6 +192,12 @@ random effects model.}
 
 \item{outclab}{Outcome label.}
 
+\item{col.label.left}{The colour of the graph label on the left side of
+the null effect.}
+
+\item{col.label.right}{The colour of the graph label on the right side of
+the null effect.}
+
 \item{keepdata}{A logical indicating whether original data (set)
 should be kept in meta object.}
 
@@ -206,10 +224,9 @@ Cochrane Intervention review.
 Cochrane intervention reviews are based on the comparison of two
 interventions. Each Cochrane intervention review can have a
 variable number of comparisons. For each comparison, a variable
-number of outcomes can be define. For each outcome, a seperate
+number of outcomes can be define. For each outcome, a separate
 meta-analysis is conducted. Review Manager 5 (RevMan 5) was the
-software used for preparing and maintaining Cochrane Reviews
-(\url{https://training.cochrane.org/online-learning/core-software/revman}).
+software used for preparing and maintaining Cochrane Reviews.
 
 This wrapper function can be used to perform meta-analysis for a
 single outcome of a Cochrane intervention review. Internally, R

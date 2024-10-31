@@ -41,9 +41,9 @@ summary(m.publ)
 ## ----eval = FALSE-------------------------------------------------------------
 #  print(summary(m.publ))
 
-## ----eval = FALSE-------------------------------------------------------------
-#  forest(m.publ, sortvar = year, prediction = TRUE,
-#    file = "figure2.pdf", width = 10)
+## -----------------------------------------------------------------------------
+forest(m.publ, sortvar = year, prediction = TRUE,
+  file = "figure2.pdf", width = 10)
 
 ## ----echo = FALSE, out.width = "95%"------------------------------------------
 knitr::include_graphics("figure2.pdf")
@@ -52,12 +52,12 @@ knitr::include_graphics("figure2.pdf")
 m.publ.sub = update(m.publ, subgroup = miss, print.subgroup.name = FALSE)
 m.publ.sub
 
-## ----eval = FALSE-------------------------------------------------------------
-#  forest(m.publ.sub, sortvar = year,
-#    xlim = c(0.1, 100), at = c(0.1, 0.3, 1, 3, 10, 30, 100),
-#    test.subgroup.common = FALSE,
-#    label.test.subgroup.random = "Test for subgroup differences:",
-#    file = "figure3.pdf", width = 10)
+## -----------------------------------------------------------------------------
+forest(m.publ.sub, sortvar = year,
+  xlim = c(0.1, 100), at = c(0.1, 0.3, 1, 3, 10, 30, 100),
+  test.subgroup.common = FALSE,
+  label.test.subgroup.random = "Test for subgroup differences:",
+  file = "figure3.pdf", width = 10)
 
 ## ----echo = FALSE, out.width = "95%"------------------------------------------
 knitr::include_graphics("figure3.pdf")
@@ -104,13 +104,13 @@ mbr = metabind(m.publ.iv,
   mmiss.imor2, mmiss.imor0.5,
   name = meths, pooled = "random")
 
-## ----eval = FALSE-------------------------------------------------------------
-#  forest(mbr, xlim = c(0.5, 4),
-#    leftcols = c("studlab", "I2.w", "tau2.w", "Q.w", "pval.Q.w"),
-#    leftlab = c("Meta-Analysis Method", "I2", "Tau2", "Q", "P-value"),
-#    type.study = "diamond",
-#    digits.addcols = c(4, 2, 2, 2), just.addcols = "right",
-#    file = "figure4.pdf", width = 10)
+## -----------------------------------------------------------------------------
+forest(mbr, xlim = c(0.5, 4),
+  leftcols = c("studlab", "I2", "tau2", "Q", "pval.Q"),
+  leftlab = c("Meta-Analysis Method", "I2", "Tau2", "Q", "P-value"),
+  type = "diamond",
+  digits.addcols = c(4, 2, 2, 2), just.addcols = "right",
+  file = "figure4.pdf", width = 10)
 
 ## ----echo = FALSE, out.width = "95%"------------------------------------------
 knitr::include_graphics("figure4.pdf")

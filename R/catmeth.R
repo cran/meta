@@ -263,10 +263,11 @@ catmeth <- function(x,
         details <-
           paste0(details,
                  if (mi2i == "Q")
-                   "\n- Calculation of I^2 based on Q"
-                 #
+                   paste0("\n- Calculation of ", text.I2,
+                          " based on Q")
                  else if (mi2i == "tau2")
-                   "\n- Calculation of I^2 based on tau^2")
+                   paste0("\n- Calculation of ", text.I2,
+                          " based on ", text.tau2))
       }
     }
   }
@@ -851,7 +852,7 @@ catmeth <- function(x,
   ##
   null.effect <- x$null.effect
   ##
-  if (!is.na(null.effect) && null.effect != 0) {
+  if (!is.na(null.effect) && (null.effect != 0 | metaprop | metarate)) {
     details <- paste0(details, "\n- Null hypothesis: effect is equal to ")
     ##
     if (!is.null(pscale) && pscale != 1)

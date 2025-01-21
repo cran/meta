@@ -503,7 +503,7 @@ runGLMM <- function(x, method.tau, method.random.ci, level,
   res
 }
 
-addGLMM <- function(x, glmm, method.I2) {
+addGLMM <- function(x, glmm, method.I2, null.effect = x$null.effect) {
   
   res <- x
   ##
@@ -513,7 +513,7 @@ addGLMM <- function(x, glmm, method.I2) {
   level.predict <- x$level.predict
   method.random.ci <- x$method.random.ci
   method.predict <- x$method.predict
-  null.effect <- replaceNULL(x$null.effect, 0)
+  null.effect <- replaceNULL(null.effect, 0)
   ##
   ## Common effect model
   ##
@@ -524,11 +524,11 @@ addGLMM <- function(x, glmm, method.I2) {
   res$w.common <- rep(NA, len)
   res$lower.common <- glmm.common$ci.lb
   res$upper.common <- glmm.common$ci.ub
-  res$statistic.common <- glmm.common$zval
-  res$pval.common <-
-    ci(res$TE.common, res$seTE.common, level = level.ma,
-       null.effect = null.effect)$p
-  res$zval.common <-  res$statistic.common
+  #
+  ci.c <- ci(res$TE.common, res$seTE.common, level = level.ma,
+             null.effect = null.effect)
+  res$statistic.common <- res$zval.common <- ci.c$statistic
+  res$pval.common <- ci.c$p
   ##
   ## Random effects model(s)
   ##
@@ -539,13 +539,14 @@ addGLMM <- function(x, glmm, method.I2) {
   res$w.random <- rep(NA, len)
   res$lower.random <- sapply(glmm.random, extrVar, "ci.lb")
   res$upper.random <- sapply(glmm.random, extrVar, "ci.ub")
-  res$statistic.random <- sapply(glmm.random, extrVar, "zval")
-  res$pval.random <-
+  #
+  ci.r <-
     ci(res$TE.random, res$seTE.random,
        level = level.ma,
        null.effect = null.effect,
-       df = ifelse(method.random.ci == "HK", k - 1, Inf))$p
-  res$zval.random <- res$statistic.random
+       df = ifelse(method.random.ci == "HK", k - 1, Inf))
+  res$statistic.random <- res$zval.random <- ci.r$statistic
+  res$pval.random <- ci.r$p
   ##
   if (length(method.random.ci) > 1)
     names(res$seTE.random) <-
@@ -665,18 +666,19 @@ runLRP <- function(event1, n1, event2, n2, warn = TRUE, ...) {
     longarm("B", "A", event1 = event1, n1 = n1, event2 = event2, n2 = n2,
             data = dat.bin)
   #
-  text.lrp <- "cbind(events, nonevents) ~ as.factor(studlab) + as.factor(treat)"
+  text.formula <- "cbind(events, nonevents) ~ as.factor(treat)"
   #
-  formula.lrp <- as.formula(text.lrp)
+  if (length(unique(long.bin$studlab)) > 1)
+    text.formula <- paste(text.formula, "+ as.factor(studlab)")
   #
-  fit.glm <-
-    glm(formula.lrp,
-        data = long.bin,
-        family = binomial(link = "logit"), method = "glm.fit")
+  res.lrp <- glm(as.formula(text.formula), data = long.bin,
+                 family = binomial(link = "logit"),
+                 method = brglm2::brglmFit, type = "MPL_Jeffreys",
+                 ...)
   #
-  res.lrp <- update(fit.glm, method = brglm2::brglmFit, type = "MPL_Jeffreys")
-  #
-  phi <- phi(res.lrp)
+  phi <- 1
+  if (length(unique(long.bin$studlab)) > 1)
+    phi <- phi(res.lrp)
   #
   sel.trt <- grepl("treat", names(coef(res.lrp)))
   #

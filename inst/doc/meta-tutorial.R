@@ -10,13 +10,13 @@ options(knitr.kable.NA = ".")
 load("mmiss_limit.rda")
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  install.packages(c("meta", "metasens"))
+# install.packages(c("meta", "metasens"))
 
 ## -----------------------------------------------------------------------------
 library(meta)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  library(metasens)
+# library(metasens)
 
 ## -----------------------------------------------------------------------------
 settings.meta(digits = 2, method.tau = "PM")
@@ -39,7 +39,7 @@ m.publ = metabin(resp.h, resp.h + fail.h, resp.p, resp.p + fail.p,
 summary(m.publ)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  print(summary(m.publ))
+# print(summary(m.publ))
 
 ## -----------------------------------------------------------------------------
 forest(m.publ, sortvar = year, prediction = TRUE,
@@ -63,26 +63,26 @@ forest(m.publ.sub, sortvar = year,
 knitr::include_graphics("figure3.pdf")
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  # Impute as no events (ICA-0) - default
-#  mmiss.0 = metamiss(m.publ, drop.h, drop.p)
-#  # Impute as events (ICA-1)
-#  mmiss.1 = metamiss(m.publ, drop.h, drop.p, method = "1")
-#  # Observed risk in control group (ICA-pc)
-#  mmiss.pc = metamiss(m.publ, drop.h, drop.p, method = "pc")
-#  # Observed risk in experimental group (ICA-pe)
-#  mmiss.pe = metamiss(m.publ, drop.h, drop.p, method = "pe")
-#  # Observed group-specific risks (ICA-p)
-#  mmiss.p = metamiss(m.publ, drop.h, drop.p, method = "p")
-#  # Best-case scenario (ICA-b)
-#  mmiss.b = metamiss(m.publ, drop.h, drop.p, method = "b", small.values = "bad")
-#  # Worst-case scenario (ICA-w)
-#  mmiss.w = metamiss(m.publ, drop.h, drop.p, method = "w", small.values = "bad")
-#  # Gamble-Hollis method
-#  mmiss.gh = metamiss(m.publ, drop.h, drop.p, method = "GH")
-#  # IMOR.e = 2 and IMOR.c = 2 (same as available case analysis)
-#  mmiss.imor2 = metamiss(m.publ, drop.h, drop.p, method = "IMOR", IMOR.e = 2)
-#  # IMOR.e = 0.5 and IMOR.c = 0.5
-#  mmiss.imor0.5 = metamiss(m.publ, drop.h, drop.p, method = "IMOR", IMOR.e = 0.5)
+# # Impute as no events (ICA-0) - default
+# mmiss.0 = metamiss(m.publ, drop.h, drop.p)
+# # Impute as events (ICA-1)
+# mmiss.1 = metamiss(m.publ, drop.h, drop.p, method = "1")
+# # Observed risk in control group (ICA-pc)
+# mmiss.pc = metamiss(m.publ, drop.h, drop.p, method = "pc")
+# # Observed risk in experimental group (ICA-pe)
+# mmiss.pe = metamiss(m.publ, drop.h, drop.p, method = "pe")
+# # Observed group-specific risks (ICA-p)
+# mmiss.p = metamiss(m.publ, drop.h, drop.p, method = "p")
+# # Best-case scenario (ICA-b)
+# mmiss.b = metamiss(m.publ, drop.h, drop.p, method = "b", small.values = "bad")
+# # Worst-case scenario (ICA-w)
+# mmiss.w = metamiss(m.publ, drop.h, drop.p, method = "w", small.values = "bad")
+# # Gamble-Hollis method
+# mmiss.gh = metamiss(m.publ, drop.h, drop.p, method = "GH")
+# # IMOR.e = 2 and IMOR.c = 2 (same as available case analysis)
+# mmiss.imor2 = metamiss(m.publ, drop.h, drop.p, method = "IMOR", IMOR.e = 2)
+# # IMOR.e = 0.5 and IMOR.c = 0.5
+# mmiss.imor0.5 = metamiss(m.publ, drop.h, drop.p, method = "IMOR", IMOR.e = 0.5)
 
 ## -----------------------------------------------------------------------------
 meths = c("Available case analysis (ACA)",
@@ -116,7 +116,7 @@ forest(mbr, xlim = c(0.5, 4),
 knitr::include_graphics("figure4.pdf")
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  funnel(m.publ)
+# funnel(m.publ)
 
 ## -----------------------------------------------------------------------------
 metabias(m.publ, method.bias = "score")
@@ -129,52 +129,52 @@ tf.publ
 summary(tf.publ)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  funnel(tf.publ)
+# funnel(tf.publ)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  l1.publ = limitmeta(m.publ)
+# l1.publ = limitmeta(m.publ)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  l1.publ
+# l1.publ
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  pdf("figure5.pdf", width = 10, height = 10)
-#  #
-#  par(mfrow = c(2, 2), pty = "s",
-#      oma = c(0, 0, 0, 0), mar = c(4.1, 3.1, 2.1, 1.1))
-#  #
-#  funnel(m.publ, xlim = c(0.05, 50), axes = FALSE)
-#  axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
-#  axis(2, at = c(0, 0.5, 1, 1.5))
-#  box()
-#  title(main = "Panel A: Funnel plot", adj = 0)
-#  #
-#  funnel(m.publ, xlim = c(0.05, 50), axes = FALSE,
-#         contour.levels = c(0.9, 0.95, 0.99),
-#         col.contour = c("darkgray", "gray", "lightgray"))
-#  legend("topright",
-#         c("p < 1%", "1% < p < 5%", "5% < p < 10%", "p > 10%"),
-#         fill = c("lightgray", "gray", "darkgray", "white"),
-#         border = "white", bg = "white")
-#  axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
-#  axis(2, at = c(0, 0.5, 1, 1.5))
-#  box()
-#  title(main = "Panel B: Contour-enhanced funnel plot", adj = 0)
-#  #
-#  funnel(tf.publ, xlim = c(0.05, 50), axes = FALSE)
-#  axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
-#  axis(2, at = c(0, 0.5, 1, 1.5))
-#  box()
-#  title(main = "Panel C: Trim-and-fill method", adj = 0)
-#  #
-#  funnel(l1.publ, xlim = c(0.05, 50), axes = FALSE,
-#         col.line = 8, lwd.line = 3)
-#  axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
-#  axis(2, at = c(0, 0.5, 1, 1.5))
-#  box()
-#  title(main = "Panel D: Limit meta-analysis", adj = 0)
-#  #
-#  dev.off()
+# pdf("figure5.pdf", width = 10, height = 10)
+# #
+# par(mfrow = c(2, 2), pty = "s",
+#     oma = c(0, 0, 0, 0), mar = c(4.1, 3.1, 2.1, 1.1))
+# #
+# funnel(m.publ, xlim = c(0.05, 50), axes = FALSE)
+# axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
+# axis(2, at = c(0, 0.5, 1, 1.5))
+# box()
+# title(main = "Panel A: Funnel plot", adj = 0)
+# #
+# funnel(m.publ, xlim = c(0.05, 50), axes = FALSE,
+#        contour.levels = c(0.9, 0.95, 0.99),
+#        col.contour = c("darkgray", "gray", "lightgray"))
+# legend("topright",
+#        c("p < 1%", "1% < p < 5%", "5% < p < 10%", "p > 10%"),
+#        fill = c("lightgray", "gray", "darkgray", "white"),
+#        border = "white", bg = "white")
+# axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
+# axis(2, at = c(0, 0.5, 1, 1.5))
+# box()
+# title(main = "Panel B: Contour-enhanced funnel plot", adj = 0)
+# #
+# funnel(tf.publ, xlim = c(0.05, 50), axes = FALSE)
+# axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
+# axis(2, at = c(0, 0.5, 1, 1.5))
+# box()
+# title(main = "Panel C: Trim-and-fill method", adj = 0)
+# #
+# funnel(l1.publ, xlim = c(0.05, 50), axes = FALSE,
+#        col.line = 8, lwd.line = 3)
+# axis(1, at = c(0.1, 0.2, 0.5, 1, 2, 5, 10, 50))
+# axis(2, at = c(0, 0.5, 1, 1.5))
+# box()
+# title(main = "Panel D: Limit meta-analysis", adj = 0)
+# #
+# dev.off()
 
 ## ----echo = FALSE, out.width = "95%"------------------------------------------
 knitr::include_graphics("figure5.pdf")

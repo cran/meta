@@ -181,7 +181,7 @@
 #'   should be kept in meta object.
 #' @param warn A logical indicating whether warnings should be printed
 #'   (e.g., if \code{incr} is added to studies with zero cell
-#'   frequencies).
+#'   frequencies or if estimation problems exist in fitting a GLMM).
 #' @param warn.deprecated A logical indicating whether warnings should
 #'   be printed if deprecated arguments are used.
 #' @param control An optional list to control the iterative process to
@@ -271,7 +271,7 @@
 #' R package \bold{brglm2} must be available to fit a one-stage logistic
 #' regression model with penalised likelihood (Evrenoglou et al., 2022).
 #' The estimation of the summary odds ratio relies on the maximisation of the 
-#' likelihood function, penalized using a Firth-type correction. This
+#' likelihood function, penalised using a Firth-type correction. This
 #' penalisation aims to reduce bias in cases with rare events and a small
 #' number of available studies. However, this method is not restricted 
 #' to only such cases and can be applied more generally to binary data. Note,
@@ -575,13 +575,10 @@
 #' m5
 #' 
 #' \dontrun{
-#' # Meta-analysis using generalised linear mixed models
-#' # (only if R package 'lme4' is available)
-#' #
+#' # Meta-analyses using generalised linear mixed models (GLMM)
 #' 
 #' # Logistic regression model with (k = 4) fixed study effects
 #' # (default: model.glmm = "UM.FS")
-#' #
 #' m6 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
 #'   studlab = paste(author, year),
 #'   data = Olkin1995, subset = year < 1970, method = "GLMM")
@@ -590,8 +587,6 @@
 #' m6
 #' 
 #' # Mixed-effects logistic regression model with random study effects
-#' # (warning message printed due to argument 'nAGQ')
-#' #
 #' m7 <- update(m6, model.glmm = "UM.RS")
 #' #
 #' # Use additional argument 'nAGQ' for internal call of 'rma.glmm'
@@ -602,43 +597,29 @@
 #' 
 #' # Generalised linear mixed model (conditional Hypergeometric-Normal)
 #' # (R package 'BiasedUrn' must be available)
-#' #
-#' m8 <- update(m6, model.glmm = "CM.EL")
-#' m8
+#' if (requireNamespace("BiasedUrn", quietly = TRUE)) {
+#'  m8 <- update(m6, model.glmm = "CM.EL")
+#'  m8
+#' }
 #' 
 #' # Generalised linear mixed model (conditional Binomial-Normal)
-#' #
 #' m9 <- update(m6, model.glmm = "CM.AL")
 #' m9
 #' 
 #' # Logistic regression model with (k = 70) fixed study effects
-#' # (about 18 seconds with Intel Core i7-3667U, 2.0GHz)
-#' #
 #' m10 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
 #'    studlab = paste(author, year),
 #'    data = Olkin1995, method = "GLMM")
 #' m10
 #' 
 #' # Mixed-effects logistic regression model with random study effects
-#' # - about 50 seconds with Intel Core i7-3667U, 2.0GHz
-#' # - several warning messages, e.g. "failure to converge, ..."
-#' #
 #' update(m10, model.glmm = "UM.RS")
 #' 
-#' # Conditional Hypergeometric-Normal GLMM
-#' # - long computation time (about 12 minutes with Intel Core
-#' #   i7-3667U, 2.0GHz)
-#' # - estimation problems for this very large dataset:
-#' #   * warning that Choleski factorisation of Hessian failed
-#' #   * confidence interval for treatment effect smaller in random
-#' #     effects model compared to common effect model
-#' #
+#' # Conditional Hypergeometric-Normal GLMM (with long computation time)
 #' system.time(m11 <- update(m10, model.glmm = "CM.EL"))
 #' m11
 #' 
 #' # Generalised linear mixed model (conditional Binomial-Normal)
-#' # (less than 1 second with Intel Core i7-3667U, 2.0GHz)
-#' #
 #' update(m10, model.glmm = "CM.AL")
 #' }
 #' 
@@ -1702,7 +1683,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                   call. = FALSE)
       }
     else if (is.glmm | is.lrp) {
-      if ((sparse | addincr) & warn)
+      if (sparse & warn &
+          ((!missing.incr & any(incr != 0)) | allincr | addincr))
         warning("Note, for method = \"", method,
                 "\", continuity correction ",
                 "only used to calculate individual study results.",
@@ -1824,7 +1806,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
               method.random.ci = method.random.ci,
               level = level.ma,
               control = list(control),
-              use.random = use.random)
+              use.random = use.random,
+              warn = warn)
     ##
     TE.common   <- as.numeric(res.glmm$glmm.common$b)
     seTE.common <- as.numeric(res.glmm$glmm.common$se)
@@ -1833,7 +1816,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   }
   else if (is.lrp) {
     fit.lrp <- runLRP(event.e[!exclude], n1 = n.e[!exclude],
-                      event2 = event.c[!exclude], n2 = n.c[!exclude])
+                      event2 = event.c[!exclude], n2 = n.c[!exclude],
+                      ...)
     #
     TE.common   <- fit.lrp$TE.common
     seTE.common <- fit.lrp$seTE.common
@@ -1863,7 +1847,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                overall.hetstat = overall.hetstat,
                prediction = prediction,
                ##
-               method.tau = method.tau, method.tau.ci = method.tau.ci,
+               method.tau = if (is.glmm | is.lrp) "DL" else method.tau,
+               method.tau.ci = if (is.glmm | is.lrp) "" else method.tau.ci,
                level.hetstat = level.hetstat,
                tau.preset = tau.preset,
                TE.tau = if (Q.Cochrane) TE.common else TE.tau,
@@ -1972,6 +1957,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   }
   #
   if (is.glmm) {
+    res$method.tau <- method.tau
     res <- addGLMM(res, res.glmm, method.I2)
     res$model.glmm <- model.glmm
     ##
@@ -1998,7 +1984,8 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
                     else
                       NULL,
                   control = list(control),
-                  use.random = use.random)$glmm.random[[1]],
+                  use.random = use.random,
+                  warn = warn)$glmm.random[[1]],
           method.I2
         )
     }
@@ -2081,7 +2068,7 @@ metabin <- function(event.e, n.e, event.c, n.c, studlab,
   if (res$method.random == "MH")
     res$method.random <- "Inverse"
   #
-  # Do not return tau^2 and tau for penalized logistic regression
+  # Do not return tau^2 and tau for penalised logistic regression
   #
   if (is.lrp) {
     res$method.random <- "LRP"

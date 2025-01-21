@@ -143,9 +143,8 @@
 #' @param adhoc.hakn Deprecated argument (replaced by 'adhoc.hakn.ci').
 #' @param keepdata A logical indicating whether original data (set)
 #'   should be kept in meta object.
-#' @param warn A logical indicating whether the addition of
-#'   \code{incr} to studies with zero or all events should result in a
-#'   warning.
+#' @param warn A logical indicating whether warnings should be printed
+#'   (e.g., if estimation problems exist in fitting a GLMM).
 #' @param warn.deprecated A logical indicating whether warnings should
 #'   be printed if deprecated arguments are used.
 #' @param control An optional list to control the iterative process to
@@ -1084,18 +1083,18 @@ metaprop <- function(event, n, studlab,
     TE <- log((event + incr.event) / (n - event + incr.event))
     seTE <- sqrt(1 / (event + incr.event) +
                  1 / ((n - event + incr.event)))
-    transf.null.effect <- log(null.effect / (1 - null.effect))
+    transf.null.effect <- p2logit(null.effect)
   }
   else if (sm == "PAS") {
     TE <- asin(sqrt(event / n))
     seTE <- sqrt(1 / (4 * n))
-    transf.null.effect <- asin(sqrt(null.effect))
+    transf.null.effect <- p2asin(null.effect)
   }
   else if (sm == "PFT") {
     TE <-
       0.5 * (asin(sqrt(event / (n + 1))) + asin(sqrt((event + 1) / (n + 1))))
     seTE <- sqrt(1 / (4 * n + 2))
-    transf.null.effect <- asin(sqrt(null.effect))
+    transf.null.effect <- p2asin(null.effect)
   }
   else if (sm == "PLN") {
     TE <- log((event + incr.event) / (n + incr.event))
@@ -1242,7 +1241,8 @@ metaprop <- function(event, n, studlab,
                overall.hetstat = overall.hetstat,
                prediction = prediction,
                ##
-               method.tau = method.tau, method.tau.ci = method.tau.ci,
+               method.tau = if (is.glmm) "DL" else method.tau,
+               method.tau.ci = if (is.glmm) "" else method.tau.ci,
                level.hetstat = level.hetstat,
                tau.preset = tau.preset,
                TE.tau = TE.tau,
@@ -1324,6 +1324,9 @@ metaprop <- function(event, n, studlab,
     m$pval <- rep(NA, length(m$pval))
   }
   ##
+  if (is.glmm) 
+    m$method.tau <- method.tau
+  #
   if (is.glmm | three.level) {
     m$seTE.hakn.ci <- m$seTE.hakn.adhoc.ci <-
       m$seTE.hakn.pi <- m$seTE.hakn.adhoc.pi <-
@@ -1353,9 +1356,10 @@ metaprop <- function(event, n, studlab,
               method.tau = method.tau,
               method.random.ci = method.random.ci,
               level = level.ma,
-              control = control, use.random = use.random)
+              control = control, use.random = use.random,
+              warn = warn)
     ##
-    res <- addGLMM(res, res.glmm, method.I2)
+    res <- addGLMM(res, res.glmm, method.I2, transf.null.effect)
     ##
     if (by) {
       n.subgroups <- length(unique(subgroup[!exclude]))
@@ -1380,7 +1384,8 @@ metaprop <- function(event, n, studlab,
                       as.call(~ subgroup.glmm)
                     else
                       NULL,
-                  control = control, use.random = use.random)$glmm.random[[1]],
+                  control = control, use.random = use.random,
+                  warn = warn)$glmm.random[[1]],
           method.I2
         )
     }

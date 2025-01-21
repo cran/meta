@@ -321,7 +321,7 @@ should be kept in meta object.}
 
 \item{warn}{A logical indicating whether warnings should be printed
 (e.g., if \code{incr} is added to studies with zero cell
-frequencies).}
+frequencies or if estimation problems exist in fitting a GLMM).}
 
 \item{warn.deprecated}{A logical indicating whether warnings should
 be printed if deprecated arguments are used.}
@@ -429,7 +429,7 @@ be utilised in a meta-analysis of binary outcomes (Stijnen et al.,
 R package \bold{brglm2} must be available to fit a one-stage logistic
 regression model with penalised likelihood (Evrenoglou et al., 2022).
 The estimation of the summary odds ratio relies on the maximisation of the 
-likelihood function, penalized using a Firth-type correction. This
+likelihood function, penalised using a Firth-type correction. This
 penalisation aims to reduce bias in cases with rare events and a small
 number of available studies. However, this method is not restricted 
 to only such cases and can be applied more generally to binary data. Note,
@@ -625,13 +625,10 @@ m5 <- update(m3, method = "Peto")
 m5
 
 \dontrun{
-# Meta-analysis using generalised linear mixed models
-# (only if R package 'lme4' is available)
-#
+# Meta-analyses using generalised linear mixed models (GLMM)
 
 # Logistic regression model with (k = 4) fixed study effects
 # (default: model.glmm = "UM.FS")
-#
 m6 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
   studlab = paste(author, year),
   data = Olkin1995, subset = year < 1970, method = "GLMM")
@@ -640,8 +637,6 @@ m6 <- update(m2, method = "GLMM")
 m6
 
 # Mixed-effects logistic regression model with random study effects
-# (warning message printed due to argument 'nAGQ')
-#
 m7 <- update(m6, model.glmm = "UM.RS")
 #
 # Use additional argument 'nAGQ' for internal call of 'rma.glmm'
@@ -652,43 +647,29 @@ m7
 
 # Generalised linear mixed model (conditional Hypergeometric-Normal)
 # (R package 'BiasedUrn' must be available)
-#
-m8 <- update(m6, model.glmm = "CM.EL")
-m8
+if (requireNamespace("BiasedUrn", quietly = TRUE)) {
+ m8 <- update(m6, model.glmm = "CM.EL")
+ m8
+}
 
 # Generalised linear mixed model (conditional Binomial-Normal)
-#
 m9 <- update(m6, model.glmm = "CM.AL")
 m9
 
 # Logistic regression model with (k = 70) fixed study effects
-# (about 18 seconds with Intel Core i7-3667U, 2.0GHz)
-#
 m10 <- metabin(ev.exp, n.exp, ev.cont, n.cont,
    studlab = paste(author, year),
    data = Olkin1995, method = "GLMM")
 m10
 
 # Mixed-effects logistic regression model with random study effects
-# - about 50 seconds with Intel Core i7-3667U, 2.0GHz
-# - several warning messages, e.g. "failure to converge, ..."
-#
 update(m10, model.glmm = "UM.RS")
 
-# Conditional Hypergeometric-Normal GLMM
-# - long computation time (about 12 minutes with Intel Core
-#   i7-3667U, 2.0GHz)
-# - estimation problems for this very large dataset:
-#   * warning that Choleski factorisation of Hessian failed
-#   * confidence interval for treatment effect smaller in random
-#     effects model compared to common effect model
-#
+# Conditional Hypergeometric-Normal GLMM (with long computation time)
 system.time(m11 <- update(m10, model.glmm = "CM.EL"))
 m11
 
 # Generalised linear mixed model (conditional Binomial-Normal)
-# (less than 1 second with Intel Core i7-3667U, 2.0GHz)
-#
 update(m10, model.glmm = "CM.AL")
 }
 

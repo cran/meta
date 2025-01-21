@@ -1,12 +1,12 @@
 Package: meta
 Title: General Package for Meta-Analysis
-Version: 8.0-1
-Date: 2024-10-31
+Version: 8.0-2
+Date: 2025-01-21
 Depends: R (>= 4.0.0), metadat
 Imports: metafor (>= 3.0-0), grid, lme4, CompQuadForm, xml2, dplyr,
         methods, readr, magrittr, purrr, stringr
-Suggests: netmeta, BiasedUrn, pimeta, estmeansd, writexl, rmarkdown,
-        knitr, robvis, brglm2
+Suggests: netmeta, BiasedUrn, pimeta, estmeansd, robvis, brglm2,
+        writexl, rmarkdown, knitr
 Authors@R: person("Guido", "Schwarzer",
                   role = c("cre", "aut"),
                   email = "guido.schwarzer@uniklinik-freiburg.de",
@@ -20,6 +20,7 @@ Description: User-friendly general package providing standard methods for meta-a
  - several plots (forest, funnel, Galbraith / radial, L'Abbe, Baujat, bubble);
  - three-level meta-analysis model;
  - generalised linear mixed model;
+ - logistic regression with penalised likelihood for rare events;
  - Hartung-Knapp method for random effects model;
  - Kenward-Roger method for random effects model;
  - prediction interval;
@@ -34,6 +35,6 @@ Encoding: UTF-8
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2024-10-31 08:26:58 UTC; sc
+Packaged: 2025-01-21 18:29:14 UTC; sc
 Repository: CRAN
-Date/Publication: 2024-10-31 10:50:03 UTC
+Date/Publication: 2025-01-21 19:20:02 UTC

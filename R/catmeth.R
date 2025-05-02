@@ -21,14 +21,20 @@ catmeth <- function(x,
   ##
   ##
   
-  metabin  <- inherits(x, "metabin")
-  metacont <- inherits(x, "metacont")
-  metainc  <- inherits(x, "metainc")
-  metaprop <- inherits(x, "metaprop")
-  metarate <- inherits(x, "metarate")
-  trimfill <- inherits(x, "trimfill")
-  metamiss <- inherits(x, "metamiss")
+  metacum.metainf <- inherits(x, "metacum") | inherits(x, "metainf")
   metabind <- inherits(x, "metabind")
+  #
+  metabin  <- inherits(x, "metabin") & !metacum.metainf
+  metacont <- inherits(x, "metacont") & !metacum.metainf
+  metacor  <- inherits(x, "metacor") & !metacum.metainf
+  metagen  <- inherits(x, "metagen") & !metacum.metainf
+  metainc  <- inherits(x, "metainc") & !metacum.metainf
+  metamean <- inherits(x, "metamean") & !metacum.metainf
+  metaprop <- inherits(x, "metaprop") & !metacum.metainf
+  metarate <- inherits(x, "metarate") & !metacum.metainf
+  #
+  trimfill <- inherits(x, "trimfill") & !metacum.metainf
+  metamiss <- inherits(x, "metamiss") & !metacum.metainf
   ##
   by <- !is.null(x$subgroup)
   ##
@@ -63,19 +69,24 @@ catmeth <- function(x,
   #
   width <- options()$width
   ##
-  method <-
-    if (metacont)
-      "metacont"
-    else if (metabin)
-      "metabin"
-    else if (metainc)
-      "metainc"
-    else if (metaprop)
-      "metaprop"
-    else if (metarate)
-      "metarate"
-    else if (metabind)
-      x$classes
+  if (metabin)
+    method <- "metabin"
+  else if (metacont)
+    method <- "metacont"
+  else if (metacor)
+    method <- "metacor"
+  else if (metagen)
+    method <- "metagen"
+  else if (metainc)
+    method <- "metainc"
+  else if (metamean)
+    method <- "metamean"
+  else if (metaprop)
+    method <- "metaprop"
+  else if (metarate)
+    method <- "metarate"
+  else if (metacum.metainf | metabind)
+    method <- x$classes
   ##
   if (forest) {
     text.tau2 <- "tau^2"
@@ -86,7 +97,7 @@ catmeth <- function(x,
   ##
   text.t <- ""
   ##
-  if (print.tau2 | metabind)
+  if (print.tau2 | metabind | metacum.metainf)
     text.t <- text.tau2
   else if (print.tau)
     text.t <- text.tau
@@ -100,7 +111,7 @@ catmeth <- function(x,
   ##
   ##
 
-  if (overall | metabind | by) {
+  if (overall | metabind | metacum.metainf | by) {
     
     meth.ma <- meth[meth$model %in% selmod, , drop = FALSE]
     ##
@@ -136,10 +147,14 @@ catmeth <- function(x,
   ## (3) Estimation of between-study variance
   ##
   ##
-  
-  if ((random & (overall | metabind | by)) | overall.hetstat) {
-    dat.mt <-
-      unique(meth[meth$model %in% "random", c("tau.preset", "method.tau")])
+  if (((random | (metacum.metainf & (print.tau2 | print.tau))) & 
+       (overall | metabind | by)) | overall.hetstat) {
+    if (metacum.metainf)
+      sel.mt <- meth$model %in% c("common", "random")
+    else
+      sel.mt <- meth$model == "random"
+    #
+    dat.mt <- unique(meth[sel.mt, c("tau.preset", "method.tau")])
     ##
     tau.preset <- dat.mt$tau.preset[!is.na(dat.mt$tau.preset)]
     ##
@@ -192,7 +207,7 @@ catmeth <- function(x,
       }
     }
     ##
-    if (metabin) {
+    if (metabin | metacum.metainf) {
       dat.qc <-
         unique(meth[meth$model %in% "random" & is.na(meth$tau.preset),
                     c("method.tau", "Q.Cochrane")])
@@ -693,7 +708,7 @@ catmeth <- function(x,
   ## (12) Information on continuity correction
   ##
   ##
-
+  
   if (metabin | metainc | metaprop | metarate) {
     vars <- c("method", "incr", "method.incr", "sparse", "k.all")
     ##
@@ -735,7 +750,11 @@ catmeth <- function(x,
         else
           txtCC.ind.i <- dat.cc$method[i] %in% c("GLMM", "LRP")
         ##
-        if (method.incr.i == "all") {
+        if (method.incr.i == "user") {
+          if (incr.i != 0)
+            details.cc <- "\n- User-defined continuity correction"
+        }
+        else if (method.incr.i == "all") {
           if (incr.i == "TACC") {
             details.cc <- c(
               details.cc,
@@ -796,7 +815,7 @@ catmeth <- function(x,
               "(only used to calculate individual study results)")
         }
         ##
-        if (metabin) {
+        if (metabin & method.incr.i != "user") {
           if ((!is.na(dat.cc$allstudies[i]) && dat.cc$allstudies[i]) &
               (!is.na(dat.cc$doublezeros[i]) && dat.cc$doublezeros[i]))
             details.cc <- c(

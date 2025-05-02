@@ -15,9 +15,12 @@
   cycles,
   method,
   sm = object$sm,
-  incr,
+  incr = object$incr,
   method.incr = object$method.incr,
   allstudies = object$allstudies,
+  incr.e,
+  incr.c,
+  incr.event,
   MH.exact = object$MH.exact,
   RR.Cochrane = object$RR.Cochrane,
   Q.Cochrane = object$Q.Cochrane,
@@ -39,6 +42,7 @@
   tau.preset = object$tau.preset,
   TE.tau = object$TE.tau,
   tau.common = object$tau.common,
+  detail.tau = object$detail.tau,
   method.I2 = object$method.I2,
   prediction = object$prediction,
   level.predict = object$level.predict,
@@ -148,6 +152,15 @@ events in both groups are to be included in the meta-analysis
 (applies only to \code{\link{metabin}} object with \code{sm}
 equal to \code{"RR"} or \code{"OR"}).}
 
+\item{incr.e}{Continuity correction in experimental group (see
+\code{\link{metabin}} and \code{\link{metainc}}).}
+
+\item{incr.c}{Continuity correction in control group (see
+\code{\link{metabin}} and \code{\link{metainc}}).}
+
+\item{incr.event}{Continuity correction (see
+\code{\link{metaprop}} and \code{\link{metarate}}).}
+
 \item{MH.exact}{A logical indicating if \code{incr} is not to be
 added to all cell frequencies for studies with a zero cell count
 to calculate the pooled estimate based on the Mantel-Haenszel
@@ -226,6 +239,8 @@ between-study variance tau-squared.}
 
 \item{tau.common}{A logical indicating whether tau-squared should
 be the same across subgroups.}
+
+\item{detail.tau}{Detail on between-study variance estimate.}
 
 \item{method.I2}{A character string indicating which method is
 used to estimate the heterogeneity statistic I\eqn{^2}. Either
@@ -307,10 +322,10 @@ the null effect.}
 the null effect.}
 
 \item{n.e}{Number of observations in experimental group (only for
-\code{\link{metagen}} object).}
+\code{\link{metagen}} or \code{\link{metainc}} object).}
 
 \item{n.c}{Number of observations in control group (only for
-metagen object).}
+\code{\link{metagen}} or \code{\link{metainc}} object).}
 
 \item{method.mean}{A character string indicating which method to
 use to approximate the mean from the median and other statistics

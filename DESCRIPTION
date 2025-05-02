@@ -1,17 +1,18 @@
 Package: meta
 Title: General Package for Meta-Analysis
-Version: 8.0-2
-Date: 2025-01-21
+Version: 8.1-0
+Date: 2025-05-02
 Depends: R (>= 4.0.0), metadat
-Imports: metafor (>= 3.0-0), grid, lme4, CompQuadForm, xml2, dplyr,
-        methods, readr, magrittr, purrr, stringr
+Imports: metafor (>= 3.0-0), grid, ggplot2, lme4, CompQuadForm, xml2,
+        methods, readr, dplyr, magrittr, purrr, stringr, tibble, scales
 Suggests: netmeta, BiasedUrn, pimeta, estmeansd, robvis, brglm2,
-        writexl, rmarkdown, knitr
+        writexl, rmarkdown, knitr, ggpubr, gridExtra
 Authors@R: person("Guido", "Schwarzer",
                   role = c("cre", "aut"),
                   email = "guido.schwarzer@uniklinik-freiburg.de",
                   comment = c(ORCID = "0000-0001-6214-9087"))
-Author: Guido Schwarzer [cre, aut] (<https://orcid.org/0000-0001-6214-9087>)
+Author: Guido Schwarzer [cre, aut] (ORCID:
+    <https://orcid.org/0000-0001-6214-9087>)
 Maintainer: Guido Schwarzer <guido.schwarzer@uniklinik-freiburg.de>
 URL: https://github.com/guido-s/meta/
         https://link.springer.com/book/10.1007/978-3-319-21416-0
@@ -35,6 +36,6 @@ Encoding: UTF-8
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2025-01-21 18:29:14 UTC; sc
+Packaged: 2025-05-02 14:56:04 UTC; sc
 Repository: CRAN
-Date/Publication: 2025-01-21 19:20:02 UTC
+Date/Publication: 2025-05-02 16:10:02 UTC

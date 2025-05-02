@@ -221,7 +221,7 @@ mismatch <- function(x, y, var) {
     return(FALSE)
   else {
     if (!is.null(x) & !is.null(y))
-      return(any(x != y))
+      return(any(x != y, na.rm = TRUE))
     else
       return(TRUE)
   }
@@ -731,7 +731,10 @@ calcPercent <- function(x)
 cond <- function(x, only.finite = TRUE, digits = 2, big.mark = "") {
   if (is.null(x))
     return(x)
-  ##
+  #
+  if (is.character(x))
+    return(x)
+  #
   if (only.finite)
     x <- x[is.finite(x)]
   ##
@@ -848,11 +851,39 @@ expandvar <- function(x, n, length = NULL) {
   res
 }
 
-ignore_input <- function(x, cond = TRUE, text = "") {
+warn_ignore_input <- function(x, cond = TRUE, text = "") {
   if (cond)
     warning("Argument '", deparse(substitute(x)), "' ignored",
             if (text != "") " ", text, ".",
             call. = FALSE)
   #
   invisible(NULL)
+}
+
+warn_set_input <- function(x, cond = TRUE, set, text = "") {
+  if (cond)
+    warning("Argument '", deparse(substitute(x)), " = ", set, "'",
+            if (text != "") " ", text, ".",
+            call. = FALSE)
+  #
+  invisible(NULL)
+}
+
+drop_from_dots <- function(x, old, new) {
+  for (i in seq_along(old)) {
+    if (!is.null(x[[old[i]]])) {
+      if (new[i] != "")
+        warning("Argument '", old[i],
+                "' ignored; please use argument '",
+                new[i], "' instead.",
+                call. = FALSE)
+      else
+        warning("Argument '", old[i],
+                "' ignored as it is used internally.",
+                call. = FALSE)
+      #
+      x[[old[i]]] <- NULL
+    }
+  }
+  x
 }

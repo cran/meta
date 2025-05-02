@@ -19,6 +19,8 @@ metainc(
   sm = gs("sminc"),
   incr = gs("incr"),
   method.incr = gs("method.incr"),
+  incr.e = if (length(incr) > 1) incr else NULL,
+  incr.c = if (length(incr) > 1) incr else NULL,
   model.glmm = "UM.FS",
   level = gs("level"),
   common = gs("common"),
@@ -34,6 +36,7 @@ metainc(
   tau.preset = NULL,
   TE.tau = NULL,
   tau.common = gs("tau.common"),
+  detail.tau = NULL,
   method.I2 = gs("method.I2"),
   level.ma = gs("level.ma"),
   method.random.ci = gs("method.random.ci"),
@@ -117,11 +120,16 @@ abbreviated.}
 be used for pooling of studies, see Details.}
 
 \item{incr}{A numerical value which is added to cell frequencies
-for studies with a zero cell count, see Details.}
+for studies with a zero cell count or a numeric vector with the continuity
+correction for each study, see Details.}
 
 \item{method.incr}{A character string indicating which continuity
 correction method should be used (\code{"only0"},
-\code{"if0all"}, or \code{"all"}), see Details.}
+\code{"if0all"}, \code{"all"}, or \code{"user"}), see Details.}
+
+\item{incr.e}{Continuity correction in experimental group, see Details.}
+
+\item{incr.c}{Continuity correction in control group, see Details.}
 
 \item{model.glmm}{A character string indicating which GLMM should
 be used. One of \code{"UM.FS"}, \code{"UM.RS"}, and
@@ -168,6 +176,8 @@ between-study variance tau-squared.}
 
 \item{tau.common}{A logical indicating whether tau-squared should
 be the same across subgroups.}
+
+\item{detail.tau}{Detail on between-study variance estimate.}
 
 \item{method.I2}{A character string indicating which method is
 used to estimate the heterogeneity statistic I\eqn{^2}. Either
@@ -406,7 +416,7 @@ model (with random treatment effects).
 
 \subsection{Continuity correction}{
 
-Three approaches are available to apply a continuity correction:
+Four approaches are available to apply a continuity correction:
 \itemize{
 \item Only studies with a zero cell count (\code{method.incr =
   "only0", default})
@@ -414,6 +424,8 @@ Three approaches are available to apply a continuity correction:
   (\code{method.incr = "if0all"})
 \item All studies irrespective of zero cell counts
   (\code{method.incr = "all"})
+\item Use values provided in arguments \code{incr.e} and \code{incr.c}
+  (\code{method.incr = "user"})
 }
 
 For studies with a zero cell count, by default, 0.5 is added to all

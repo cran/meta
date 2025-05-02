@@ -29,7 +29,8 @@
 #'   (\code{"IR"}, \code{"IRLN"}, \code{"IRS"}, or \code{"IRFT"}) is
 #'   to be used for pooling of studies, see Details.
 #' @param incr A numeric which is added to the event number of studies
-#'   with zero events, i.e., studies with an incidence rate of 0.
+#'   with zero events, i.e., studies with an incidence rate of 0. Or a
+#'   numeric vector with the continuity correction for each study.
 #' @param method.incr A character string indicating which continuity
 #'   correction method should be used (\code{"only0"},
 #'   \code{"if0all"}, or \code{"all"}), see Details.
@@ -66,6 +67,7 @@
 #'   between-study variance tau-squared.
 #' @param tau.common A logical indicating whether tau-squared should
 #'   be the same across subgroups.
+#' @param detail.tau Detail on between-study variance estimate.
 #' @param method.I2 A character string indicating which method is
 #'   used to estimate the heterogeneity statistic I\eqn{^2}. Either
 #'   \code{"Q"} or \code{"tau2"}, can be abbreviated
@@ -383,6 +385,7 @@ metarate <- function(event, time, studlab,
                      level.hetstat = gs("level.hetstat"),
                      tau.preset = NULL, TE.tau = NULL,
                      tau.common = gs("tau.common"),
+                     detail.tau = NULL,
                      #
                      method.I2 = gs("method.I2"),
                      #
@@ -438,6 +441,7 @@ metarate <- function(event, time, studlab,
   ## (1) Check and set arguments
   ##
   ##
+  
   chknumeric(rho, min = -1, max = 1)
   ##
   missing.method <- missing(method)
@@ -603,6 +607,7 @@ metarate <- function(event, time, studlab,
   ## (2) Read data
   ##
   ##
+  
   nulldata <- is.null(data)
   sfsp <- sys.frame(sys.parent())
   mc <- match.call()
@@ -657,6 +662,7 @@ metarate <- function(event, time, studlab,
   ## (3) Check length of essential variables
   ##
   ##
+  
   chklength(time, k.All, fun)
   if (!is.null(n))
     chklength(n, k.All, fun)
@@ -694,6 +700,7 @@ metarate <- function(event, time, studlab,
   ## (4) Subset, exclude studies, and subgroups
   ##
   ##
+  
   if (!missing.subset)
     if ((is.logical(subset) & (sum(subset) > k.All)) ||
         (length(subset) > k.All))
@@ -718,6 +725,7 @@ metarate <- function(event, time, studlab,
   ##     (if argument keepdata is TRUE)
   ##
   ##
+  
   if (keepdata) {
     if (nulldata)
       data <- data.frame(.event = event)
@@ -729,7 +737,7 @@ metarate <- function(event, time, studlab,
     if (!is.null(n))
       data$.n <- n
     ##
-    data$.incr <- incr
+    data$.incr <- NA
     ##
     if (by)
       data$.subgroup <- subgroup
@@ -750,12 +758,13 @@ metarate <- function(event, time, studlab,
       data$.id <- data$.cluster <- cluster
   }
   
-  
+    
   ##
   ##
   ## (6) Use subset for analysis
   ##
   ##
+  
   if (!missing.subset) {
     event <- event[subset]
     time  <- time[subset]
@@ -765,7 +774,7 @@ metarate <- function(event, time, studlab,
     ##
     cluster <- cluster[subset]
     exclude <- exclude[subset]
-    ##
+    #
     if (length(incr) > 1)
       incr <- incr[subset]
     ##
@@ -831,32 +840,53 @@ metarate <- function(event, time, studlab,
     chkchar(subgroup.name, length = 1)
   
   
-  ##
-  ##
-  ## (7) Calculate results for individual studies
-  ##
-  ##
+  #
+  #
+  # (7) Continuity correction
+  #
+  #
+  
   sel <- switch(sm,
                 IR   = event == 0,
                 IRLN = event == 0,
                 IRS  = rep(FALSE, length(event)),
                 IRFT = rep(FALSE, length(event)))
-  ##
+  #
   sparse <- any(sel, na.rm = TRUE)
-  ##
-  ## No need to add anything to cell counts for arcsine transformation
-  ##
-  if (addincr)
+  #
+  # No need to add anything to cell counts for arcsine transformation
+  #
+  if (addincr | method.incr == "user")
     incr.event <- if (length(incr) == 1) rep(incr, k.all) else incr
-  else
-    if (sparse)
+  else {
+    if (sparse) {
       if (allincr)
         incr.event <- if (length(incr) == 1) rep(incr, k.all) else incr
       else
         incr.event <- incr * sel
-  else
-    incr.event <- rep(0, k.all)
+    }
+    else
+      incr.event <- rep(0, k.all)
+  }
+  #
+  if (keepdata) {
+    if (missing.subset) {
+      data$.incr <- incr.event
+    }
+    else {
+      data$.incr <- NA
+      #
+      data$.incr[subset] <- incr.event
+    }
+  }
+  
+  
   ##
+  ##
+  ## (8) Calculate results for individual studies
+  ##
+  ##
+  
   if (sm == "IR") {
     TE <- (event + incr.event) / time
     seTE <- sqrt(TE / time)
@@ -912,9 +942,10 @@ metarate <- function(event, time, studlab,
   
   ##
   ##
-  ## (8) Additional checks for three-level model
+  ## (9) Additional checks for three-level model
   ##
   ##
+  
   three.level <- FALSE
   sel.ni <- !is.infinite(TE) & !is.infinite(seTE)
   ##
@@ -941,9 +972,10 @@ metarate <- function(event, time, studlab,
   
   ##
   ##
-  ## (9) Additional checks for GLMM
+  ## (10) Additional checks for GLMM
   ##
   ##
+  
   if (is.glmm) {
     chkglmm(sm, method.tau, method.random.ci, method.predict,
             adhoc.hakn.ci, adhoc.hakn.pi,
@@ -973,9 +1005,10 @@ metarate <- function(event, time, studlab,
   
   ##
   ##
-  ## (10) Do meta-analysis
+  ## (11) Do meta-analysis
   ##
   ##
+  
   k <- sum(!is.na(event[!exclude]) & !is.na(time[!exclude]))
   ##
   for (i in seq_along(method.random.ci))
@@ -1001,6 +1034,7 @@ metarate <- function(event, time, studlab,
                tau.preset = tau.preset,
                TE.tau = TE.tau,
                tau.common = FALSE,
+               detail.tau = detail.tau,
                #
                method.I2 = method.I2,
                #
@@ -1043,9 +1077,10 @@ metarate <- function(event, time, studlab,
   
   ##
   ##
-  ## (9) Generate R object
+  ## (12) Generate R object
   ##
   ##
+  
   res <- list(event = event, time = time,
               n = n,
               incr = if (length(unique(incr)) == 1) unique(incr) else incr,
@@ -1149,11 +1184,11 @@ metarate <- function(event, time, studlab,
   ##
   res$irscale <- irscale
   res$irunit  <- irunit
-  ##
+  #
+  res$pairwise <- FALSE
+  #
   res$call <- match.call()
-  res$allincr <- allincr
-  res$addincr <- addincr
-  ##
+  #
   if (keepdata) {
     res$data <- data
     if (!missing.subset)

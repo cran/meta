@@ -1,10 +1,11 @@
 text_meth <- function(x, i, random, method) {
   ##
-  if (x$method[i] == "MH")
+  if (x$method[i] == "MH" & x$model[i] == "common")
     txt <- text_MH(x, i, random)
   else if (x$method[i] == "Peto")
     txt <- text_Peto(x, i, random)
-  else if (x$method[i] == "Inverse")
+  else if (x$method[i] == "Inverse" |
+           (x$method[i] == "MH" & x$model[i] == "random"))
     txt <- text_Inverse(x, i, random, method)
   else if (x$method[i] == "GLMM")
     txt <- text_GLMM(x, i, random, method)
@@ -26,18 +27,10 @@ text_meth <- function(x, i, random, method) {
 text_MH <- function(x, i, random) {
   meth.i <- x[i, , drop = FALSE]
   ##
-  txt <- "\n- Mantel-Haenszel method"
-  ##
-  if (!is.null(meth.i$sparse)) {
-    if ((meth.i$sparse | meth.i$method.incr == "all") &
-        (!is.null(meth.i$MH.exact) && meth.i$MH.exact))
-      txt <-
-        paste0(txt,
-               if (random)
-                 ", without continuity correction)"
-               else
-                 " (without continuity correction)")
-  }
+  txt <- paste0("\n- ",
+                if (!is.null(meth.i$MH.exact) && meth.i$MH.exact)
+                  "Exact ",
+                "Mantel-Haenszel method")
   ##
   if (random)
     txt <- paste0(txt, " (", gs("text.w.common"), " effect model)")

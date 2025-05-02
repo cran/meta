@@ -34,6 +34,12 @@
 #'   events in both groups are to be included in the meta-analysis
 #'   (applies only to \code{\link{metabin}} object with \code{sm}
 #'   equal to \code{"RR"} or \code{"OR"}).
+#' @param incr.e Continuity correction in experimental group (see
+#'   \code{\link{metabin}} and \code{\link{metainc}}).
+#' @param incr.c Continuity correction in control group (see
+#'   \code{\link{metabin}} and \code{\link{metainc}}).
+#' @param incr.event Continuity correction (see
+#'   \code{\link{metaprop}} and \code{\link{metarate}}).
 #' @param MH.exact A logical indicating if \code{incr} is not to be
 #'   added to all cell frequencies for studies with a zero cell count
 #'   to calculate the pooled estimate based on the Mantel-Haenszel
@@ -98,6 +104,7 @@
 #'   between-study variance tau-squared.
 #' @param tau.common A logical indicating whether tau-squared should
 #'   be the same across subgroups.
+#' @param detail.tau Detail on between-study variance estimate.
 #' @param method.I2 A character string indicating which method is
 #'   used to estimate the heterogeneity statistic I\eqn{^2}. Either
 #'   \code{"Q"} or \code{"tau2"}, can be abbreviated
@@ -147,9 +154,9 @@
 #' @param col.label.right The colour of the graph label on the right side of
 #'   the null effect.
 #' @param n.e Number of observations in experimental group (only for
-#'   \code{\link{metagen}} object).
+#'   \code{\link{metagen}} or \code{\link{metainc}} object).
 #' @param n.c Number of observations in control group (only for
-#'   metagen object).
+#'   \code{\link{metagen}} or \code{\link{metainc}} object).
 #' @param method.mean A character string indicating which method to
 #'   use to approximate the mean from the median and other statistics
 #'   (see \code{\link{metacont}} and \code{\link{metamean}}).
@@ -291,7 +298,6 @@
 #' @method update meta
 #' @export
 
-
 update.meta <- function(object, 
                         data = object$data,
                         subset, studlab, exclude, cluster,
@@ -300,9 +306,12 @@ update.meta <- function(object,
                         ##
                         method,
                         sm = object$sm,
-                        incr,
+                        incr = object$incr,
                         method.incr = object$method.incr,
                         allstudies = object$allstudies,
+                        #
+                        incr.e, incr.c, incr.event,
+                        #
                         MH.exact = object$MH.exact,
                         RR.Cochrane = object$RR.Cochrane,
                         Q.Cochrane = object$Q.Cochrane,
@@ -326,6 +335,7 @@ update.meta <- function(object,
                         tau.preset = object$tau.preset,
                         TE.tau = object$TE.tau,
                         tau.common = object$tau.common,
+                        detail.tau = object$detail.tau,
                         #
                         method.I2 = object$method.I2,
                         #
@@ -437,7 +447,10 @@ update.meta <- function(object,
   missing.method.predict <- missing(method.predict)
   missing.adhoc.hakn.pi <- missing(adhoc.hakn.pi)
   missing.text.predict <- missing(text.predict)
-  ##
+  #
+  missing.method.bias <- missing(method.bias)
+  missing.method.incr <- missing(method.incr)
+  #
   chklogical(verbose)
   ##
   if (update_needed(object$version, 3, 2, verbose)) {
@@ -565,13 +578,6 @@ update.meta <- function(object,
       object$data$.cluster <- object$data$.id
   }
   #
-  if (update_needed(object$version, 6, 1, verbose)) {
-    ##
-    ## Changes for meta objects with version < 6.1
-    ##
-    object$transf <- TRUE
-  }
-  #
   if (update_needed(object$version, 6, 0, verbose)) {
     ##
     ## Changes for meta objects with version < 6.0
@@ -603,6 +609,13 @@ update.meta <- function(object,
       ##
       object$df.Q.b.random <- object$df.Q.b.common <- object$df.Q.b
     }
+  }
+  #
+  if (update_needed(object$version, 6, 1, verbose)) {
+    ##
+    ## Changes for meta objects with version < 6.1
+    ##
+    object$transf <- TRUE
   }
   #
   if (update_needed(object$version, 6, 5, verbose)) {
@@ -754,6 +767,38 @@ update.meta <- function(object,
     #
     object$level.hetstat <- object$level.ma
   }
+  #
+  if (update_needed(object$version, 8, 1, verbose)) {
+    #
+    # Changes for meta objects with version < 8.1
+    #
+    object$pairwise <- FALSE
+    #
+    if (object$keepdata) {
+      if (inherits(object, c("metabin", "metainc"))) {
+        if (isCol(object$data, ".subset")) {
+          object$incr.e <- object$data$.incr[object$data$.subset]
+          object$incr.c <- object$data$.incr[object$data$.subset]
+        }
+        else {
+          object$incr.e <- object$data$.incr
+          object$incr.c <- object$data$.incr
+        }
+        #
+        object$data$.incr.e <- object$data$.incr
+        object$data$.incr.c <- object$data$.incr
+        object$data$.incr <- NULL
+      }
+      #
+      if (inherits(object, "metainc"))
+        object$incr.event <- NULL
+      #
+      if (inherits(object, c("metaprop", "metarate"))) {
+        object$data$.incr.event <- object$data$.incr
+        object$data$.incr <- NULL
+      }
+    }
+  }
   
   
   ##
@@ -784,6 +829,8 @@ update.meta <- function(object,
   ## Check for deprecated arguments in '...'
   ##
   args <- list(...)
+  nam.args <- names(args)
+  #
   chklogical(warn.deprecated)
   ##
   level.ma <- deprecated(level.ma, missing(level.ma), args, "level.comb",
@@ -835,18 +882,16 @@ update.meta <- function(object,
     replaceNULL(prediction.subgroup, gs("prediction.subgroup"))
   ##
   missing.method.incr <- missing(method.incr)
-  addincr <-
-    deprecated(method.incr, missing.method.incr, args, "addincr",
-               warn.deprecated)
-  allincr <-
-    deprecated(method.incr, missing.method.incr, args, "allincr",
-               warn.deprecated)
-  if (missing.method.incr) {
-    if (is.logical(addincr) && addincr)
-      method.incr <- "all"
-    else if (is.logical(allincr) && allincr)
-      method.incr <- "if0all"
-  }
+  #
+  # Ignore deprecated arguments 'addincr' and 'allincr'
+  #
+  txt.ignore <- "(deprecated); use argument 'method.incr'"
+  #
+  addincr <- allincr <- NULL
+  if (!is.na(charmatch("addincr", nam.args)))
+    warn_ignore_input(addincr, TRUE, txt.ignore)
+  if (!is.na(charmatch("allincr", nam.args)))
+    warn_ignore_input(allincr, TRUE, txt.ignore)
   ##
   ## Some more checks
   ##
@@ -885,6 +930,8 @@ update.meta <- function(object,
     ##
     oldclass <- object$class.x
     ##
+    object$class <- object$class[object$class != "trimfill"]
+    #
     res <- trimfill(object,
                     left = left, ma.common = ma.common,
                     type = type, n.iter.max = n.iter.max,
@@ -995,11 +1042,42 @@ update.meta <- function(object,
   ## Catch argument 'incr'
   ##
   missing.incr <- missing(incr)
-  ##
-  if (!missing.incr)
-    incr <- catch("incr", mc, data, sfsp)
+  #
+  # Catch argument 'incr.e'
+  #
+  missing.incr.e <- missing(incr.e)
+  #
+  if (!missing.incr.e)
+    incr.e <- catch("incr.e", mc, data, sfsp)
   else
-    incr <- catch2(object, "incr", gs("incr"))
+    incr.e <- catch2(object, "incr.e", gs("incr"))
+  #
+  avail.incr.e <- !missing.incr.e & !is.null(incr.e)
+  #
+  # Catch argument 'incr.c'
+  #
+  missing.incr.c <- missing(incr.c)
+  #
+  if (!missing.incr.c)
+    incr.c <- catch("incr.c", mc, data, sfsp)
+  else
+    incr.c <- catch2(object, "incr.c", gs("incr"))
+  #
+  avail.incr.c <- !missing.incr.c & !is.null(incr.c)
+  #
+  # Catch argument 'n.e'
+  #
+  if (!missing(n.e))
+    n.e <- catch("n.e", mc, data, sfsp)
+  else
+    n.e <- catch2(object, "n.e")
+  #
+  # Catch argument 'n.c'
+  #
+  if (!missing(n.c))
+    n.c <- catch("n.c", mc, data, sfsp)
+  else
+    n.c <- catch2(object, "n.c")
   ##
   ## Catch argument 'approx.mean.e'
   ##
@@ -1144,7 +1222,6 @@ update.meta <- function(object,
   ##
   ##
   method.predict <- replaceVal(method.predict, "", gs("method.predict"))
-  missing.method.bias <- missing(method.bias)
   ##
   if (metabin) {
     sm <- setchar(sm, gs("sm4bin"))
@@ -1156,47 +1233,61 @@ update.meta <- function(object,
     if (method %in% c("GLMM", "LRP") & !missing.sm & sm != "OR")
       warning("Summary measure 'sm = \"OR\" used as 'method = \"",
               method, "\".")
-    ##
-    if (sm == "ASD") {
-      if (!missing.incr && any(incr != 0))
-        warning("Note, no continuity correction considered for ",
-                "arcsine difference (sm = \"ASD\").",
-                call. = FALSE)
-      incr <- 0
-      object$data$.incr <- 0
-    }
-    ##
-    if (method == "Peto") {
-      if (!missing.incr && any(incr != 0))
-        warning("Note, no continuity correction considered for ",
-                "method = \"Peto\".",
-                call. = FALSE)
-      incr <- 0
-      object$data$.incr <- 0
-    }
-    ##
+    #
     if (method == "GLMM") {
       sm <- "OR"
       method.tau <- "ML"
       model.glmm <- replaceNULL(model.glmm, gs("model.glmm"))
     }
-    ##
+    #
     if (method == "LRP") {
       sm <- "OR"
       method.tau <- "DL"
     }
-    ##
-    RR.Cochrane <- replaceNULL(RR.Cochrane, gs("RR.cochrane"))
     #
     if (!(method == "MH" & method.tau == "DL" &
-        (sm %in% c("OR", "RR", "RD", "DOR"))))
+          (sm %in% c("OR", "RR", "RD", "DOR"))))
       Q.Cochrane <- FALSE
     #
     if (sm == "DOR" & missing.method.bias)
       method.bias <- "Deeks"
     else if (sm == "OR" & missing.method.bias)
       method.bias <- "Harbord"
-    ##
+    #
+    if (!missing.method.incr)
+      method.incr <- setchar(method.incr, gs("meth4incr"))
+    else {
+      if (!missing.incr & missing.incr.e & missing.incr.c)
+        method.incr <- gs("method.incr")
+    }
+    #
+    if (method.incr == "user") {
+      incr.orig <- incr
+      incr <- NULL
+    }
+    else {
+      incr.e <- NULL
+      incr.c <- NULL
+      #
+      if (sm == "ASD") {
+        if (!missing.incr && any(incr != 0))
+          warning("Note, no continuity correction considered for ",
+                  "arcsine difference (sm = \"ASD\").",
+                  call. = FALSE)
+        incr <- 0
+      }
+      #
+      if (method == "Peto") {
+        if (!missing.incr && any(incr != 0))
+          warning("Note, no continuity correction considered for ",
+                  "method = \"Peto\".",
+                  call. = FALSE)
+        incr <- 0
+      }
+      #
+      RR.Cochrane <- replaceNULL(RR.Cochrane, gs("RR.cochrane"))
+    }
+    #
     m <- metabin(event.e = object$data$.event.e,
                  n.e = object$data$.n.e,
                  event.c = object$data$.event.c,
@@ -1204,13 +1295,15 @@ update.meta <- function(object,
                  studlab = studlab,
                  ##
                  data = data, subset = subset, exclude = exclude,
-                 cluster = ...cluster,
+                 cluster = ...cluster, rho = rho,
                  ##
                  method = method,
                  sm = sm,
-                 incr = incr,
-                 method.incr = method.incr,
+                 #
+                 incr = incr, method.incr = method.incr,
                  allstudies = allstudies,
+                 incr.e = incr.e, incr.c = incr.c,
+                 #
                  MH.exact = MH.exact, RR.Cochrane = RR.Cochrane,
                  Q.Cochrane = Q.Cochrane, model.glmm = model.glmm,
                  ##
@@ -1228,6 +1321,7 @@ update.meta <- function(object,
                  level.hetstat = level.hetstat,
                  tau.preset = tau.preset, TE.tau = TE.tau,
                  tau.common = tau.common,
+                 detail.tau = detail.tau,
                  #
                  method.I2 = method.I2,
                  #
@@ -1261,6 +1355,9 @@ update.meta <- function(object,
                  ##
                  control = control,
                  ...)
+    #
+    if (method.incr == "user")
+      m$incr <- incr.orig
   }
   ##
   if (metacont) {
@@ -1342,6 +1439,7 @@ update.meta <- function(object,
                   level.hetstat = level.hetstat,
                   tau.preset = tau.preset, TE.tau = TE.tau,
                   tau.common = tau.common,
+                  detail.tau = detail.tau,
                   #
                   method.I2 = method.I2,
                   #
@@ -1379,7 +1477,7 @@ update.meta <- function(object,
                  studlab = studlab,
                  ##
                  data = data, subset = subset, exclude = exclude,
-                 cluster = ...cluster,
+                 cluster = ...cluster, rho = rho,
                  ##
                  sm = sm,
                  level = level, level.ma = level.ma,
@@ -1396,6 +1494,7 @@ update.meta <- function(object,
                  level.hetstat = level.hetstat,
                  tau.preset = tau.preset, TE.tau = TE.tau,
                  tau.common = tau.common,
+                 detail.tau = detail.tau,
                  #
                  method.I2 = method.I2,
                  #
@@ -1430,18 +1529,12 @@ update.meta <- function(object,
                  control = control)
   ##
   if (metagen) {
-    data.m <- data
-    add.e <- FALSE
-    add.c <- FALSE
-    ##
-    if ("n.e" %in% names(data)) {
-      add.e <- TRUE
-      data.m <- data.m[, names(data.m) != "n.e"]
-    }
-    if ("n.c" %in% names(data)) {
-      add.c <- TRUE
-      data.m <- data.m[, names(data.m) != "n.c"]
-    }
+    ...n.e <- n.e
+    ...n.c <- n.c
+    #
+    rm(n.e)
+    rm(n.c)
+    #
     if (missing(approx.TE)) {
       if (isCol(object$data, ".approx.TE"))
         approx.TE <- object$data$.approx.TE
@@ -1483,6 +1576,7 @@ update.meta <- function(object,
                  level.hetstat = level.hetstat,
                  tau.preset = tau.preset, TE.tau = TE.tau,
                  tau.common = tau.common,
+                 detail.tau = detail.tau,
                  #
                  method.I2 = method.I2,
                  #
@@ -1491,7 +1585,7 @@ update.meta <- function(object,
                  ##
                  method.bias = method.bias,
                  ##
-                 n.e = n.e, n.c = n.c,
+                 n.e = ...n.e, n.c = ...n.c,
                  ##
                  pval = setVal(object$data, ".pval"),
                  df = setVal(object$data, ".df"),
@@ -1544,15 +1638,15 @@ update.meta <- function(object,
                  warn = warn, warn.deprecated = FALSE,
                  ##
                  control = control)
-    if (add.e)
-      m$data$n.e <- data$n.e
-    if (add.c)
-      m$data$n.c <- data$n.c
-    if (add.e | add.c)
-      m$data <- m$data[, names(data)]
   }
   ##
   if (metainc) {
+    ...n.e <- n.e
+    ...n.c <- n.c
+    #
+    rm(n.e)
+    rm(n.c)
+    #
     sm <- setchar(sm, gs("sm4inc"))
     method <- setchar(method, gs("meth4inc"))
     ##
@@ -1562,26 +1656,29 @@ update.meta <- function(object,
     if (method == "GLMM" & !missing.sm & !(sm %in% c("IRR", "VE")))
       warning("Summary measure 'sm = \"IRR\" used as 'method = \"GLMM\".")
     ##
-    data.m <- data
-    add.e <- FALSE
-    add.c <- FALSE
-    ##
-    if ("n.e" %in% names(data)) {
-      add.e <- TRUE
-      data.m <- data.m[, names(data.m) != "n.e"]
-    }
-    if ("n.c" %in% names(data)) {
-      add.c <- TRUE
-      data.m <- data.m[, names(data.m) != "n.c"]
-    }
-    ##
     if (method == "GLMM") {
       if (sm != "VE")
         sm <- "IRR"
       method.tau <- "ML"
       model.glmm <- replaceNULL(model.glmm, "UM.FS")
     }
-    ##
+    #
+    if (!missing.method.incr)
+      method.incr <- setchar(method.incr, gs("meth4incr"))
+    else {
+      if (!missing.incr & missing.incr.e & missing.incr.c)
+        method.incr <- gs("method.incr")
+    }
+    #
+    if (method.incr == "user") {
+      incr.orig <- incr
+      incr <- NULL
+    }
+    else {
+      incr.e <- NULL
+      incr.c <- NULL
+    }
+    #
     m <- metainc(event.e = object$data$.event.e,
                  time.e = object$data$.time.e,
                  event.c = object$data$.event.c,
@@ -1589,12 +1686,14 @@ update.meta <- function(object,
                  studlab = studlab,
                  ##
                  data = data, subset = subset, exclude = exclude,
-                 cluster = ...cluster,
+                 cluster = ...cluster, rho = rho,
                  ##
                  method = method,
                  sm = sm,
-                 incr = incr,
-                 method.incr = method.incr,
+                 #
+                 incr = incr, method.incr = method.incr,
+                 incr.e = incr.e, incr.c = incr.c,
+                 #
                  model.glmm = model.glmm,
                  ##
                  level = level, level.ma = level.ma,
@@ -1611,6 +1710,7 @@ update.meta <- function(object,
                  level.hetstat = level.hetstat,
                  tau.preset = tau.preset, TE.tau = TE.tau,
                  tau.common = tau.common,
+                 detail.tau = detail.tau,
                  #
                  method.I2 = method.I2,
                  #
@@ -1619,7 +1719,7 @@ update.meta <- function(object,
                  ##
                  method.bias = method.bias,
                  ##
-                 n.e = n.e, n.c = n.c,
+                 n.e = ...n.e, n.c = ...n.c,
                  ##
                  backtransf = backtransf, irscale = irscale, irunit = irunit,
                  ##
@@ -1645,12 +1745,9 @@ update.meta <- function(object,
                  ##
                  control = control,
                  ...)
-    if (add.e)
-      m$data$n.e <- data$n.e
-    if (add.c)
-      m$data$n.c <- data$n.c
-    if (add.e | add.c)
-      m$data <- m$data[, names(data)]
+    #
+    if (method.incr == "user")
+      m$incr <- incr.orig
   }
   ##
   if (metamean)
@@ -1660,7 +1757,7 @@ update.meta <- function(object,
                   studlab = studlab,
                   ##
                   data = data, subset = subset, exclude = exclude,
-                  cluster = ...cluster,
+                  cluster = ...cluster, rho = rho,
                   ##
                   median = setVal(object$data, ".median"),
                   q1 = setVal(object$data, ".q1"),
@@ -1690,6 +1787,7 @@ update.meta <- function(object,
                   level.hetstat = level.hetstat,
                   tau.preset = tau.preset, TE.tau = TE.tau,
                   tau.common = tau.common,
+                  detail.tau = detail.tau,
                   #
                   method.I2 = method.I2,
                   #
@@ -1744,7 +1842,7 @@ update.meta <- function(object,
                   studlab = studlab,
                   ##
                   data = data, subset = subset, exclude = exclude,
-                  cluster = ...cluster,
+                  cluster = ...cluster, rho = rho,
                   ##
                   method = method,
                   sm = sm,
@@ -1766,6 +1864,7 @@ update.meta <- function(object,
                   level.hetstat = level.hetstat,
                   tau.preset = tau.preset, TE.tau = TE.tau,
                   tau.common = tau.common,
+                  detail.tau = detail.tau,
                   #
                   method.I2 = method.I2,
                   #
@@ -1823,7 +1922,7 @@ update.meta <- function(object,
                   studlab = studlab,
                   ##
                   data = data, subset = subset, exclude = exclude,
-                  cluster = ...cluster,
+                  cluster = ...cluster, rho = rho,
                   ##
                   method = method,
                   sm = sm,
@@ -1845,6 +1944,7 @@ update.meta <- function(object,
                   level.hetstat = level.hetstat,
                   tau.preset = tau.preset, TE.tau = TE.tau,
                   tau.common = tau.common,
+                  detail.tau = detail.tau,
                   #
                   method.I2 = method.I2,
                   #
@@ -1879,7 +1979,7 @@ update.meta <- function(object,
                   control = control,
                   ...)
   }
-  ##  
+  ##
   m$call.object <- object$call
   m$call <- match.call()
   ##

@@ -1,3 +1,108 @@
+## meta, version 8.1-0 (2025-05-02)
+
+### Major changes
+
+* New functions cidprop() and plot.cidprop() to calculate and plot
+  expected proportions of comparable studies with clinically important benefit
+  or harm which are derived from the prediction interval
+
+* Rewrite of R function metacum() for cumulative meta-analysis with dedicated
+  print and forest functions
+
+* Rewrite of R function metainf() for leave-one-out meta-analysis with dedicated
+  print and forest functions
+
+* Remove R code for cumulative or leave-one-out meta-analysis from R function
+  forest.meta()
+
+* In forest plots, information for additional columns can be printed in the
+  lines with pooled effects using the new argument 'data.pooled'
+
+* R packages **ggplot2*, **tibble**, and **scales** added to Imports
+
+* R packages **gridExtra** and **ggpubr** added to Suggests
+
+### Bug fixes
+
+* forest.meta():
+  - consider setting for list element 'null.effect' for metamean(), metaprop()
+    and metarate() objects to fix
+    [issue #67](https://github.com/guido-s/meta/pull/67)
+  - remove duplicated columns from forest plots with RevMan5 layout and risk of
+    bias information
+  - use correct column labels for log transformed treatment estimates and
+    standard errors (list elements TE and seTE) if argument 'backtransf = TRUE
+
+* update.meta():
+  - consider setting for list element 'rho' for metabin(), metacor(),
+    metainc(), metamean(), metaprop(), metarate()
+
+* metabin(), metacont(), metacor(), metainc(), metamean(), metaprop(),
+  metarate():
+  - bug fix for three-level model if argument 'detail.tau' is not specified by
+    the user
+
+* Fix bug 'could not find function "func"' in internal function chksuitable()
+
+
+### User-visible changes
+
+* metabin(), metainc():
+  - new arguments 'incr.e' and 'incr.c' for user-specified continuity correction
+  - do not warn about continuity correction for generalized linear mixed models
+    and penalised logistic regression
+  - arguments 'addincr' and 'allincr' in argument '...' ignored
+
+* pairwise():
+  - new argument 'sm' to specify summary measure (this argument was previously
+    available via argument '...')
+  - argument 'method' can be any admissible value for metabin(), metacont(),
+    metacont(), or metagen()
+  - argument 'n' considered for count data
+
+* metacr():
+  - new arguments 'label.left' and 'label.right' to fix
+    [issue #66](https://github.com/guido-s/meta/pull/66)
+
+* metabin(), metacont(), metacor(), metainc(), metamean(), metaprop(),
+  metarate(), update.meta():
+  - new argument 'detail.tau'
+
+* forest.meta():
+  - argument 'lower.equi' has been replaced by 'cid.lower'
+  - argument 'upper.equi' has been replaced by 'cid.upper'
+  - argument 'lty.equi' has been replaced by 'lty.cid'
+  - argument 'col.equi' has been replaced by 'col.cid'
+  - new argument 'cid' which can be used instead of 'cid.lower' and 'cid.upper'
+  - new arguments 'fill.cid', 'fill.cid.lower' and 'fill.cid.upper' to colour
+    regions of clinically important differences
+  - new argument 'data.pooled' to add information
+
+* metacum(), metainf():
+  - new arguments 'prediction', 'overall', and 'text.pooled'
+  - new arguments 'cid', 'cid.lower', and 'cid.upper' to define CID thresholds
+  - new argument 'small.values' to specify whether small treatment
+    effects indicate a beneficial or harmful effect
+
+* settings.meta():
+  - new settings 'cid', 'cid.lower', 'cid.upper', 'lty.cid', 'col.cid',
+    'fill.cid', and 'digits.cid'
+
+### Internal changes
+
+* metabin(), metainc():
+  - list element 'data' contains columns '.incr.e' and '.incr.c' instead of
+    '.incr'
+
+* metainc():
+  - list element 'incr.event' replaced by 'incr.e' and 'incr.c'
+
+* pairwise(): add columns 'incr1' and 'incr2' to core variables
+
+* Internal function xlab() renamed to xlab_meta() as xlab() from the R package
+  **ggplot2** is used in plot.cidprop()
+
+
 ## meta, version 8.0-2 (2025-01-21)
 
 ### Bug fixes
@@ -712,8 +817,8 @@ Revise web links
     see printout of command settings.meta(print = TRUE)
 
 * forest.meta():
-  - argument 'col.by' has been renamed to 'col.subgroup',
-  - argument 'bysort' has been renamed to 'sort.subgroup'
+  - argument 'col.by' has been replaced by 'col.subgroup',
+  - argument 'bysort' has been replaced by 'sort.subgroup'
 
 * trimfill.meta():
   - arguments 'level', 'level.ma', 'method.random.ci', 'adhoc.hakn',
@@ -773,7 +878,7 @@ Revise web links
 ### User-visible changes
 
 * For three-level models,
-  - argument 'id' has been renamed to 'cluster'
+  - argument 'id' has been replaced by 'cluster'
   - cluster variable is shown in forest plots
 
 * New arguments 'common' and 'cluster' in functions metabin(),
@@ -863,7 +968,7 @@ Revise web links
     'test.effect.subgroup.random' can be a logical vector of same
     length as number of subgroups
   - arguments 'lab.e', 'lab.c', 'lab.e.attach.to.col' and
-    'lab.c.attach.to.col' renamed to 'label.e', 'label.c',
+    'lab.c.attach.to.col' replaced by 'label.e', 'label.c',
     'label.e.attach' and 'label.c.attach'
 
 * forest.meta(), metabin(), metacont(), metacor(), metacr(),
@@ -1416,11 +1521,11 @@ Revise web links
 ### User-visible changes
 
 * forest.meta(), forest.metabind():
-  - arguments 'digits.zval' and 'print.zval' renamed to 'digits.stat'
+  - arguments 'digits.zval' and 'print.zval' replaced by 'digits.stat'
     and 'print.stat'
 
 * print.summary.meta(), settings.meta():
-  - argument 'digits.zval' renamed to 'digits.stat'
+  - argument 'digits.zval' replaced by 'digits.stat'
   
 * metacr():
   - do not print a warning for inverse variance meta-analysis with
@@ -1558,7 +1663,7 @@ Revise web links
   - new argument 'method.mean'
 
 * chkchar(), chkcolor(), chklevel(), chknumeric():
-  - argument 'single' renamed to 'length' (which can be used to test
+  - argument 'single' replaced by 'length' (which can be used to test
     for a specific vector length instead whether it is a single value)
 	(argument 'single' is still available for backward compatibility,
      however, will be removed in a future update)
@@ -1716,7 +1821,7 @@ Revise web links
   - argument checks implemented
 
 * baujat(), bubble():
-  - argument 'pos' renamed to 'pos.studlab'
+  - argument 'pos' replaced by 'pos.studlab'
   - argument checks implemented
 
 
@@ -2540,7 +2645,7 @@ Revise web links
     right side of forest plot
   - new arguments 'col.label.right' and 'col.label.left' to change
     colour of labels on left and right side of forest plot
-  - argument 'weight' renamed to 'weight.study' and new argument
+  - argument 'weight' replaced by 'weight.study' and new argument
     'weight.subgroup' added to specify whether plotted subgroup
     results should be of same or different size
   - new arguments 'print.Rb', 'print.Rb.ci' and 'Rb.text' for
@@ -2551,7 +2656,7 @@ Revise web links
     rows with subgroup label from forest plot
   - new argument 'type.subgroup' to change plotting of subgroup
     results
-  - argument 'addspace' renamed to 'addrow'
+  - argument 'addspace' replaced by 'addrow'
   - new argument 'addrow.subgroups' to add a blank line between
     subgroup results
   - new argument 'addrow.overall' to add a blank before meta-analysis
@@ -3593,7 +3698,7 @@ This functionality is now provided by update.meta().
 	- 'subset' with information on subset used in meta-analysis
 
 * metareg():
-  - argument 'data' renamed to 'x'
+  - argument 'data' replaced by 'x'
   - first two arguments interchanged (which is now in line with other
     R functions from R package **meta**)
   - information on grouping variable (list element 'byvar') is

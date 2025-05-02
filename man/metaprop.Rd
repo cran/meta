@@ -32,6 +32,7 @@ metaprop(
   tau.preset = NULL,
   TE.tau = NULL,
   tau.common = gs("tau.common"),
+  detail.tau = NULL,
   method.I2 = gs("method.I2"),
   level.ma = gs("level.ma"),
   method.random.ci = gs("method.random.ci"),
@@ -106,7 +107,8 @@ used for pooling of studies. One of \code{"Inverse"} and
 
 \item{incr}{A numeric which is added to event number and sample
 size of studies with zero or all events, i.e., studies with an
-event probability of either 0 or 1.}
+event probability of either 0 or 1. Or a numeric vector with the
+continuity correction for each study.}
 
 \item{method.incr}{A character string indicating which continuity
 correction method should be used (\code{"only0"},
@@ -157,6 +159,8 @@ between-study variance tau-squared.}
 
 \item{tau.common}{A logical indicating whether tau-squared should
 be the same across subgroups.}
+
+\item{detail.tau}{Detail on between-study variance estimate.}
 
 \item{method.I2}{A character string indicating which method is
 used to estimate the heterogeneity statistic I\eqn{^2}. Either

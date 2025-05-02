@@ -91,6 +91,7 @@
 #'   between-study variance tau-squared.
 #' @param tau.common A logical indicating whether tau-squared should
 #'   be the same across subgroups.
+#' @param detail.tau Detail on between-study variance estimate.
 #' @param method.I2 A character string indicating which method is
 #'   used to estimate the heterogeneity statistic I\eqn{^2}. Either
 #'   \code{"Q"} or \code{"tau2"}, can be abbreviated
@@ -604,6 +605,7 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                      level.hetstat = gs("level.hetstat"),
                      tau.preset = NULL, TE.tau = NULL,
                      tau.common = gs("tau.common"),
+                     detail.tau = NULL,
                      #
                      method.I2 = gs("method.I2"),
                      #
@@ -683,6 +685,9 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   missing.subgroup.name <- missing(subgroup.name)
   missing.print.subgroup.name <- missing(print.subgroup.name)
   missing.sep.subgroup <- missing(sep.subgroup)
+  #
+  missing.label.e <- missing(label.e)
+  missing.label.c <- missing(label.c)
   missing.complab <- missing(complab)
   #
   missing.cluster <- missing(cluster)
@@ -742,11 +747,6 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##
   adhoc.hakn.pi <- setchar(replaceNA(adhoc.hakn.pi, ""), gs("adhoc4hakn.pi"))
   #
-  # Classic tests + Pustejovsky
-  #
-  method.bias <-
-    setmethodbias(method.bias, c(1:3, if (sm == "SMD") 8))
-  ##
   if (!is.null(text.common))
     chkchar(text.common, length = 1)
   if (!is.null(text.random))
@@ -850,9 +850,13 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   nulldata <- is.null(data)
   sfsp <- sys.frame(sys.parent())
   mc <- match.call()
-  ##
-  if (nulldata)
+  #
+  if (nulldata) {
     data <- sfsp
+    data.pairwise <- FALSE
+  }
+  else
+    data.pairwise <- inherits(data, "pairwise")
   ##
   ## Catch 'n.e', 'mean.e', 'sd.e', 'n.c', 'mean.c', 'sd.c', 'studlab',
   ## and 'subgroup' from data:
@@ -860,21 +864,22 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   n.e <- catch("n.e", mc, data, sfsp)
   chknull(n.e)
   #
-  if (is.data.frame(n.e) & !is.null(attr(n.e, "pairwise"))) {
+  if (inherits(n.e, "pairwise")) {
+    is.pairwise <- TRUE
+    #
     type <- attr(n.e, "type")
+    #
     if (type != "continuous")
       stop("Wrong type for pairwise() object: '", type, "'.", call. = FALSE)
     #
-    is.pairwise <- TRUE
+    txt.ignore <- "as first argument is a pairwise object"
     #
-    txt.ignore <- "ignored as first argument is a pairwise object"
-    #
-    ignore_input(n.c, !missing.n.c, txt.ignore)
-    ignore_input(mean.e, !missing.mean.e, txt.ignore)
-    ignore_input(mean.c, !missing.mean.c, txt.ignore)
-    ignore_input(sd.e, !missing.sd.e, txt.ignore)
-    ignore_input(sd.c, !missing.sd.c, txt.ignore)
-    ignore_input(studlab, !missing.studlab, txt.ignore)
+    warn_ignore_input(n.c, !missing.n.c, txt.ignore)
+    warn_ignore_input(mean.e, !missing.mean.e, txt.ignore)
+    warn_ignore_input(mean.c, !missing.mean.c, txt.ignore)
+    warn_ignore_input(sd.e, !missing.sd.e, txt.ignore)
+    warn_ignore_input(sd.c, !missing.sd.c, txt.ignore)
+    warn_ignore_input(studlab, !missing.studlab, txt.ignore)
     #
     missing.n.c <- FALSE
     missing.mean.e <- FALSE
@@ -925,14 +930,16 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     }
     #
     if (missing.subgroup) {
-      #subgroup <- paste(paste0("'", treat1, "'"),
-      #                  paste0("'", treat2, "'"),
-      #                  sep = " vs ")
       subgroup <- paste(treat1, treat2, sep = " vs ")
       #
       if (length(unique(subgroup)) == 1) {
         if (missing.complab)
           complab <- unique(subgroup)
+        #
+        if (missing.label.e)
+          label.e <- unique(treat1)
+        if (missing.label.c)
+          label.c <- unique(treat2)
         #
         subgroup <- NULL
       }
@@ -971,6 +978,13 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                             warn.deprecated)
   }
   #
+  # Classic tests + Pustejovsky
+  #
+  method.bias <-
+    setmethodbias(method.bias, c(1:3, if (sm == "SMD") 8))
+  #
+  by <- !is.null(subgroup)
+  #
   k.All <- length(n.e)
   #
   avail.mean.e <- !(missing.mean.e || is.null(mean.e))
@@ -997,8 +1011,6 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     sd.c <- rep(NA, k.All)
   #
   studlab <- setstudlab(studlab, k.All)
-  #
-  by <- !is.null(subgroup)
   #
   # Catch 'subset', 'exclude', and 'cluster' from data:
   #
@@ -1337,6 +1349,25 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
     ##
     if (by)
       subgroup <- subgroup[subset]
+    #
+    if (missing.subgroup & is.pairwise & by) {
+      if (length(unique(subgroup)) == 1) {
+        by <- FALSE
+        #
+        if (missing.complab)
+          complab <- unique(subgroup)
+        #
+        subgroup <- NULL
+        #
+        if (keepdata)
+          data$.subgroup <- NULL
+        #
+        if (missing.overall)
+          overall <- TRUE
+        if (missing.overall.hetstat)
+          overall.hetstat <- TRUE
+      }
+    }
   }
   ##
   ## Determine total number of studies
@@ -1904,6 +1935,7 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
                tau.preset = tau.preset,
                TE.tau = TE.tau,
                tau.common = FALSE,
+               detail.tau = detail.tau,
                #
                method.I2 = method.I2,
                #
@@ -2002,6 +2034,11 @@ metacont <- function(n.e, mean.e, sd.e, n.c, mean.c, sd.c, studlab,
   ##
   ## Add data
   ##
+  if (is.pairwise | data.pairwise) {
+    res$pairwise <- TRUE
+    res$k.study <- length(unique(res$studlab[!is.na(res$TE)]))
+  }
+  #
   res$call <- match.call()
   ##
   if (keepdata) {

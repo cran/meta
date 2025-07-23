@@ -13,6 +13,9 @@ metaprop(
   exclude = NULL,
   cluster = NULL,
   rho = 0,
+  weights = NULL,
+  weights.common = weights,
+  weights.random = weights,
   method,
   sm = gs("smprop"),
   incr = gs("incr"),
@@ -35,6 +38,7 @@ metaprop(
   detail.tau = NULL,
   method.I2 = gs("method.I2"),
   level.ma = gs("level.ma"),
+  method.common.ci = gs("method.common.ci"),
   method.random.ci = gs("method.random.ci"),
   adhoc.hakn.ci = gs("adhoc.hakn.ci"),
   level.predict = gs("level.predict"),
@@ -96,6 +100,12 @@ from the same cluster resulting in the use of a three-level
 meta-analysis model.}
 
 \item{rho}{Assumed correlation of estimates within a cluster.}
+
+\item{weights}{A single numeric or vector with user-specified weights.}
+
+\item{weights.common}{User-specified weights (common effect model).}
+
+\item{weights.random}{User-specified weights (random effects model).}
 
 \item{method}{A character string indicating which method is to be
 used for pooling of studies. One of \code{"Inverse"} and
@@ -169,6 +179,10 @@ used to estimate the heterogeneity statistic I\eqn{^2}. Either
 
 \item{level.ma}{The level used to calculate confidence intervals
 for meta-analysis estimates.}
+
+\item{method.common.ci}{A character string indicating which method
+is used to calculate confidence interval and test statistic for
+common effect estimate (see \code{\link{meta-package}}).}
 
 \item{method.random.ci}{A character string indicating which method
 is used to calculate confidence interval and test statistic for
@@ -401,7 +415,9 @@ By default, 0.5 is used as continuity correction (argument
 \code{incr}). This continuity correction is used both to calculate
 individual study results with confidence limits and to conduct
 meta-analysis based on the inverse variance method. For GLMMs no
-continuity correction is used.
+continuity correction is used. Furthermore, the value of \code{incr} is
+only considered in the calculation of confidence intervals for individual
+studies if \code{method.ci = "NAsm"} (see next subsection).
 }
 
 \subsection{Confidence intervals for individual studies}{
@@ -428,7 +444,7 @@ summary measure, i.e. \code{method.ci = "NAsm"}, the same
 confidence interval is calculated for individual studies for any
 summary measure (argument \code{sm}) as only number of events and
 observations are used in the calculation disregarding the chosen
-transformation.
+transformation. Furthermore, the continuity correction 
 
 Results will be presented for transformed proportions if argument
 \code{backtransf = FALSE}. In this case, argument \code{method.ci =

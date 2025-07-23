@@ -21,6 +21,9 @@
 #'   from the same cluster resulting in the use of a three-level
 #'   meta-analysis model.
 #' @param rho Assumed correlation of estimates within a cluster.
+#' @param weights A single numeric or vector with user-specified weights.
+#' @param weights.common User-specified weights (common effect model).
+#' @param weights.random User-specified weights (random effects model).
 #' @param n Number of observations.
 #' @param method A character string indicating which method is to be
 #'   used for pooling of studies. One of \code{"Inverse"} and
@@ -74,6 +77,9 @@
 #'   (see \code{\link{meta-package}}).
 #' @param level.ma The level used to calculate confidence intervals
 #'   for meta-analysis estimates.
+#' @param method.common.ci A character string indicating which method
+#'   is used to calculate confidence interval and test statistic for
+#'   common effect estimate (see \code{\link{meta-package}}).
 #' @param method.random.ci A character string indicating which method
 #'   is used to calculate confidence interval and test statistic for
 #'   random effects estimate (see \code{\link{meta-package}}).
@@ -229,6 +235,8 @@
 #'
 #' For the Freeman-Tukey (Freeman & Tukey, 1950) and square root
 #' transformation as well as GLMMs no continuity correction is used.
+#' Furthermore, the value of \code{incr} is not considered for Poisson
+#' confidence intervals for individual studies (\code{method.ci = "Poisson"}).
 #' }
 #'
 #' \subsection{Subgroup analysis}{
@@ -361,6 +369,10 @@ metarate <- function(event, time, studlab,
                      ##
                      data = NULL, subset = NULL, exclude = NULL,
                      cluster = NULL, rho = 0,
+                     #
+                     weights = NULL,
+                     weights.common = weights, weights.random = weights,
+                     #
                      n = NULL,
                      ##
                      method = "Inverse",
@@ -390,6 +402,7 @@ metarate <- function(event, time, studlab,
                      method.I2 = gs("method.I2"),
                      #
                      level.ma = gs("level.ma"),
+                     method.common.ci = gs("method.common.ci"),
                      method.random.ci = gs("method.random.ci"),
                      adhoc.hakn.ci = gs("adhoc.hakn.ci"),
                      ##
@@ -514,7 +527,18 @@ metarate <- function(event, time, studlab,
   ##
   method <- setchar(method, gs("meth4rate"))
   is.glmm <- method == "GLMM"
-  ##
+  #
+  missing.method.common.ci <- missing(method.common.ci)
+  method.common.ci <- setchar(method.common.ci, gs("meth4common.ci"))
+  #
+  if (method != "Inverse" & method.common.ci == "IVhet") {
+    if (!missing.method.common.ci)
+      warning("Argument 'method.common.ci = \"IVhet\"' only available ",
+              "if 'method = \"Inverse\".",
+              call. = FALSE)
+    method.common.ci <- "classic"
+  }
+  #
   missing.method.incr <- missing(method.incr)
   method.incr <- setchar(method.incr, gs("meth4incr"))
   ##
@@ -655,6 +679,40 @@ metarate <- function(event, time, studlab,
   ##
   cluster <- catch("cluster", mc, data, sfsp)
   with.cluster <- !is.null(cluster)
+  #
+  # Catch 'weights', 'weights.common', and 'weights.random' from data:
+  #
+  if (!missing(weights))
+    weights <- catch("weights", mc, data, sfsp)
+  if (!missing(weights.common))
+    weights.common <- catch("weights.common", mc, data, sfsp)
+  if (!missing(weights.random))
+    weights.random <- catch("weights.random", mc, data, sfsp)
+  #
+  if (!is.null(weights) & is.null(weights.common))
+    weights.common <- weights
+  #
+  if (!is.null(weights) & is.null(weights.random))
+    weights.random <- weights
+  #
+  usw.common <- !is.null(weights.common)
+  usw.random <- !is.null(weights.random)
+  #
+  if (usw.common)
+    chknumeric(weights.common, min = 0)
+  #
+  if (usw.random)
+    chknumeric(weights.random, min = 0)
+  #
+  if (usw.common & method != "Inverse")
+    stop("User-specified weights for the common effect model only implemented ",
+         "for the inverse variance method (method = \"Inverse\").",
+         call. = FALSE)
+  #
+  if (usw.random & method == "GLMM")
+    stop("User-specified weights for the random effects model not implemented ",
+         "for generalized linear mixed models (method = \"GLMM\").",
+         call. = FALSE)
   
   
   ##
@@ -667,9 +725,24 @@ metarate <- function(event, time, studlab,
   if (!is.null(n))
     chklength(n, k.All, fun)
   chklength(studlab, k.All, fun)
+  #
   if (with.cluster)
     chklength(cluster, k.All, fun)
-  ##
+  #
+  if (usw.common) {
+    if (length(weights.common) == 1)
+      weights.common <- rep(weights.common, k.All)
+    else
+      chklength(weights.common, k.All, fun)
+  }
+  #
+  if (usw.random) {
+    if (length(weights.random) == 1)
+      weights.random <- rep(weights.random, k.All)
+    else
+      chklength(weights.random, k.All, fun)
+  }
+  #
   if (length(incr) > 1)
     chklength(incr, k.All, fun)
   ##
@@ -756,6 +829,12 @@ metarate <- function(event, time, studlab,
     ##
     if (with.cluster)
       data$.id <- data$.cluster <- cluster
+    #
+    if (usw.common)
+      data$.weights.common <- weights.common
+    #
+    if (usw.random)
+      data$.weights.random <- weights.random
   }
   
     
@@ -774,6 +853,9 @@ metarate <- function(event, time, studlab,
     ##
     cluster <- cluster[subset]
     exclude <- exclude[subset]
+    #
+    weights.common <- weights.common[subset]
+    weights.random <- weights.random[subset]
     #
     if (length(incr) > 1)
       incr <- incr[subset]
@@ -1018,7 +1100,10 @@ metarate <- function(event, time, studlab,
   m <- metagen(TE, seTE, studlab,
                exclude = if (missing.exclude) NULL else exclude,
                cluster = cluster, rho = rho,
-               ##
+               #
+               weights.common = weights.common,
+               weights.random = weights.random,
+               #
                sm = sm,
                level = level,
                ##
@@ -1039,6 +1124,7 @@ metarate <- function(event, time, studlab,
                method.I2 = method.I2,
                #
                level.ma = level.ma,
+               method.common.ci = method.common.ci,
                method.random.ci = method.random.ci,
                adhoc.hakn.ci = adhoc.hakn.ci,
                ##

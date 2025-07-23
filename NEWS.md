@@ -1,3 +1,68 @@
+## meta, version 8.2-0 (2025-07-23)
+
+### Major changes
+
+* Inverse variance heterogeneity (IVhet) method by
+  ([Doi et al. (2015)](https://doi.org/10.1016/j.cct.2015.05.009)) implemented
+
+* User-defined weights can be provided in meta-analysis functions
+
+* Major revision of R function metaadd() to add meta-analysis results to
+  existing meta-analysis object
+
+* R function longarm() can be used with dose-response data
+
+### Bug fixes
+
+* forest.meta():
+  - calculate and print correct totals if studies have been excluded from the
+    meta-analysis
+    [(issue #73)](https://github.com/guido-s/meta/pull/73)
+  - region for clinically important difference (CID) can be restricted to
+    meta-analysis results
+  - bug fix for p-values below 0.0001 in R object created with
+    metacum() or metainf()
+
+* metaprop():
+  - use generalised linear mixed model if argument 'method' is missing and
+    argument 'sm' is equal to "PLO", "PLOG", or "PLOGI" (i.e., the abbreviation
+    of "PLOGIT")
+
+* subgroup():
+  - calculate correct totals in subgroups if studies have been excluded from the
+    meta-analysis
+
+* Do not print information on continuity correction for generalized linear
+  mixed model and argument 'method.ci != "NAsm"'
+
+### User-visible changes
+
+* metabin(), metacont(), metacor(), metagen(); metainc(), metamean(),
+  metaprop(), metarate(), update.meta():
+  - new argument 'method.common.ci' to choose IVhet method
+  - new arguments 'weights', 'weights.common', and 'weights.random' to provide
+    user-defined weights
+
+* metaadd():
+  - argument 'type' can be equal to 'tau2' to provide estimate for the
+    between-study variance (argument 'TE') and its confidence interval
+    (arguments 'lower' and 'upper')
+  - new argument 'se' to provide standard error
+  - new argument 'df' to provide degrees of freedom for random effects estimate
+    or prediction interval
+  - argument 'method' replaces arguments 'method.common', 'method.random',
+    'method.tau' and 'method.predict'
+  - argument 'method.ci' replaces argument 'method.random.ci'
+
+* longarm():
+  - new arguments 'agent1', 'agent2', 'dose1', 'dose2', and 'sep.ag' for
+    dose-response data
+
+* forest.meta(), settings.meta():
+  - new argument 'cid.pooled.only' to restrict CID region to meta-analysis
+    results
+
+
 ## meta, version 8.1-0 (2025-05-02)
 
 ### Major changes
@@ -27,7 +92,7 @@
 * forest.meta():
   - consider setting for list element 'null.effect' for metamean(), metaprop()
     and metarate() objects to fix
-    [issue #67](https://github.com/guido-s/meta/pull/67)
+    [(issue #67)](https://github.com/guido-s/meta/pull/67)
   - remove duplicated columns from forest plots with RevMan5 layout and risk of
     bias information
   - use correct column labels for log transformed treatment estimates and
@@ -62,7 +127,7 @@
 
 * metacr():
   - new arguments 'label.left' and 'label.right' to fix
-    [issue #66](https://github.com/guido-s/meta/pull/66)
+    [(issue #66)](https://github.com/guido-s/meta/pull/66)
 
 * metabin(), metacont(), metacor(), metainc(), metamean(), metaprop(),
   metarate(), update.meta():

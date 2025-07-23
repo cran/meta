@@ -43,6 +43,7 @@ summary(m.publ)
 
 ## -----------------------------------------------------------------------------
 forest(m.publ, sortvar = year, prediction = TRUE,
+  digits.pval.Q = 3,
   file = "figure2.pdf", width = 10)
 
 ## ----echo = FALSE, out.width = "95%"------------------------------------------
@@ -55,7 +56,7 @@ m.publ.sub
 ## -----------------------------------------------------------------------------
 forest(m.publ.sub, sortvar = year,
   xlim = c(0.1, 100), at = c(0.1, 0.3, 1, 3, 10, 30, 100),
-  test.subgroup.common = FALSE,
+  digits.pval.Q = 3, test.subgroup.common = FALSE,
   label.test.subgroup.random = "Test for subgroup differences:",
   file = "figure3.pdf", width = 10)
 

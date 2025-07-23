@@ -16,6 +16,9 @@
 #' @param rho Assumed correlation of estimates within a cluster.
 #' @param cycles A numeric vector with the number of cycles per patient / study
 #'   in n-of-1 trials (see \code{\link{metagen}}).
+#' @param weights A single numeric or vector with user-specified weights.
+#' @param weights.common User-specified weights (common effect model).
+#' @param weights.random User-specified weights (random effects model).
 #' @param method A character string indicating which method is to be
 #'   used for pooling of studies (see \code{\link{metabin}},
 #'   \code{\link{metainc}}, \code{\link{metaprop}} and
@@ -75,6 +78,9 @@
 #'   null hypothesis.
 #' @param level.ma The level used to calculate confidence intervals
 #'   for meta-analysis estimates.
+#' @param method.common.ci A character string indicating which method
+#'   is used to calculate confidence interval and test statistic for
+#'   common effect estimate (see \code{\link{meta-package}}).
 #' @param method.random.ci A character string indicating which method
 #'   is used to calculate confidence interval and test statistic for
 #'   random effects estimate (see \code{\link{meta-package}}).
@@ -303,7 +309,11 @@ update.meta <- function(object,
                         subset, studlab, exclude, cluster,
                         rho = object$rho,
                         cycles,
-                        ##
+                        #
+                        weights = NULL,
+                        weights.common = object$weights.common,
+                        weights.random = object$weights.random,
+                        #
                         method,
                         sm = object$sm,
                         incr = object$incr,
@@ -324,6 +334,7 @@ update.meta <- function(object,
                         random = object$random,
                         overall = object$overall,
                         overall.hetstat = object$overall.hetstat,
+                        method.common.ci = object$method.common.ci,
                         method.random.ci = object$method.random.ci,
                         adhoc.hakn.ci = object$adhoc.hakn.ci,
                         method.predict = object$method.predict,
@@ -440,6 +451,7 @@ update.meta <- function(object,
   metaprop <- inherits(object, "metaprop")
   metarate <- inherits(object, "metarate")
   ##
+  missing.method.common.ci <- missing(method.common.ci)
   missing.method.random.ci <- missing(method.random.ci)
   missing.adhoc.hakn.ci <- missing(adhoc.hakn.ci)
   missing.text.random <- missing(text.random)
@@ -799,6 +811,13 @@ update.meta <- function(object,
       }
     }
   }
+  #
+  if (update_needed(object$version, 8, 2, verbose)) {
+    ##
+    ## Changes for meta objects with version < 8.2
+    ##
+    object$method.common.ci <- "classic"
+  }
   
   
   ##
@@ -848,7 +867,9 @@ update.meta <- function(object,
   random <- deprecated(random, missing.random, args, "comb.random",
                        warn.deprecated)
   chklogical(random)
-  ##
+  #
+  method.common.ci <- setchar(method.common.ci, gs("meth4common.ci"))
+  #
   method.random.ci <-
     deprecated(method.random.ci, missing.method.random.ci,
                args, "hakn", warn.deprecated)
@@ -937,6 +958,7 @@ update.meta <- function(object,
                     type = type, n.iter.max = n.iter.max,
                     level = level, level.ma = level.ma,
                     common = common, random = random,
+                    method.common.ci = method.common.ci,
                     method.random.ci = method.random.ci,
                     adhoc.hakn.ci = adhoc.hakn.ci,
                     method.tau = method.tau, method.tau.ci = method.tau.ci,
@@ -1137,8 +1159,13 @@ update.meta <- function(object,
   ##
   if (!is.null(subgroup.name))
     chkchar(subgroup.name, length = 1)
+  #
+  # Check arguments for common effect model
+  #
+  if (!missing.method.common.ci & missing.common)
+    common <- TRUE
   ##
-  ## Check variables for random effects model(s)
+  ## Check arguments for random effects model(s)
   ##
   if (!(missing.method.random.ci & missing.adhoc.hakn.ci) & missing.random)
     random <- TRUE
@@ -1296,7 +1323,11 @@ update.meta <- function(object,
                  ##
                  data = data, subset = subset, exclude = exclude,
                  cluster = ...cluster, rho = rho,
-                 ##
+                 #
+                 weights = weights,
+                 weights.common = weights.common,
+                 weights.random = weights.random,
+                 #
                  method = method,
                  sm = sm,
                  #
@@ -1311,6 +1342,7 @@ update.meta <- function(object,
                  common = common, random = random,
                  overall = overall, overall.hetstat = overall.hetstat,
                  ##
+                 method.common.ci = method.common.ci,
                  method.random.ci = method.random.ci,
                  adhoc.hakn.ci = adhoc.hakn.ci,
                  method.predict = method.predict,
@@ -1395,7 +1427,11 @@ update.meta <- function(object,
                   ##
                   data = data, subset = subset, exclude = exclude,
                   cluster = ...cluster, rho = rho,
-                  ##
+                  #
+                  weights = weights,
+                  weights.common = weights.common,
+                  weights.random = weights.random,
+                  #
                   median.e = setVal(object$data, ".median.e"),
                   q1.e = setVal(object$data, ".q1.e"),
                   q3.e = setVal(object$data, ".q3.e"),
@@ -1429,6 +1465,7 @@ update.meta <- function(object,
                   common = common, random = random,
                   overall = overall, overall.hetstat = overall.hetstat,
                   ##
+                  method.common.ci = method.common.ci,
                   method.random.ci = method.random.ci,
                   adhoc.hakn.ci = adhoc.hakn.ci,
                   method.predict = method.predict,
@@ -1478,12 +1515,17 @@ update.meta <- function(object,
                  ##
                  data = data, subset = subset, exclude = exclude,
                  cluster = ...cluster, rho = rho,
-                 ##
+                 #
+                 weights = weights,
+                 weights.common = weights.common,
+                 weights.random = weights.random,
+                 #
                  sm = sm,
                  level = level, level.ma = level.ma,
                  common = common, random = random,
                  overall = overall, overall.hetstat = overall.hetstat,
                  ##
+                 method.common.ci = method.common.ci,
                  method.random.ci = method.random.ci,
                  adhoc.hakn.ci = adhoc.hakn.ci,
                  method.predict = method.predict,
@@ -1559,6 +1601,10 @@ update.meta <- function(object,
                  #
                  cycles = cycles,
                  #
+                 weights = weights,
+                 weights.common = weights.common,
+                 weights.random = weights.random,
+                 #
                  sm = sm,
                  method.ci = method.ci,
                  level = level,
@@ -1566,6 +1612,7 @@ update.meta <- function(object,
                  overall = overall, overall.hetstat = overall.hetstat,
                  ##
                  level.ma = level.ma,
+                 method.common.ci = method.common.ci,
                  method.random.ci = method.random.ci,
                  adhoc.hakn.ci = adhoc.hakn.ci,
                  method.predict = method.predict,
@@ -1687,7 +1734,11 @@ update.meta <- function(object,
                  ##
                  data = data, subset = subset, exclude = exclude,
                  cluster = ...cluster, rho = rho,
-                 ##
+                 #
+                 weights = weights,
+                 weights.common = weights.common,
+                 weights.random = weights.random,
+                 #
                  method = method,
                  sm = sm,
                  #
@@ -1700,6 +1751,7 @@ update.meta <- function(object,
                  common = common, random = random,
                  overall = overall, overall.hetstat = overall.hetstat,
                  ##
+                 method.common.ci = method.common.ci,
                  method.random.ci = method.random.ci,
                  adhoc.hakn.ci = adhoc.hakn.ci,
                  method.predict = method.predict,
@@ -1758,7 +1810,11 @@ update.meta <- function(object,
                   ##
                   data = data, subset = subset, exclude = exclude,
                   cluster = ...cluster, rho = rho,
-                  ##
+                  #
+                  weights = weights,
+                  weights.common = weights.common,
+                  weights.random = weights.random,
+                  #
                   median = setVal(object$data, ".median"),
                   q1 = setVal(object$data, ".q1"),
                   q3 = setVal(object$data, ".q3"),
@@ -1777,6 +1833,7 @@ update.meta <- function(object,
                   common = common, random = random,
                   overall = overall, overall.hetstat = overall.hetstat,
                   ##
+                  method.common.ci = method.common.ci,
                   method.random.ci = method.random.ci,
                   adhoc.hakn.ci = adhoc.hakn.ci,
                   method.predict = method.predict,
@@ -1843,7 +1900,11 @@ update.meta <- function(object,
                   ##
                   data = data, subset = subset, exclude = exclude,
                   cluster = ...cluster, rho = rho,
-                  ##
+                  #
+                  weights = weights,
+                  weights.common = weights.common,
+                  weights.random = weights.random,
+                  #
                   method = method,
                   sm = sm,
                   incr = incr,
@@ -1854,6 +1915,7 @@ update.meta <- function(object,
                   common = common, random = random,
                   overall = overall, overall.hetstat = overall.hetstat,
                   ##
+                  method.common.ci = method.common.ci,
                   method.random.ci = method.random.ci,
                   adhoc.hakn.ci = adhoc.hakn.ci,
                   method.predict = method.predict,
@@ -1923,7 +1985,11 @@ update.meta <- function(object,
                   ##
                   data = data, subset = subset, exclude = exclude,
                   cluster = ...cluster, rho = rho,
-                  ##
+                  #
+                  weights = weights,
+                  weights.common = weights.common,
+                  weights.random = weights.random,
+                  #
                   method = method,
                   sm = sm,
                   incr = incr,
@@ -1934,6 +2000,7 @@ update.meta <- function(object,
                   common = common, random = random,
                   overall = overall, overall.hetstat = overall.hetstat,
                   ##
+                  method.common.ci = method.common.ci,
                   method.random.ci = method.random.ci,
                   adhoc.hakn.ci = adhoc.hakn.ci,
                   method.predict = method.predict,

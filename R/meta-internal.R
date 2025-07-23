@@ -50,7 +50,6 @@ taudat <- function(method.tau, detail.tau,
                    tau, lower.tau, upper.tau, print.tau.ci, digits.tau,
                    tau2, lower.tau2, upper.tau2, print.tau2.ci, digits.tau2,
                    sign.lower, sign.upper) {
-  
   dat <- data.frame(method.tau, names = detail.tau, tau, tau2)
   ##
   ## In order to use duplicated()
@@ -573,6 +572,7 @@ argslist.internal <-
     "ci4cont", "ci4prop", "ci4rate",
     "meth4bin", "meth4inc", "meth4prop", "meth4rate",
     "meth4tau", "meth4tau.ci", "meth4i2",
+    "meth4common.ci",
     "meth4random.ci", "meth4pi",
     "adhoc4hakn.ci", "adhoc4hakn.pi",
     "meth4bias", "meth4bias.old",
@@ -607,6 +607,7 @@ setOption("meth4rate", c("Inverse", "GLMM"))
 setOption("meth4tau", c("DL", "PM", "REML", "ML", "HS", "SJ", "HE", "EB"))
 setOption("meth4tau.ci", c("QP", "BJ", "J", "PL", ""))
 setOption("meth4i2", c("Q", "tau2"))
+setOption("meth4common.ci", c("classic", "IVhet"))
 setOption("meth4random.ci", c("classic", "HK", "KR"))
 setOption("meth4pi",
           c("V", "HTS", "HK", "HK-PR", "KR", "KR-PR", "NNF", "S", ""))
@@ -633,7 +634,7 @@ setOption("minor.update", 6)
 ##
 argslist <-
   c("level", "level.ma", "common", "random",
-    "method.random.ci", "method.predict",
+    "method.common.ci", "method.random.ci", "method.predict",
     "adhoc.hakn.ci", "adhoc.hakn.pi",
     "method.tau", "method.tau.ci", "level.hetstat", "tau.common",
     "method.I2",
@@ -675,6 +676,7 @@ argslist <-
     "sort.subgroup",
     "pooled.events", "pooled.times", "study.results",
     "cid", "cid.below.null", "cid.above.null", "lty.cid", "col.cid", "fill.cid",
+    "cid.pooled.only",
     "fill", "fill.equi",
     "leftcols", "rightcols", "leftlabs", "rightlabs", 
     "label.e.attach", "label.c.attach",
@@ -737,6 +739,7 @@ setOption("fixed", TRUE)
 setOption("comb.fixed", TRUE)
 setOption("random", TRUE)
 setOption("comb.random", TRUE)
+setOption("method.common.ci", "classic")
 setOption("method.random.ci", "classic")
 setOption("hakn", FALSE)
 setOption("adhoc.hakn", "")
@@ -893,6 +896,7 @@ setOption("cid.above.null", NA)
 setOption("lty.cid", 1)
 setOption("col.cid", "blue")
 setOption("fill.cid", "transparent")
+setOption("cid.pooled.only", FALSE)
 #
 setOption("lower.equi", NA)
 setOption("upper.equi", NA)

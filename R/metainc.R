@@ -26,6 +26,9 @@
 #'   from the same cluster resulting in the use of a three-level
 #'   meta-analysis model.
 #' @param rho Assumed correlation of estimates within a cluster.
+#' @param weights A single numeric or vector with user-specified weights.
+#' @param weights.common User-specified weights (common effect model).
+#' @param weights.random User-specified weights (random effects model).
 #' @param method A character string indicating which method is to be
 #'   used for pooling of studies. One of \code{"MH"},
 #'   \code{"Inverse"}, \code{"Cochran"}, or \code{"GLMM"} can be
@@ -81,6 +84,9 @@
 #'   (see \code{\link{meta-package}}).
 #' @param level.ma The level used to calculate confidence intervals
 #'   for meta-analysis estimates.
+#' @param method.common.ci A character string indicating which method
+#'   is used to calculate confidence interval and test statistic for
+#'   common effect estimate (see \code{\link{meta-package}}).
 #' @param method.random.ci A character string indicating which method
 #'   is used to calculate confidence interval and test statistic for
 #'   random effects estimate (see \code{\link{meta-package}}).
@@ -413,7 +419,10 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                     ##
                     data = NULL, subset = NULL, exclude = NULL,
                     cluster = NULL, rho = 0,
-                    ##
+                    #
+                    weights = NULL,
+                    weights.common = weights, weights.random = weights,
+                    #
                     method = if (sm == "IRSD") "Inverse" else "MH",
                     sm = gs("sminc"),
                     incr = gs("incr"), method.incr = gs("method.incr"),
@@ -445,6 +454,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                     method.I2 = gs("method.I2"),
                     #
                     level.ma = gs("level.ma"),
+                    method.common.ci = gs("method.common.ci"),
                     method.random.ci = gs("method.random.ci"),
                     adhoc.hakn.ci = gs("adhoc.hakn.ci"),
                     ##
@@ -532,6 +542,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   missing.level.ma <- missing(level.ma)
   missing.common <- missing(common)
   missing.random <- missing(random)
+  missing.method.common.ci <- missing(method.common.ci)
   missing.method.random.ci <- missing(method.random.ci)
   #
   missing.hakn <- missing(hakn)
@@ -611,7 +622,17 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   }
   ##
   method <- setchar(method, gs("meth4inc"))
-  ##
+  #
+  method.common.ci <- setchar(method.common.ci, gs("meth4common.ci"))
+  #
+  if (method != "Inverse" & method.common.ci == "IVhet") {
+    if (!missing.method.common.ci)
+      warning("Argument 'method.common.ci = \"IVhet\"' only available ",
+              "if 'method = \"Inverse\".",
+              call. = FALSE)
+    method.common.ci <- "classic"
+  }
+  #
   method.incr <- setchar(method.incr, gs("meth4incr"))
   ##
   is.glmm <- method == "GLMM"
@@ -931,6 +952,40 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   cluster <- catch("cluster", mc, data, sfsp)
   with.cluster <- !is.null(cluster)
   #
+  # Catch 'weights', 'weights.common', and 'weights.random' from data:
+  #
+  if (!missing(weights))
+    weights <- catch("weights", mc, data, sfsp)
+  if (!missing(weights.common))
+    weights.common <- catch("weights.common", mc, data, sfsp)
+  if (!missing(weights.random))
+    weights.random <- catch("weights.random", mc, data, sfsp)
+  #
+  if (!is.null(weights) & is.null(weights.common))
+    weights.common <- weights
+  #
+  if (!is.null(weights) & is.null(weights.random))
+    weights.random <- weights
+  #
+  usw.common <- !is.null(weights.common)
+  usw.random <- !is.null(weights.random)
+  #
+  if (usw.common)
+    chknumeric(weights.common, min = 0)
+  #
+  if (usw.random)
+    chknumeric(weights.random, min = 0)
+  #
+  if (usw.common & method != "Inverse")
+    stop("User-specified weights for the common effect model only implemented ",
+         "for the inverse variance method (method = \"Inverse\").",
+         call. = FALSE)
+  #
+  if (usw.random & method == "GLMM")
+    stop("User-specified weights for the random effects model not implemented ",
+         "for generalized linear mixed models (method = \"GLMM\").",
+         call. = FALSE)
+  #
   # Check variable values
   #
   chknumeric(event.e, 0)
@@ -956,8 +1011,23 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   chklength(event.c, k.All, fun)
   chklength(time.c, k.All, fun)
   chklength(studlab, k.All, fun)
+  #
   if (with.cluster)
     chklength(cluster, k.All, fun)
+  #
+  if (usw.common) {
+    if (length(weights.common) == 1)
+      weights.common <- rep(weights.common, k.All)
+    else
+      chklength(weights.common, k.All, fun)
+  }
+  #
+  if (usw.random) {
+    if (length(weights.random) == 1)
+      weights.random <- rep(weights.random, k.All)
+    else
+      chklength(weights.random, k.All, fun)
+  }
   #
   if (length(incr) > 1)
     chklength(incr, k.All, fun)
@@ -1069,7 +1139,16 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     ##
     if (!missing.exclude)
       data$.exclude <- exclude
-    ##
+    #
+    if (with.cluster)
+      data$.id <- data$.cluster <- cluster
+    #
+    if (usw.common)
+      data$.weights.common <- weights.common
+    #
+    if (usw.random)
+      data$.weights.random <- weights.random
+    #
     if (avail.n.e)
       data$.n.e <- n.e
     if (avail.n.e)
@@ -1092,6 +1171,9 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
     ##
     cluster <- cluster[subset]
     exclude <- exclude[subset]
+    #
+    weights.common <- weights.common[subset]
+    weights.random <- weights.random[subset]
     #
     if (avail.n.e)
       n.e <- n.e[subset]
@@ -1390,7 +1472,10 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
   m <- metagen(TE, seTE, studlab,
                exclude = if (missing.exclude) NULL else exclude,
                cluster = cluster, rho = rho,
-               ##
+               #
+               weights.common = weights.common,
+               weights.random = weights.random,
+               #
                sm = sm,
                level = level,
                ##
@@ -1411,6 +1496,7 @@ metainc <- function(event.e, time.e, event.c, time.c, studlab,
                method.I2 = method.I2,
                #
                level.ma = level.ma,
+               method.common.ci = method.common.ci,
                method.random.ci = method.random.ci,
                adhoc.hakn.ci = adhoc.hakn.ci,
                ##

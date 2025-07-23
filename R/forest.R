@@ -149,6 +149,8 @@
 #'   reference value. Can be equal to the number of upper limits or the
 #'   number of limits plus 1 (in this case the region between largest
 #'   limit and maximum is also filled).
+#' @param cid.pooled.only A logical indicating whether CID regions should only
+#'   be visible for pooled estimates or also individual studies.
 #' @param fill Colour for background of confidence interval plot (also used
 #'   as colour for region between CID limits if argument \code{fill.equi} was
 #'   not provided).
@@ -1362,6 +1364,7 @@ forest.meta <- function(x,
                         fill.cid = gs("fill.cid"),
                         fill.cid.below.null = fill.cid,
                         fill.cid.above.null = rev(fill.cid),
+                        cid.pooled.only = gs("cid.pooled.only"),
                         #
                         fill = gs("fill"),
                         #
@@ -1641,6 +1644,8 @@ forest.meta <- function(x,
   metaprop <- inherits(x, "metaprop")
   metarate <- inherits(x, "metarate")
   metabind <- inherits(x, "is.metabind")
+  metacum <- inherits(x, "metacum")
+  metainf <- inherits(x, "metainf")
   #
   metamerge <- inherits(x, "metamerge")
   #
@@ -1663,11 +1668,13 @@ forest.meta <- function(x,
   # Logical variables for missing arguments
   #
   missing.calcwidth.common <- missing(calcwidth.common)
-  missing.col.circle <- missing(col.circle)
-  missing.col.circle.lines <- missing(col.circle.lines)
+  missing.col.circle <- missing(col.circle) | is.null(col.circle)
+  missing.col.circle.lines <-
+    missing(col.circle.lines) | is.null(col.circle.lines)
   missing.col.common <- missing(col.common)
   missing.col.diamond <- missing(col.diamond)
-  missing.col.diamond.common <- missing(col.diamond.common)
+  missing.col.diamond.common <-
+    missing(col.diamond.common) | is.null(col.diamond.common)
   missing.col.diamond.fixed <- is.na(argid(nam.args, "col.diamond.fixed"))
   missing.col.diamond.fixed.lines <-
     is.na(argid(nam.args, "col.diamond.fixed.lines"))
@@ -1675,11 +1682,13 @@ forest.meta <- function(x,
   missing.col.diamond.lines.fixed <-
     is.na(argid(nam.args, "col.diamond.lines.fixed"))
   missing.col.diamond.lines.random <- missing(col.diamond.lines.random)
-  missing.col.diamond.random <- missing(col.diamond.random)
+  missing.col.diamond.random <-
+    missing(col.diamond.random) | is.null(col.diamond.random)
   missing.col.inside <- missing(col.inside)
   missing.col.inside.common <- missing(col.inside.common)
-  missing.col.square <- missing(col.square)
-  missing.col.square.lines <- missing(col.square.lines)
+  missing.col.square <- missing(col.square) | is.null(col.square)
+  missing.col.square.lines <-
+    missing(col.square.lines) | is.null(col.square.lines)
   missing.col.subgroup <- missing(col.subgroup)
   missing.common <- missing(common)
   missing.common.subgroup <- missing(common.subgroup)
@@ -2412,6 +2421,8 @@ forest.meta <- function(x,
     }
   }
   #
+  chklogical(cid.pooled.only)
+  #
   if (bmj)
     type.study <- "squarediamond"
   else
@@ -3062,6 +3073,65 @@ forest.meta <- function(x,
   }
   #
   chklogical(details)
+  #
+  # Set colours for JAMA and RevMan5 layouts
+  #
+  if (jama) {
+    if (missing.col.square)
+      col.square <- rep("darkblue", K.all)
+    if (missing.col.square.lines)
+      col.square.lines <- rep("darkblue", K.all)
+    #
+    if (missing.col.circle)
+      col.circle <- rep("darkblue", K.all)
+    if (missing.col.circle.lines)
+      col.circle.lines <- rep("darkblue", K.all)
+    #
+    if (missing.col.diamond.common)
+      col.diamond.common <- "lightblue"
+    if (missing.col.diamond.random)
+      col.diamond.random <- "lightblue"
+  }
+  else if (revman5) {
+    if (missing.col.square) {
+      if (metacont | metamean)
+        col.square <- rep("green", K.all)
+      else if (metabin)
+        col.square <- rep("blue", K.all)
+      else
+        col.square <- rep("red", K.all)
+    }
+    if (missing.col.square.lines) {
+      if (metacont | metamean)
+        col.square.lines <- rep("green", K.all)
+      else if (metabin)
+        col.square.lines <- rep("darkblue", K.all)
+      else
+        col.square.lines <- rep("red", K.all)
+    }
+    #
+    if (missing.col.circle) {
+      if (metacont | metamean)
+        col.circle <- rep("green", K.all)
+      else if (metabin)
+        col.circle <- rep("blue", K.all)
+      else
+        col.circle <- rep("red", K.all)
+    }
+    if (missing.col.circle.lines) {
+      if (metacont | metamean)
+        col.circle.lines <- rep("green", K.all)
+      else if (metabin)
+        col.circle.lines <- rep("darkblue", K.all)
+      else
+        col.circle.lines <- rep("red", K.all)
+    }
+    #
+    if (missing.col.diamond.common)
+      col.diamond.common <- "black"
+    if (missing.col.diamond.random)
+      col.diamond.random <- "black"
+  }
   
   
   #
@@ -3108,7 +3178,7 @@ forest.meta <- function(x,
   #
   #
   n.com <- max(length(x$TE.common), 1)
-  n.ran <- max(length(x$seTE.random), 1)
+  n.ran <- max(length(x$lower.random), 1)
   n.prd <- max(length(x$lower.predict), 1)
   #
   prediction <- prediction &
@@ -3482,8 +3552,12 @@ forest.meta <- function(x,
   chknumeric(addrows.below.overall, min = 0, length = 1, integer = TRUE)
   #
   if (!avail.xlim) {
+    mrm <- c("metaprop", "metarate", "metamean")
+    #
     if (metaprop || metarate || metamean ||
-        (metabind & sm %in% c(gs("sm4prop"), gs("sm4rate"), gs("sm4mean")))) {
+        (metabind && sm %in% c(gs("sm4prop"), gs("sm4rate"), gs("sm4mean"))) ||
+        (metacum && any(x$classes %in% mrm)) ||
+        (metainf && any(x$classes %in% mrm))) {
       xlim <- NULL
       #
       avail.xlim <- FALSE
@@ -3729,68 +3803,15 @@ forest.meta <- function(x,
   if (jama) {
     if (missing.ff.lr)
       ff.lr <- "bold"
+    #
     if (xlab == "")
       xlab <- paste0(sm.lab, " (", ci.lab, ")")
-    #
-    if (missing.col.square)
-      col.square <- rep("darkblue", K.all)
-    if (missing.col.square.lines)
-      col.square.lines <- rep("darkblue", K.all)
-    #
-    if (missing.col.circle)
-      col.circle <- rep("darkblue", K.all)
-    if (missing.col.circle.lines)
-      col.circle.lines <- rep("darkblue", K.all)
-    #
-    if (missing.col.diamond.common)
-      col.diamond.common <- "lightblue"
-    if (missing.col.diamond.random)
-      col.diamond.random <- "lightblue"
     #
     smlab <- ""
     bottom.lr <- FALSE
   }
   else {
     if (revman5) {
-      if (missing.col.square) {
-        if (metacont | metamean)
-          col.square <- rep("green", K.all)
-        else if (metabin)
-          col.square <- rep("blue", K.all)
-        else
-          col.square <- rep("red", K.all)
-      }
-      if (missing.col.square.lines) {
-        if (metacont | metamean)
-          col.square.lines <- rep("green", K.all)
-        else if (metabin)
-          col.square.lines <- rep("darkblue", K.all)
-        else
-          col.square.lines <- rep("red", K.all)
-      }
-      #
-      if (missing.col.circle) {
-        if (metacont | metamean)
-          col.circle <- rep("green", K.all)
-        else if (metabin)
-          col.circle <- rep("blue", K.all)
-        else
-          col.circle <- rep("red", K.all)
-      }
-      if (missing.col.circle.lines) {
-        if (metacont | metamean)
-          col.circle.lines <- rep("green", K.all)
-        else if (metabin)
-          col.circle.lines <- rep("darkblue", K.all)
-        else
-          col.circle.lines <- rep("red", K.all)
-      }
-      #
-      if (missing.col.diamond.common)
-        col.diamond.common <- "black"
-      if (missing.col.diamond.random)
-        col.diamond.random <- "black"
-      #
       sel.method <- pmatch(x$method, c("Inverse", "MH", "Peto", "GLMM"))
       lab.method <- c("IV", "MH", "Peto", "GLMM")[sel.method]
       #
@@ -4501,9 +4522,9 @@ forest.meta <- function(x,
   #
   col.inside <- col.inside[sel]
   #
-  null.exclude <- is.null(x$exclude)
-  if (!null.exclude)
-    exclude <- x$exclude[sel]
+  avail.exclude <- !is.null(x$exclude)
+  if (avail.exclude)
+    x$exclude <- x$exclude[sel]
   #
   if (sort | by) {
     if (sort.subgroup)
@@ -4569,8 +4590,8 @@ forest.meta <- function(x,
     #
     col.inside <- col.inside[o]
     #
-    if (!null.exclude)
-      exclude <- exclude[o]
+    if (avail.exclude)
+      x$exclude <- x$exclude[o]
     #
     if (newcols) {
       dataset1 <- dataset1[o, ]
@@ -8159,10 +8180,10 @@ forest.meta <- function(x,
   lowTE.exclude <- lowTE
   uppTE.exclude <- uppTE
   #
-  if (!null.exclude) {
-    TE.exclude[exclude] <- NA
-    lowTE.exclude[exclude] <- NA
-    uppTE.exclude[exclude] <- NA
+  if (avail.exclude) {
+    TE.exclude[x$exclude] <- NA
+    lowTE.exclude[x$exclude] <- NA
+    uppTE.exclude[x$exclude] <- NA
   }
   #
   if (!common) {
@@ -8990,8 +9011,7 @@ forest.meta <- function(x,
     lowTEs <- c(lowTE.common, lowTE.random, lowTE.predict, lowTE.w, lowTE)
     uppTEs <- c(uppTE.common, uppTE.random, uppTE.predict, uppTE.w, uppTE)
     #
-    TEs.exclude <- c(TE.common, TE.random, NAs.prd,
-                     TE.w, TE.exclude)
+    TEs.exclude <- c(TE.common, TE.random, NAs.prd, TE.w, TE.exclude)
     lowTEs.exclude <- c(lowTE.common, lowTE.random, lowTE.predict, lowTE.w,
                         lowTE.exclude)
     uppTEs.exclude <- c(uppTE.common, uppTE.random, uppTE.predict, uppTE.w,
@@ -9202,33 +9222,57 @@ forest.meta <- function(x,
   #
   if (!is.null(x$n.e.pooled))
     sum.n.e <- x$n.e.pooled
-  else
-    sum.n.e <- sum(x$n.e, na.rm = TRUE)
+  else {
+    if (avail.exclude)
+      sum.n.e <- sum(x$n.e[!x$exclude], na.rm = TRUE)
+    else
+      sum.n.e <- sum(x$n.e, na.rm = TRUE)
+  }
   #
   if (!is.null(x$n.c.pooled))
     sum.n.c <- x$n.c.pooled
-  else
-    sum.n.c <- sum(x$n.c, na.rm = TRUE)
+  else {
+    if (avail.exclude)
+      sum.n.c <- sum(x$n.c[!x$exclude], na.rm = TRUE)
+    else
+      sum.n.c <- sum(x$n.c, na.rm = TRUE)
+  }
   #
   if (!is.null(x$event.e.pooled))
     sum.e.e <- x$event.e.pooled
-  else
-    sum.e.e <- sum(x$event.e, na.rm = TRUE)
+  else {
+    if (avail.exclude)
+      sum.e.e <- sum(x$event.e[!x$exclude], na.rm = TRUE)
+    else
+      sum.e.e <- sum(x$event.e, na.rm = TRUE)
+  }
   #
   if (!is.null(x$event.c.pooled))
     sum.e.c <- x$event.c.pooled
-  else
-    sum.e.c <- sum(x$event.c, na.rm = TRUE)
+  else {
+    if (avail.exclude)
+      sum.e.c <- sum(x$event.c[!x$exclude], na.rm = TRUE)
+    else
+      sum.e.c <- sum(x$event.c, na.rm = TRUE)
+  }
   #
   if (!is.null(x$time.e.pooled))
     sum.t.e <- x$time.e.pooled
-  else
-    sum.t.e <- sum(x$time.e, na.rm = TRUE)
+  else {
+    if (avail.exclude)
+      sum.t.e <- sum(x$time.e[!x$exclude], na.rm = TRUE)
+    else
+      sum.t.e <- sum(x$time.e, na.rm = TRUE)
+  }
   #
   if (!is.null(x$time.c.pooled))
     sum.t.c <- x$time.c.pooled
-  else
-    sum.t.c <- sum(x$time.c, na.rm = TRUE)
+  else {
+    if (avail.exclude)
+      sum.t.c <- sum(x$time.c[!x$exclude], na.rm = TRUE)
+    else
+      sum.t.c <- sum(x$time.c, na.rm = TRUE)
+  }
   #
   if (is.character(x$cluster))
     as.character.cluster <- TRUE
@@ -9734,8 +9778,10 @@ forest.meta <- function(x,
   #
   # P-value of effect
   #
+  
   pval.format <-
-    formatPT(c(x$pval.common, x$pval.random, NAs.prd, x$pval),
+    formatPT(c(x$pval.common, x$pval.random, NAs.prd,
+               if (is.numeric(x$pval)) x$pval else rep(NA, length(x$pval))),
              digits = digits.pval,
              big.mark = big.mark,
              lab = FALSE, labval = "",
@@ -11271,6 +11317,12 @@ forest.meta <- function(x,
   #
   ymax <- spacing * (nrow - ifelse(is.na(yHeadadd), 1, 2) - 1 * addrow)
   #
+  if (cid.pooled.only)
+    ymax.ref <- spacing * (ymin.line + prediction * n.prd + random * n.ran +
+                             common * n.com)
+  else
+    ymax.ref <- ymax
+  #
   # Position on y-axis of left and right labels (at bottom of forest plot)
   #
   y.bottom.lr <- ymin.line - 2.5 + (!(overall | overall.hetstat) & addrow)
@@ -11599,6 +11651,7 @@ forest.meta <- function(x,
              overall, common, random, prediction,
              ymin.common, ymin.random, ymin.ref,
              ymax + 0.5 * header.line * addrow,
+             ymax.ref + 0.5 * header.line * addrow,
              lwd, lty.common, lty.random, col.common, col.random,
              xlim[1], xlim[2],
              cid.below.null, cid.above.null, lty.cid, col.cid,

@@ -13,6 +13,9 @@
   cluster,
   rho = object$rho,
   cycles,
+  weights = NULL,
+  weights.common = object$weights.common,
+  weights.random = object$weights.random,
   method,
   sm = object$sm,
   incr = object$incr,
@@ -31,6 +34,7 @@
   random = object$random,
   overall = object$overall,
   overall.hetstat = object$overall.hetstat,
+  method.common.ci = object$method.common.ci,
   method.random.ci = object$method.random.ci,
   adhoc.hakn.ci = object$adhoc.hakn.ci,
   method.predict = object$method.predict,
@@ -129,6 +133,12 @@ meta-analysis model.}
 \item{cycles}{A numeric vector with the number of cycles per patient / study
 in n-of-1 trials (see \code{\link{metagen}}).}
 
+\item{weights}{A single numeric or vector with user-specified weights.}
+
+\item{weights.common}{User-specified weights (common effect model).}
+
+\item{weights.random}{User-specified weights (random effects model).}
+
 \item{method}{A character string indicating which method is to be
 used for pooling of studies (see \code{\link{metabin}},
 \code{\link{metainc}}, \code{\link{metaprop}} and
@@ -199,6 +209,10 @@ heterogeneity measures for overall treatment comparisons. This
 argument is useful in a meta-analysis with subgroups if
 heterogeneity statistics should only be printed on subgroup
 level.}
+
+\item{method.common.ci}{A character string indicating which method
+is used to calculate confidence interval and test statistic for
+common effect estimate (see \code{\link{meta-package}}).}
 
 \item{method.random.ci}{A character string indicating which method
 is used to calculate confidence interval and test statistic for

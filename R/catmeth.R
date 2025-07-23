@@ -110,9 +110,9 @@ catmeth <- function(x,
   ## (2) Meta-analysis methods
   ##
   ##
-
-  if (overall | metabind | metacum.metainf | by) {
     
+  if (overall | metabind | metacum.metainf | by) {
+      
     meth.ma <- meth[meth$model %in% selmod, , drop = FALSE]
     ##
     vars.ma <- c("model", "method")
@@ -139,6 +139,20 @@ catmeth <- function(x,
       details.i[i] <- text_meth(meth.ma, i, random, method)
     ##
     details <- paste(c(details, unique(details.i)), collapse = "")
+    #
+    # Information on user-specified weights
+    #
+    if (!is.null(x$weights.common) | !is.null(x$weights.random)) {
+      if (!is.null(x$weights.common) & !is.null(x$weights.random))
+        details.usw <- ""
+      else if  (!is.null(x$weights.common))
+        details.usw <- " (common effect model)"
+      else
+        details.usw <- " (random effects model)"
+      #
+      details <-
+        paste0(details, "\n- User-specified weights", details.usw)
+    }
   }
   
   
@@ -288,9 +302,21 @@ catmeth <- function(x,
   }
   
   
+  #
+  #
+  # (6) Confidence interval of common effect estimate
+  #
+  #
+  
+  if (common &
+      any(meth$model == "common" & meth$method.common.ci == "IVhet"))
+    details <- paste0(details,
+                      "\n- Inverse variance heterogeneity model")
+  
+  
   ##
   ##
-  ## (6) Confidence interval of random effects estimate
+  ## (7) Confidence interval of random effects estimate
   ##
   ##
 
@@ -373,7 +399,7 @@ catmeth <- function(x,
   
   ##
   ##
-  ## (7) Prediction interval
+  ## (8) Prediction interval
   ##
   ##
 
@@ -513,7 +539,7 @@ catmeth <- function(x,
   
   ##
   ##
-  ## (8) Trim-and-fill method
+  ## (9) Trim-and-fill method
   ##
   ##
 
@@ -536,7 +562,7 @@ catmeth <- function(x,
   
   ##
   ##
-  ## (9) metamiss
+  ## (10) R function metamiss()
   ##
   ##
 
@@ -578,7 +604,7 @@ catmeth <- function(x,
   
   ##
   ##
-  ## (10) Information on effect measure
+  ## (11) Information on effect measure
   ##
   ##
   
@@ -659,7 +685,7 @@ catmeth <- function(x,
   
   ##
   ##
-  ## (11) Information on confidence interval for individual studies
+  ## (12) Information on confidence interval for individual studies
   ##
   ##
   
@@ -705,7 +731,7 @@ catmeth <- function(x,
   
   ##
   ##
-  ## (12) Information on continuity correction
+  ## (13) Information on continuity correction
   ##
   ##
   
@@ -749,72 +775,78 @@ catmeth <- function(x,
         }
         else
           txtCC.ind.i <- dat.cc$method[i] %in% c("GLMM", "LRP")
-        ##
-        if (method.incr.i == "user") {
-          if (incr.i != 0)
-            details.cc <- "\n- User-defined continuity correction"
-        }
-        else if (method.incr.i == "all") {
-          if (incr.i == "TACC") {
-            details.cc <- c(
-              details.cc,
-              if (k.all.i > 1)
-                "\n- Treatment arm continuity correction in all studies"
-              else
-                "\n- Treatment arm continuity correction")
+        #
+        # No continuity correction for generalized linear mixed model and
+        # argument 'method.ci != "NAsm"'
+        #
+        if (!(txtCC.ind.i &
+              (!is.null(x$method.ci) && x$method.ci != "NAsm"))) {
+          if (method.incr.i == "user") {
+            if (incr.i != 0)
+              details.cc <- "\n- User-defined continuity correction"
           }
-          else if (incr.i != 0)
-            details.cc <- c(
-              details.cc,
-              paste0("\n- Continuity correction of ",
-                     incr.i,
-                     if (k.all.i > 1)
-                       " in all studies",
-                     details.rr))
-        }
-        else if (sparse.i) {
-          if (incr.i == "TACC") {
-            details.cc <- c(
-              details.cc,
-              paste0(
-                "\n- Treatment arm continuity correction in ",
+          else  if (method.incr.i == "all") {
+            if (incr.i == "TACC") {
+              details.cc <- c(
+                details.cc,
                 if (k.all.i > 1)
-                  "studies "
+                  "\n- Treatment arm continuity correction in all studies"
                 else
-                  "study ",
-                "with",
-                if (width > 70 | forest)
-                  " "
-                else
-                  "\n  ",
-                "zero cell frequencies",
-                details.rr
-              ))
+                  "\n- Treatment arm continuity correction")
+            }
+            else if (incr.i != 0)
+              details.cc <- c(
+                details.cc,
+                paste0("\n- Continuity correction of ",
+                       incr.i,
+                       if (k.all.i > 1)
+                         " in all studies",
+                       details.rr))
           }
-          else if (incr.i != 0) {
-            details.cc <- c(
-              details.cc,
-              paste0(
-                "\n- Continuity correction of ",
-                incr.i,
-                if (k.all.i > 1)
-                  " in studies with",
-                if (k.all.i > 1 & width > 70)
-                  " "
-                else if (k.all.i > 1 & !forest)
-                  "\n  ",
-                if (k.all.i > 1)
+          else if (sparse.i) {
+            if (incr.i == "TACC") {
+              details.cc <- c(
+                details.cc,
+                paste0(
+                  "\n- Treatment arm continuity correction in ",
+                  if (k.all.i > 1)
+                    "studies "
+                  else
+                    "study ",
+                  "with",
+                  if (width > 70 | forest)
+                    " "
+                  else
+                    "\n  ",
                   "zero cell frequencies",
-                details.rr))
+                  details.rr
+                ))
+            }
+            else if (incr.i != 0) {
+              details.cc <- c(
+                details.cc,
+                paste0(
+                  "\n- Continuity correction of ",
+                  incr.i,
+                  if (k.all.i > 1)
+                    " in studies with",
+                  if (k.all.i > 1 & width > 70)
+                    " "
+                  else if (k.all.i > 1 & !forest)
+                    "\n  ",
+                  if (k.all.i > 1)
+                    "zero cell frequencies",
+                  details.rr))
+            }
+            ##
+            if ((incr.i == "TACC" || incr.i != 0) && txtCC.ind.i)
+              details.cc <- c(
+                details.cc,
+                if (forest) " " else "\n  ",
+                "(only used to calculate individual study results)")
           }
-          ##
-          if ((incr.i == "TACC" || incr.i != 0) && txtCC.ind.i)
-            details.cc <- c(
-              details.cc,
-              if (forest) " " else "\n  ",
-              "(only used to calculate individual study results)")
         }
-        ##
+        #
         if (metabin & method.incr.i != "user") {
           if ((!is.na(dat.cc$allstudies[i]) && dat.cc$allstudies[i]) &
               (!is.na(dat.cc$doublezeros[i]) && dat.cc$doublezeros[i]))
@@ -835,7 +867,7 @@ catmeth <- function(x,
   
   ##
   ##
-  ## (13) Information on number of events and null hypothesis
+  ## (14) Information on number of events and null hypothesis
   ##
   ##
   

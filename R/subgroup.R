@@ -45,11 +45,16 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
   is.glmm <- x$method == "GLMM"
   is.mlm <- !is.null(x$three.level) && x$three.level
   ##
-  sumNA <- function(x)
+  sumNA <- function(x, exclude = NULL) {
     if (all(is.na(x)))
-      NA
-    else
-      sum(x, na.rm = TRUE)
+      return(NA)
+    else {
+      if (is.null(exclude))
+        return(sum(x, na.rm = TRUE))
+      else
+        return(sum(x[!exclude], na.rm = TRUE))
+    }
+  }
   
   
   ##
@@ -108,6 +113,7 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                        model.glmm = x$model.glmm,
                        ##
                        level.ma = x$level.ma,
+                       method.common.ci = x$method.common.ci,
                        method.random.ci = x$method.random.ci,
                        adhoc.hakn.ci = x$adhoc.hakn.ci,
                        ##
@@ -167,6 +173,7 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                         exact.smd = x$exact.smd,
                         ##
                         level.ma = x$level.ma,
+                        method.common.ci = x$method.common.ci,
                         method.random.ci = x$method.random.ci,
                         adhoc.hakn.ci = x$adhoc.hakn.ci,
                         ##
@@ -196,6 +203,7 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                        sm = x$sm,
                        ##
                        level.ma = x$level.ma,
+                       method.common.ci = x$method.common.ci,
                        method.random.ci = x$method.random.ci,
                        adhoc.hakn.ci = x$adhoc.hakn.ci,
                        ##
@@ -222,10 +230,17 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                        cluster =
                          if (!is.null(x$cluster)) x$cluster[sel] else NULL,
                        rho = x$rho,
-                       ##
+                       #
+                       weights.common =
+                         if (!is.null(x$weights.common)) x$weights.common[sel] else NULL,
+                       #
+                       weights.random =
+                         if (!is.null(x$weights.random)) x$weights.random[sel] else NULL,
+                       #
                        sm = x$sm,
                        ##
                        level.ma = x$level.ma,
+                       method.common.ci = x$method.common.ci,
                        method.random.ci = x$method.random.ci,
                        adhoc.hakn.ci = x$adhoc.hakn.ci,
                        ##
@@ -280,6 +295,7 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                        model.glmm = x$model.glmm,
                        ##
                        level.ma = x$level.ma,
+                       method.common.ci = x$method.common.ci,
                        method.random.ci = x$method.random.ci,
                        adhoc.hakn.ci = x$adhoc.hakn.ci,
                        ##
@@ -321,6 +337,7 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                         sm = x$sm,
                         ##
                         level.ma = x$level.ma,
+                        method.common.ci = x$method.common.ci,
                         method.random.ci = x$method.random.ci,
                         adhoc.hakn.ci = x$adhoc.hakn.ci,
                         ##
@@ -355,6 +372,7 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                         method.incr = x$method.incr,
                         ##
                         level.ma = x$level.ma,
+                        method.common.ci = x$method.common.ci,
                         method.random.ci = x$method.random.ci,
                         adhoc.hakn.ci = x$adhoc.hakn.ci,
                         ##
@@ -389,6 +407,7 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                         method.incr = x$method.incr,
                         ##
                         level.ma = x$level.ma,
+                        method.common.ci = x$method.common.ci,
                         method.random.ci = x$method.random.ci,
                         adhoc.hakn.ci = x$adhoc.hakn.ci,
                         ##
@@ -483,16 +502,24 @@ subgroup <- function(x, tau.preset = NULL, subgroup.rma,
                        lower.Rb = meta1$lower.Rb,
                        upper.Rb = meta1$upper.Rb,
                        ##
-                       event = if (prop) sumNA(meta1$event) else NA,
-                       n = if (cor.prop.mean.rate) sumNA(meta1$n) else NA,
+                       event =
+                         if (prop) sumNA(meta1$event, meta1$exclude) else NA,
+                       n =
+                         if (cor.prop.mean.rate) sumNA(meta1$n, meta1$exclude) else NA,
                        ##
-                       event.e = if (bin.inc) sumNA(meta1$event.e) else NA,
-                       n.e = if (bin.cont.gen) sumNA(meta1$n.e) else NA,
-                       event.c = if (bin.inc) sumNA(meta1$event.c) else NA,
-                       n.c = if (bin.cont.gen) sumNA(meta1$n.c) else NA,
+                       event.e =
+                         if (bin.inc) sumNA(meta1$event.e, meta1$exclude) else NA,
+                       n.e =
+                         if (bin.cont.gen) sumNA(meta1$n.e, meta1$exclude) else NA,
+                       event.c =
+                         if (bin.inc) sumNA(meta1$event.c, meta1$exclude) else NA,
+                       n.c =
+                         if (bin.cont.gen) sumNA(meta1$n.c, meta1$exclude) else NA,
                        ##
-                       time.e = if (inc) sumNA(meta1$time.e) else NA,
-                       time.c = if (inc) sumNA(meta1$time.c) else NA,
+                       time.e =
+                         if (inc) sumNA(meta1$time.e, meta1$exclude) else NA,
+                       time.c =
+                         if (inc) sumNA(meta1$time.c, meta1$exclude) else NA,
                        ##
                        n.harmonic.mean = 1 / mean(1 / x$n[sel]),
                        t.harmonic.mean = 1 / mean(1 / x$time[sel]))
